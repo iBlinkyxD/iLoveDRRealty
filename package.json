@@ -1,0 +1,24 @@
+{
+  "name": "ilovedr-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "dev:landing": "turbo run dev --filter=landing",
+    "dev:dashboard": "turbo run dev --filter=dashboard",
+    "build:landing": "turbo run build --filter=landing",
+    "build:dashboard": "turbo run build --filter=dashboard"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "npm@10.7.0",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "tailwindcss": "^4.3.0"
+  }
+}
