@@ -1,17 +1,9 @@
 'use client'
 import { useNav } from '../hooks/useNav'
 import { useState, useMemo, type ReactNode } from 'react'
+import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp } from 'lucide-react'
 import { LISTINGS, fmt, type Listing } from '../data/listings'
 import { DR_REGIONS } from '../data/searchData'
-
-const PATHS = {
-  bed:   ['M3 17V9a2 2 0 012-2h14a2 2 0 012 2v8', 'M3 13h18', 'M3 17v3', 'M21 17v3'],
-  bath:  ['M4 12V6a2 2 0 012-2h2', 'M3 12h18v3a4 4 0 01-4 4H7a4 4 0 01-4-4z', 'M7 19l-1 2', 'M18 19l1 2'],
-  area:  ['M3 8V4h4', 'M21 8V4h-4', 'M3 16v4h4', 'M21 16v4h-4'],
-  pin:   ['M12 21s-7-6.3-7-11a7 7 0 1114 0c0 4.7-7 11-7 11z', 'M12 10a0 0 0 100 0 2.5 2.5 0 100 0'],
-  heart: 'M12 20s-7-4.6-9.3-9.1C1 7.5 2.7 4.5 6 4.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.3 0 5 3 3.3 6.4C19 15.4 12 20 12 20z',
-  chart: ['M4 19V5', 'M4 19h16', 'M8 16l3-4 3 2 4-6'],
-}
 
 type TagTone = 'sand' | 'coral' | 'sea' | 'gold' | 'green'
 const TONE_CLASSES: Record<TagTone, string> = {
@@ -45,15 +37,6 @@ function coordsForListing(l: Listing) {
   return { x: base.x + rand(1) * 12, y: base.y + rand(2) * 8, tone: base.tone }
 }
 
-function Icon({ d, size = 20 }: { d: string | string[]; size?: number }) {
-  const ps = Array.isArray(d) ? d : [d]
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-      {ps.map((p, i) => <path key={i} d={p} />)}
-    </svg>
-  )
-}
 
 function Tag({ children, tone = 'sand' }: { children: ReactNode; tone?: string }) {
   const cls = TONE_CLASSES[(tone as TagTone)] ?? TONE_CLASSES.sand
@@ -74,7 +57,7 @@ function PropertyCard({ l, go, onHover }: {
     <div
       onMouseEnter={() => { setHot(true); onHover?.(l) }}
       onMouseLeave={() => { setHot(false); onHover?.(null) }}
-      onClick={() => go('detail')}
+      onClick={() => go(`detail?id=${l.id}`)}
       className={`bg-paper rounded-xl overflow-hidden cursor-pointer transition-all duration-250 border ${hot ? 'border-line -translate-y-1 shadow-[0_22px_50px_-28px_rgba(0,16,46,.4)]' : 'border-line-soft shadow-[0_1px_0_rgba(0,16,46,.03)]'}`}
     >
       <div className="relative h-46" style={{ backgroundImage: `url(${l.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -85,11 +68,11 @@ function PropertyCard({ l, go, onHover }: {
           onClick={e => e.stopPropagation()}
           className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 text-coral grid place-items-center border-none cursor-pointer"
         >
-          <Icon d={PATHS.heart} size={16} />
+          <Heart size={16} />
         </button>
         {l.roi > 0 && (
           <div className="absolute bottom-3 right-3 flex items-center gap-1.25 bg-ink/90 text-paper py-1.25 px-2.5 rounded-md text-xs font-semibold">
-            <Icon d={PATHS.chart} size={13} />{l.roi}% yield
+            <TrendingUp size={13} />{l.roi}% yield
           </div>
         )}
       </div>
@@ -100,12 +83,12 @@ function PropertyCard({ l, go, onHover }: {
         </div>
         <div className="text-3.75 font-semibold text-ink mt-1.5 mb-1 leading-[1.3]">{l.title}</div>
         <div className="flex items-center gap-1.25 text-dim text-[12.5px]">
-          <Icon d={PATHS.pin} size={13} />{l.region}
+          <MapPin size={13} />{l.region}
         </div>
         <div className="flex gap-4 mt-3.5 pt-3.25 border-t border-line-soft text-ink2 text-[12.5px]">
-          {l.bd > 0 && <span className="flex items-center gap-1.25"><Icon d={PATHS.bed}  size={15} />{l.bd} bd</span>}
-          {l.ba > 0 && <span className="flex items-center gap-1.25"><Icon d={PATHS.bath} size={15} />{l.ba} ba</span>}
-          <span className="flex items-center gap-1.25"><Icon d={PATHS.area} size={15} />{l.m2} m²</span>
+          {l.bd > 0 && <span className="flex items-center gap-1.25"><BedDouble size={15} />{l.bd} bd</span>}
+          {l.ba > 0 && <span className="flex items-center gap-1.25"><Bath size={15} />{l.ba} ba</span>}
+          <span className="flex items-center gap-1.25"><Maximize2 size={15} />{l.m2} m²</span>
         </div>
       </div>
     </div>
@@ -535,7 +518,7 @@ export default function Search() {
           counts={counts}
           hovered={hovered}
           listings={results}
-          onSelect={() => go('detail')}
+          onSelect={(l) => go(`detail?id=${l.id}`)}
         />
 
         {insights && (
@@ -555,7 +538,7 @@ export default function Search() {
             <div className="text-2.75 font-bold tracking-[.12em] uppercase text-dim mb-1">You might also like</div>
             <div className="text-[11.5px] text-dim mb-3 leading-[1.45]">Just outside your current filters</div>
             {alsoLike.map((l, i) => (
-              <button key={l.id} onClick={() => go('detail')}
+              <button key={l.id} onClick={() => go(`detail?id=${l.id}`)}
                 className={`flex w-full gap-2.5 py-2.5 bg-transparent border-x-0 border-t-0 cursor-pointer text-left font-sans ${i < alsoLike.length - 1 ? 'border-b border-line-soft' : 'border-b-0'}`}>
                 <div className="w-14 h-11 rounded-md shrink-0 overflow-hidden"
                   style={{ backgroundImage: `url(${l.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />

@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   },
   description: "The Dominican Republic's real estate marketplace — verified listings, ROI tools, and a bilingual team that's lived the process.",
   metadataBase: new URL('https://ilovedrrealty.com'),
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+  },
   openGraph: {
     siteName: 'I Love DR Realty',
     type: 'website',
