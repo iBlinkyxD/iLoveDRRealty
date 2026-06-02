@@ -1,7 +1,6 @@
 'use client'
 import { useNav } from '../hooks/useNav'
 import { useState } from 'react'
-import { DEMO_ROLES } from '../data/loginData'
 import { Star, Home, Users, Handshake } from 'lucide-react'
 
 const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://dashboard.ilovedrrealty.com'
@@ -17,15 +16,13 @@ export default function Login() {
   const go = useNav()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showDemo, setShowDemo] = useState(false)
-
   const inputCls = 'w-full py-3 px-3.5 rounded-xl border border-line bg-paper font-sans text-3.75 text-ink outline-none transition-colors duration-150'
 
   return (
-    <div className="min-h-[calc(100vh-74px)] grid grid-cols-2 font-sans">
+    <div className="min-h-[calc(100vh-74px)] grid grid-cols-1 md:grid-cols-2 font-sans">
 
       {/* ── Left panel — decorative ── */}
-      <div className="relative overflow-hidden flex flex-col justify-between py-15 px-14">
+      <div className="hidden md:flex relative overflow-hidden flex-col justify-between py-15 px-14">
         {/* Background photo */}
         <div className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1683336474667-420dabe065b5?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=1200&q=80&auto=format&fit=crop)' }} />
@@ -62,7 +59,7 @@ export default function Login() {
       </div>
 
       {/* ── Right panel — form ── */}
-      <div className="bg-paper2 flex items-center justify-center py-15 px-7">
+      <div className="bg-paper2 flex items-center justify-center py-10 sm:py-15 px-4 sm:px-7">
         <div className="w-full max-w-105">
 
           <h2 className="font-serif text-7.5 font-bold text-ink mb-1.5 tracking-[-.02em]">Log in</h2>
@@ -112,47 +109,6 @@ export default function Login() {
             </button>
           </div>
 
-          {/* Demo roles toggle */}
-          <div className="mt-5">
-            <button onClick={() => setShowDemo(d => !d)}
-              className="w-full py-3 rounded-xl border border-line bg-paper text-ink2 font-sans text-[13.5px] font-semibold cursor-pointer flex items-center justify-center gap-2">
-              👤 {showDemo ? 'Hide' : 'Explore'} demo accounts & role access
-            </button>
-
-            {showDemo && (
-              <div className="mt-3 flex flex-col gap-2.5">
-                <p className="text-[12.5px] text-dim text-center mb-1">
-                  Tap a role to preview the dashboard — no account needed.
-                </p>
-                {DEMO_ROLES.map((r, i) => (
-                  <button key={i} onClick={() => window.open(`${DASHBOARD_URL}?role=${r.role}`, '_blank')}
-                    className="bg-paper border border-line-soft rounded-xl overflow-hidden cursor-pointer p-0 text-left w-full">
-                    <div className="flex items-center gap-3 py-3 px-3.5 bg-paper2">
-                      <div className="w-9 h-9 rounded-xl text-white grid place-items-center shrink-0 text-4.5"
-                        style={{ background: r.tone }}>
-                        {r.icon}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-serif text-3.75 font-semibold text-ink">{r.role}</div>
-                        <div className="text-2.75 text-dim font-mono">{r.email} · demo123</div>
-                      </div>
-                      <span className="text-xs font-bold" style={{ color: r.tone }}>Log in →</span>
-                    </div>
-                    <div className="py-2.5 px-3.5 grid grid-cols-2 gap-x-3 gap-y-1.5">
-                      {r.can.map((item, j) => (
-                        <div key={j} className="flex items-start gap-1.5 text-[11.5px] text-ink2 leading-[1.35]">
-                          <span className="shrink-0" style={{ color: r.tone }}>✓</span>{item}
-                        </div>
-                      ))}
-                    </div>
-                  </button>
-                ))}
-                <p className="text-2.75 text-dim text-center mt-1 leading-normal">
-                  Demo accounts are illustrative — no real login required.
-                </p>
-              </div>
-            )}
-          </div>
 
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client'
 import { useNav } from '../hooks/useNav'
-import { useState, useMemo, type ReactNode } from 'react'
-import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp } from 'lucide-react'
+import { useState, useMemo, useEffect, type ReactNode } from 'react'
+import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp, SlidersHorizontal, X } from 'lucide-react'
 import { LISTINGS, fmt, type Listing } from '../data/listings'
 import { DR_REGIONS } from '../data/searchData'
 
@@ -253,7 +253,13 @@ export default function Search() {
   const [amenities, setAmenities] = useState(new Set<string>())
   const [invFlags,  setInvFlags]  = useState(new Set<string>())
   const [hovered,  setHovered]  = useState<Listing | null>(null)
-  const [view,     setView]     = useState<'grid' | 'list'>('grid')
+  const [view,        setView]        = useState<'grid' | 'list'>('grid')
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  useEffect(() => {
+    document.body.style.overflow = filtersOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [filtersOpen])
 
   const TYPES        = ['All', 'Villa', 'Condo', 'House', 'Land', 'Commercial', 'Rental']
   const ALL_REGIONS  = ['Punta Cana', 'Santo Domingo', 'Cap Cana', 'Las Terrenas', 'Samaná', 'Jarabacoa', 'Santiago', 'Puerto Plata', 'Sosúa', 'Cabarete']
@@ -350,11 +356,11 @@ export default function Search() {
   const fmtMedian = (v: number) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M` : `$${Math.round(v / 1_000)}K`
 
   return (
-    <div className="max-w-380 mx-auto pt-6 px-6 pb-17.5 grid gap-5.5 font-sans items-start"
-      style={{ gridTemplateColumns: '260px minmax(0,1fr) 320px' }}>
+    <>
+    <div className="max-w-380 mx-auto pt-4 sm:pt-6 px-4 sm:px-6 pb-17.5 grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_320px] gap-5.5 font-sans items-start">
 
       {/* ===== LEFT: FILTERS ===== */}
-      <aside className="self-start sticky top-22.5 max-h-[calc(100vh-110px)] overflow-y-auto bg-paper border border-line-soft rounded-2xl p-4.5">
+      <aside className="hidden lg:block self-start sticky top-22.5 max-h-[calc(100vh-110px)] overflow-y-auto bg-paper border border-line-soft rounded-2xl p-4.5">
 
         <div className="flex items-center justify-between mb-4.5 pb-3 border-b border-line-soft">
           <div className="font-serif text-4.5 font-bold text-ink">Filters / Filtros</div>
@@ -454,15 +460,25 @@ export default function Search() {
 
       {/* ===== CENTER: RESULTS ===== */}
       <main className="min-w-0">
-        <div className="flex items-center justify-between flex-wrap gap-3 mb-3.5">
-          <h1 className="font-serif text-6.5 font-semibold text-ink leading-[1.1] m-0">
+        <div className="flex items-start justify-between flex-wrap gap-3 mb-3.5">
+          <h1 className="font-serif text-5 sm:text-6.5 font-semibold text-ink leading-[1.1] m-0">
             {results.length} properties{' '}
-            <span className="text-dim text-3.75 font-sans font-normal">
+            <span className="text-dim text-3.25 sm:text-3.75 font-sans font-normal">
               {region ? `in ${region}` : 'across the DR'}
             </span>
           </h1>
-          <div className="flex items-center gap-2.5">
-            <span className="text-[12.5px] text-dim">Sort</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setFiltersOpen(true)}
+              className="lg:hidden flex items-center gap-1.5 font-sans text-3.25 font-semibold cursor-pointer py-2 px-3.5 rounded-full border border-line bg-paper text-ink"
+            >
+              <SlidersHorizontal size={14} />
+              Filters
+              {chips.length > 0 && (
+                <span className="w-4.5 h-4.5 rounded-full bg-coral text-white text-[10px] font-bold grid place-items-center">{chips.length}</span>
+              )}
+            </button>
+            <span className="hidden sm:inline text-[12.5px] text-dim">Sort</span>
             <select value={sort} onChange={e => setSort(e.target.value as typeof sort)}
               className="font-sans text-3.25 py-2 px-3 rounded-full border border-line bg-paper text-ink cursor-pointer">
               <option value="new">Newest first</option>
@@ -470,7 +486,7 @@ export default function Search() {
               <option value="high">Price: high to low</option>
               <option value="roi">Best ROI</option>
             </select>
-            <div className="inline-flex border border-line rounded-md overflow-hidden bg-paper">
+            <div className="hidden sm:inline-flex border border-line rounded-md overflow-hidden bg-paper">
               {(['grid', 'list'] as const).map(v => (
                 <button key={v} onClick={() => setView(v)}
                   className={`py-1.75 px-2.5 border-none cursor-pointer text-3.25 ${view === v ? 'bg-ink text-paper' : 'bg-transparent text-dim'}`}>
@@ -503,14 +519,14 @@ export default function Search() {
               No properties match these filters. Try widening your price range or clearing a region.
             </div>
           ) : (
-            <div className={`grid gap-4.5 ${view === 'grid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <div className={`grid gap-4.5 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
               {results.map(l => <PropertyCard key={l.id} l={l} go={go} onHover={setHovered} />)}
             </div>
           )}
       </main>
 
       {/* ===== RIGHT: MAP + INSIGHTS ===== */}
-      <aside className="self-start sticky top-22.5 max-h-[calc(100vh-110px)] overflow-y-auto flex flex-col gap-3.5">
+      <aside className="hidden lg:flex flex-col self-start sticky top-22.5 max-h-[calc(100vh-110px)] overflow-y-auto gap-3.5">
 
         <DRMap
           active={region}
@@ -574,5 +590,120 @@ export default function Search() {
 
       </aside>
     </div>
+
+    {/* ===== MOBILE FILTER DRAWER ===== */}
+    {filtersOpen && (
+      <div className="fixed inset-0 z-50 flex flex-col bg-paper lg:hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-line-soft shrink-0">
+          <div className="font-serif text-4.5 font-bold text-ink">Filters / Filtros</div>
+          <div className="flex items-center gap-2">
+            {chips.length > 0 && (
+              <span className="text-2.5 font-bold py-0.75 px-2 rounded-full bg-coral text-white">{chips.length}</span>
+            )}
+            <button onClick={() => setFiltersOpen(false)}
+              className="p-1.5 bg-transparent border-none cursor-pointer text-ink flex items-center">
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
+
+          <FilterGroup label="Property Type">
+            {TYPES.map(t => <Chip key={t} active={type === t} onClick={() => setType(t)}>{t}</Chip>)}
+          </FilterGroup>
+
+          <FilterGroup label="Purpose">
+            {(['sale', 'rent', 'investment'] as const).map(k => (
+              <Chip key={k} active={purpose === k} onClick={() => setPurpose(k)} tone="coral">
+                {k === 'sale' ? 'For Sale' : k === 'rent' ? 'For Rent' : 'Investment'}
+              </Chip>
+            ))}
+          </FilterGroup>
+
+          <FilterGroup label="Price Range (USD)">
+            <div className="flex items-center gap-2">
+              <input type="text" value={minPrice ? minPrice.toLocaleString() : ''} placeholder="Min"
+                onChange={e => setMinPrice(+e.target.value.replace(/[^0-9]/g, '') || 0)}
+                className="flex-1 min-w-0 py-2 px-2.5 rounded-md border border-line text-3.25 font-sans text-ink outline-none" />
+              <span className="text-dim text-xs">—</span>
+              <input type="text" value={maxPrice < 3_000_000 ? maxPrice.toLocaleString() : ''} placeholder="Max"
+                onChange={e => setMaxPrice(+e.target.value.replace(/[^0-9]/g, '') || 3_000_000)}
+                className="flex-1 min-w-0 py-2 px-2.5 rounded-md border border-line text-3.25 font-sans text-ink outline-none" />
+            </div>
+            <input type="range" min={0} max={3_000_000} step={50_000} value={maxPrice}
+              onChange={e => setMaxPrice(+e.target.value)}
+              className="w-full mt-2 accent-coral" />
+            <div className="flex justify-between text-[10.5px] text-dim">
+              <span>$0</span><span>$3M+</span>
+            </div>
+          </FilterGroup>
+
+          <FilterGroup label="Bedrooms">
+            {['any', '1', '2', '3', '4', '5'].map(v => (
+              <Chip key={v} active={beds === v} onClick={() => setBeds(v)}>{v === 'any' ? 'Any' : `${v}+`}</Chip>
+            ))}
+          </FilterGroup>
+
+          <FilterGroup label="Region">
+            {ALL_REGIONS.map(r => {
+              const key = r === 'Samaná' ? 'Las Terrenas' : r
+              return (
+                <Chip key={r} active={region === key} onClick={() => setRegion(region === key ? null : key)} tone="coral">
+                  {r}
+                </Chip>
+              )
+            })}
+          </FilterGroup>
+
+          <FilterGroup label="Amenities">
+            <div className="grid grid-cols-2 gap-x-2.5 gap-y-1.5">
+              {ALL_AMENITIES.map(a => {
+                const checked = amenities.has(a)
+                return (
+                  <label key={a} className="flex items-center gap-1.75 text-[12.5px] text-ink2 cursor-pointer py-0.75">
+                    <input type="checkbox" checked={checked} onChange={() => {
+                      const n = new Set(amenities)
+                      checked ? n.delete(a) : n.add(a)
+                      setAmenities(n)
+                    }} className="accent-coral w-3.5 h-3.5 shrink-0" />
+                    <span>{a}</span>
+                  </label>
+                )
+              })}
+            </div>
+          </FilterGroup>
+
+          <FilterGroup label="Investment Filters">
+            {([
+              ['roi6', 'ROI 6%+',  () => setMinROI(minROI === 6 ? 0 : 6),  minROI === 6],
+              ['roi8', 'ROI 8%+',  () => setMinROI(minROI === 8 ? 0 : 8),  minROI === 8],
+              ['conf', 'CONFOTUR', () => { const n = new Set(invFlags); n.has('CONFOTUR') ? n.delete('CONFOTUR') : n.add('CONFOTUR'); setInvFlags(n) }, invFlags.has('CONFOTUR')],
+              ['mgd',  'Managed',  () => { const n = new Set(invFlags); n.has('Managed')  ? n.delete('Managed')  : n.add('Managed');  setInvFlags(n) }, invFlags.has('Managed')],
+            ] as [string, string, () => void, boolean][]).map(([k, label, onClick, active]) => (
+              <Chip key={k} active={active} onClick={onClick} tone="brand">{label}</Chip>
+            ))}
+          </FilterGroup>
+
+        </div>
+
+        {/* Sticky bottom CTAs */}
+        <div className="shrink-0 px-4 py-4 border-t border-line-soft flex flex-col gap-2.5">
+          <button onClick={clearAll}
+            className="w-full py-2.5 px-3.5 rounded-lg bg-transparent text-dim border border-line font-sans text-3.25 font-semibold cursor-pointer">
+            Clear all filters
+          </button>
+          <button onClick={() => setFiltersOpen(false)}
+            className="w-full py-2.5 px-3.5 rounded-lg bg-coral text-white border-none font-sans text-3.25 font-semibold cursor-pointer">
+            Show {results.length} results
+          </button>
+        </div>
+
+      </div>
+    )}
+    </>
   )
 }

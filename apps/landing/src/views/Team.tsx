@@ -15,7 +15,7 @@ export default function Team() {
   return (
     <div>
       {/* ── HERO ── */}
-      <div className="bg-ink pt-14 px-6 pb-12.5 relative overflow-hidden">
+      <div className="bg-ink pt-14 px-4 sm:px-6 pb-12.5 relative overflow-hidden">
         <div className="absolute -top-30 -right-20 w-90 h-90 rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(240,168,0,.15) 0%, transparent 70%)' }} />
         <div className="absolute -bottom-25 -left-20 w-80 h-80 rounded-full"
@@ -41,7 +41,7 @@ export default function Team() {
       </div>
 
       {/* ── PRINCIPALS ── */}
-      <div className="max-w-295 mx-auto pt-12.5 px-6 pb-5">
+      <div className="max-w-295 mx-auto pt-12.5 px-4 sm:px-6 pb-5">
         <div className="mb-6">
           <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">★ The principals</div>
           <h2 className="font-serif text-6.5 font-semibold text-ink mt-2 mb-1.5">Brokerage leaders</h2>
@@ -76,7 +76,7 @@ export default function Team() {
       </div>
 
       {/* ── AGENTS BY BROKERAGE TEAM ── */}
-      <div className="bg-paper2 pt-12.5 px-6 pb-15 mt-10">
+      <div className="bg-paper2 pt-12.5 px-4 sm:px-6 pb-15 mt-10">
         <div className="max-w-295 mx-auto">
           <div className="mb-7">
             <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-sea">★ The agents</div>
@@ -96,7 +96,7 @@ export default function Team() {
                     <div className="font-sans text-2.75 font-bold tracking-widest uppercase text-dim">Team led by {p.name.split(' ')[0]}</div>
                     <div className="font-serif text-5 font-semibold text-ink">{p.team}</div>
                   </div>
-                  <span className="ml-auto font-sans text-xs text-dim font-semibold">
+                  <span className="sm:ml-auto font-sans text-xs text-dim font-semibold">
                     {team.length} {team.length === 1 ? 'agent' : 'agents'}
                   </span>
                 </div>
@@ -135,8 +135,8 @@ export default function Team() {
       </div>
 
       {/* ── BOTTOM CTA ── */}
-      <div className="max-w-275 mx-auto py-14 px-6">
-        <div className="bg-ink rounded-3xl py-11 px-12 flex items-center justify-between flex-wrap gap-6 relative overflow-hidden">
+      <div className="max-w-275 mx-auto py-14 px-4 sm:px-6">
+        <div className="bg-ink rounded-3xl py-9 px-6 sm:py-11 sm:px-12 flex items-center justify-between flex-wrap gap-6 relative overflow-hidden">
           <div className="absolute -top-15 -right-15 w-60 h-60 rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(240,168,0,.12) 0%, transparent 70%)' }} />
           <div className="relative">

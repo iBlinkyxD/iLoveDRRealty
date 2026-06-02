@@ -243,7 +243,7 @@ export default function Calculator() {
     <div className="bg-[#F8F9FC] font-sans text-[#0D1B3E] min-h-[calc(100vh-74px)]">
 
       {/* HERO */}
-      <div className="pt-15 px-7 pb-13 relative overflow-hidden"
+      <div className="pt-12 sm:pt-15 px-4 sm:px-7 pb-10 sm:pb-13 relative overflow-hidden"
         style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1600&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(135deg, rgba(13,27,62,.95) 0%, rgba(26,58,110,.9) 50%, rgba(0,153,204,.78) 100%)' }} />
@@ -268,7 +268,7 @@ export default function Calculator() {
       </div>
 
       {/* MAIN GRID */}
-      <div className="max-w-335 mx-auto pt-8 px-7 pb-15 grid grid-cols-2 gap-6 items-start">
+      <div className="max-w-335 mx-auto pt-8 px-4 sm:px-7 pb-15 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
         {/* ── LEFT: INPUTS ── */}
         <div>
@@ -415,9 +415,9 @@ export default function Calculator() {
                     </div>
                     <div className="flex justify-between text-2.75 text-[#556070]">
                       <span>Today</span>
-                      <span>5 yrs</span>
+                      <span className="hidden sm:inline">5 yrs</span>
                       <span className="text-[#0D1B3E] font-bold">{isFinite(calc.breakeven) ? calc.breakeven.toFixed(1) + ' yrs ✓' : 'No profit'}</span>
-                      <span>20 yrs</span>
+                      <span className="hidden sm:inline">20 yrs</span>
                       <span>30 yrs</span>
                     </div>
                   </>
@@ -429,7 +429,8 @@ export default function Calculator() {
           {/* Scenario comparison table */}
           {!calc.flip && calc.scenarios && (
             <Card icon="⚖️" title="Scenario Comparison">
-              <table className="w-full border-collapse font-sans">
+              <div className="overflow-x-auto -mx-1 px-1">
+              <table className="w-full border-collapse font-sans min-w-105">
                 <thead>
                   <tr>
                     {['Scenario', 'Annual ROI', 'Monthly Cash Flow', 'Break-even'].map((h, i) => (
@@ -452,6 +453,7 @@ export default function Calculator() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </Card>
           )}
 

@@ -30,11 +30,10 @@ export default function Footer() {
     <footer className="bg-ink text-paper2/60 font-sans">
 
       {/* ── Main footer body ── */}
-      <div className="max-w-310 mx-auto pt-14 px-6 pb-10"
-        style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1.2fr', gap: 40, alignItems: 'start' }}>
+      <div className="max-w-310 mx-auto pt-12 sm:pt-14 px-4 sm:px-6 pb-10 grid grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] gap-8 lg:gap-10 items-start">
 
-        {/* Brand column */}
-        <div>
+        {/* Brand — full width on mobile */}
+        <div className="col-span-2 lg:col-span-1">
           <div className="mb-4.5">
             <Logo size={44} />
           </div>
@@ -51,7 +50,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Nav columns */}
+        {/* Nav columns — each 1 col on mobile, auto on desktop */}
         {NAV_GROUPS.map(group => (
           <div key={group.label}>
             <div className="text-2.5 font-bold tracking-[.18em] uppercase text-paper2/35 mb-4">
@@ -72,8 +71,8 @@ export default function Footer() {
           </div>
         ))}
 
-        {/* Contact column */}
-        <div>
+        {/* Contact — full width on mobile */}
+        <div className="col-span-2 lg:col-span-1">
           <div className="text-2.5 font-bold tracking-[.18em] uppercase text-paper2/35 mb-4">
             Get in touch
           </div>
@@ -93,11 +92,11 @@ export default function Footer() {
 
       {/* ── Bottom strip ── */}
       <div className="border-t border-paper2/8">
-        <div className="max-w-310 mx-auto px-6 py-4.5 flex flex-wrap gap-3.5 items-center justify-between">
+        <div className="max-w-310 mx-auto px-4 sm:px-6 py-4.5 flex flex-col sm:flex-row gap-3 sm:gap-3.5 items-center sm:justify-between text-center sm:text-left">
           <span className="text-3 text-paper2/35">
             © {year} I Love DR Realty · All rights reserved
           </span>
-          <div className="flex gap-5 text-3 items-center">
+          <div className="flex flex-wrap gap-4 sm:gap-5 text-3 items-center justify-center">
             <span className="font-serif italic text-paper2/25 tracking-[.04em]">Dream · Invest · Live</span>
             <button onClick={() => go('contact')} className="bg-transparent border-none cursor-pointer p-0 text-3 text-paper2/35 font-sans">Privacy Policy</button>
             <button onClick={() => go('contact')} className="bg-transparent border-none cursor-pointer p-0 text-3 text-paper2/35 font-sans">Terms of Service</button>

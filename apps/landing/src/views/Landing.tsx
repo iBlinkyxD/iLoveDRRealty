@@ -47,14 +47,11 @@ export default function Landing() {
     <div className="bg-paper">
 
       {/* ─────────────────────── Hero ─────────────────────── */}
-      <div className="relative overflow-hidden bg-ink min-h-145"
+      <div className="relative overflow-hidden bg-ink"
         style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0 bg-ink/80" />
-        <div className="absolute inset-0 flex items-center z-10">
-          <div
-            className="max-w-335 w-full mx-auto px-7 grid gap-10 items-center"
-            style={{ gridTemplateColumns: '1.15fr 0.85fr' }}
-          >
+        <div className="relative z-10 max-w-335 w-full mx-auto px-4 sm:px-7 py-16 sm:py-20 lg:py-0 lg:min-h-145 lg:flex lg:items-center">
+          <div className="w-full grid gap-10 items-center grid-cols-1 lg:grid-cols-[1.15fr_0.85fr]">
             {/* Left */}
             <div>
               <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold font-sans">
@@ -68,8 +65,8 @@ export default function Landing() {
               </p>
 
               {/* Search bar */}
-              <div className="mt-7 bg-white rounded-2xl p-2 flex flex-wrap gap-1.5 max-w-160 items-stretch shadow-[rgba(0,0,0,0.4)_0px_20px_50px_-20px]">
-                <div className="flex-[1_1_150px] px-3 py-1.5 border-r border-line">
+              <div className="mt-7 bg-white rounded-2xl p-2 flex flex-wrap gap-1.5 w-full max-w-160 items-stretch shadow-[rgba(0,0,0,0.4)_0px_20px_50px_-20px]">
+                <div className="flex-[1_1_150px] px-3 py-1.5 sm:border-r border-line">
                   <div className="text-2.5 font-bold tracking-widest uppercase text-dim">Location</div>
                   <select value={hLoc} onChange={e => setHLoc(e.target.value)} className="border-none bg-transparent font-sans text-sm text-ink cursor-pointer w-full mt-0.5 outline-none">
                     <option value="">Anywhere</option>
@@ -78,7 +75,7 @@ export default function Landing() {
                     )}
                   </select>
                 </div>
-                <div className="flex-[1_1_130px] px-3 py-1.5 border-r border-line">
+                <div className="flex-[1_1_130px] px-3 py-1.5 sm:border-r border-line">
                   <div className="text-2.5 font-bold tracking-widest uppercase text-dim">Type</div>
                   <select value={hType} onChange={e => setHType(e.target.value)} className="border-none bg-transparent font-sans text-sm text-ink cursor-pointer w-full mt-0.5 outline-none">
                     {['All', 'Villa', 'Condo', 'Commercial'].map(t =>
@@ -86,7 +83,7 @@ export default function Landing() {
                     )}
                   </select>
                 </div>
-                <div className="flex-[1_1_120px] px-3 py-1.5 border-r border-line">
+                <div className="flex-[1_1_120px] px-3 py-1.5 sm:border-r border-line">
                   <div className="text-2.5 font-bold tracking-widest uppercase text-dim">Budget</div>
                   <select value={hBudget} onChange={e => setHBudget(e.target.value)} className="border-none bg-transparent font-sans text-sm text-ink cursor-pointer w-full mt-0.5 outline-none">
                     <option value="">Any price</option>
@@ -97,7 +94,7 @@ export default function Landing() {
                 </div>
                 <button
                   onClick={() => go('search')}
-                  className="font-sans text-sm font-semibold cursor-pointer px-6 rounded-full shrink-0 inline-flex items-center gap-2 border border-coral bg-coral text-white"
+                  className="font-sans text-sm font-semibold cursor-pointer px-6 py-3 sm:py-0 rounded-full w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 border border-coral bg-coral text-white"
                 >
                   <Search size={17} /> Search
                 </button>
@@ -119,7 +116,7 @@ export default function Landing() {
             </div>
 
             {/* Right — property photos */}
-            <div className="grid grid-cols-2 grid-rows-2 gap-3 h-100">
+            <div className="hidden lg:grid grid-cols-2 grid-rows-2 gap-3 h-100">
               {/* Large left — luxury villa */}
               <div className="row-span-2 rounded-3xl overflow-hidden relative shadow-[rgba(0,0,0,0.5)_0px_20px_50px_-20px]"
                 style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -152,7 +149,7 @@ export default function Landing() {
 
       {/* ─────────────────────── Stats strip ─────────────────────── */}
       <div className="bg-ink border-t border-[rgba(246,241,231,.08)]">
-        <div className="max-w-310 mx-auto px-6 py-6.5 flex flex-wrap gap-6 justify-between">
+        <div className="max-w-310 mx-auto px-4 sm:px-6 py-6.5 grid grid-cols-2 sm:flex sm:flex-wrap gap-6 sm:justify-between">
           {STATS.map(({ value, label }) => (
             <div key={label}>
               <div className="font-serif text-7.5 font-semibold text-white">{value}</div>
@@ -163,7 +160,7 @@ export default function Landing() {
       </div>
 
       {/* ─────────────────────── Deal of the Week ─────────────────────── */}
-      <div className="bg-paper pt-17.5 px-6 pb-7.5">
+      <div className="bg-paper pt-14 sm:pt-17.5 px-4 sm:px-6 pb-7.5">
         <div className="max-w-310 mx-auto">
           <div className="flex items-center gap-3 mb-5.5 flex-wrap">
             <span className="inline-flex items-center gap-1.75 px-3.5 py-1.5 rounded-full bg-gold text-ink text-2.75 font-extrabold tracking-[0.14em] uppercase">
@@ -172,37 +169,34 @@ export default function Landing() {
             <span className="font-sans text-3.25 text-dim">Updated every Monday by our team</span>
           </div>
 
-          <div
-            className="bg-paper border border-line-soft rounded-3xl overflow-hidden shadow-[rgba(0,16,46,0.3)_0px_30px_60px_-40px] grid"
-            style={{ gridTemplateColumns: '1.05fr 0.95fr' }}
-          >
+          <div className="bg-paper border border-line-soft rounded-3xl overflow-hidden shadow-[rgba(0,16,46,0.3)_0px_30px_60px_-40px] grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
             {/* Left — property photo */}
-            <div className="relative h-115 overflow-hidden"
+            <div className="relative h-64 lg:h-115 overflow-hidden"
               style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=900&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
               <div className="absolute top-4.5 left-4.5 flex flex-col gap-2">
                 <span className="bg-coral text-white text-2.75 font-extrabold tracking-[0.08em] uppercase px-2.75 py-1.25 rounded-full font-sans">Save $22,000</span>
                 <span className="bg-ink/80 text-white text-[10.5px] font-bold px-2.75 py-1.25 rounded-full backdrop-blur-1.5 font-sans">📍 Sosúa · Puerto Plata</span>
               </div>
-              <div className="absolute bottom-4.5 left-4.5 right-4.5 flex gap-2">
+              <div className="absolute bottom-4.5 left-4.5 right-4.5 flex flex-wrap gap-1.5">
                 {['Seller financing', 'CONFOTUR-ready', 'Rooftop terrace'].map(tag => (
-                  <span key={tag} className="bg-white/95 text-ink text-2.75 font-bold px-2.5 py-1.25 rounded-full font-sans">{tag}</span>
+                  <span key={tag} className="bg-white/95 text-ink text-2.75 font-bold px-2.5 py-1.25 rounded-full font-sans whitespace-nowrap">{tag}</span>
                 ))}
               </div>
             </div>
 
             {/* Right — details */}
-            <div className="px-9 py-8 flex flex-col">
+            <div className="px-5 py-6 sm:px-9 sm:py-8 flex flex-col">
               <div className="font-sans text-3 font-bold tracking-[0.12em] uppercase text-coral mb-2">This week's pick</div>
               <h2 className="font-serif text-7 font-bold text-ink leading-[1.15] mb-2">Two condos, one rooftop, one fantastic price.</h2>
               <p className="font-sans text-[14.5px] text-ink2 leading-[1.65] mb-4.5">
                 A 2BR + 1BR pair above one of Sosúa's most beloved restaurants — with a private rooftop terrace and a per-square-meter price that's hard to find on the north coast. The seller is offering{' '}
                 <strong className="text-ink">$77,000 in financing for 12 months</strong> to qualified buyers.
               </p>
-              <div className="grid grid-cols-3 gap-3.5 py-4 border-t border-b border-line-soft mb-4.5">
+              <div className="flex divide-x divide-line-soft py-4 border-t border-b border-line-soft mb-4.5">
                 {[['2+1', 'Bedrooms'], ['2+1', 'Bathrooms'], ['184 m²', 'Total area']].map(([val, lbl]) => (
-                  <div key={lbl}>
-                    <div className="font-serif text-5.5 font-bold text-ink">{val}</div>
-                    <div className="font-sans text-2.75 text-dim tracking-[0.06em] uppercase mt-0.5">{lbl}</div>
+                  <div key={lbl} className="flex-1 pr-3 last:pr-0 first:pl-0 pl-3">
+                    <div className="font-serif text-5 sm:text-5.5 font-bold text-ink">{val}</div>
+                    <div className="font-sans text-[10px] sm:text-2.75 text-dim sm:tracking-[0.06em] uppercase mt-0.5 leading-tight">{lbl}</div>
                   </div>
                 ))}
               </div>
@@ -211,11 +205,11 @@ export default function Landing() {
                 <div className="font-sans text-4 text-dim line-through">$199,000</div>
                 <div className="font-sans text-3 text-brand font-bold px-2 py-0.75 bg-brand/10 rounded-full">−11%</div>
               </div>
-              <div className="flex gap-2.5 mt-auto">
-                <button onClick={() => go('search')} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center gap-2 border border-coral bg-coral text-white">
+              <div className="flex flex-col sm:flex-row gap-2.5 mt-auto">
+                <button onClick={() => go('search')} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center justify-center gap-2 border border-coral bg-coral text-white">
                   View this property <ArrowRight size={16} />
                 </button>
-                <button onClick={() => go('calculator')} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center gap-2 border border-ink bg-transparent text-ink">
+                <button onClick={() => go('calculator')} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center justify-center gap-2 border border-ink bg-transparent text-ink">
                   Run ROI numbers
                 </button>
               </div>
@@ -230,26 +224,23 @@ export default function Landing() {
       </div>
 
       {/* ─────────────────────── Founder Story ─────────────────────── */}
-      <div className="bg-paper2 py-20 px-6 relative overflow-hidden">
+      <div className="bg-paper2 py-14 sm:py-20 px-4 sm:px-6 relative overflow-hidden">
         <div className="max-w-295 mx-auto relative">
           {/* 2-col: photo collage left, story right */}
-          <div
-            className="grid gap-15 items-center"
-            style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.15fr)' }}
-          >
+          <div className="grid gap-10 lg:gap-15 items-center grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
             {/* Left — photo collage */}
-            <div className="relative min-h-115">
+            <div className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-[0_30px_70px_-30px_rgba(0,16,46,.4)]">
-                <div className="h-95 bg-ink" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div className="h-64 sm:h-80 lg:h-95 bg-ink" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 <div className="absolute inset-0 bg-ink/40" />
                 <div className="absolute bottom-4 left-4.5 text-paper text-2.75 tracking-[.12em] uppercase font-bold font-sans">
                   The Founders · Las Terrenas, 2019
                 </div>
               </div>
-              <div className="absolute -bottom-5 -right-5 w-50 h-37.5 rounded-xl overflow-hidden border-4 border-paper shadow-[0_20px_40px_-20px_rgba(0,16,46,.4)]">
+              <div className="hidden lg:block absolute -bottom-5 -right-5 w-50 h-37.5 rounded-xl overflow-hidden border-4 border-paper shadow-[0_20px_40px_-20px_rgba(0,16,46,.4)]">
                 <div className="h-37.5 bg-ink" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
               </div>
-              <div className="absolute top-5 -left-5 bg-coral text-white px-4 py-2.5 rounded-full text-3 font-bold shadow-[0_12px_30px_-12px_rgba(225,15,31,.5)] flex items-center gap-2 font-sans">
+              <div className="absolute top-4 left-4 lg:-left-5 bg-coral text-white px-4 py-2.5 rounded-full text-3 font-bold shadow-[0_12px_30px_-12px_rgba(225,15,31,.5)] flex items-center gap-2 font-sans">
                 <span className="text-3.5">🇺🇸 → 🇩🇴</span> Made the move in 2019
               </div>
             </div>
@@ -334,7 +325,7 @@ export default function Landing() {
       </div>
 
       {/* ─────────────────────── Roles ─────────────────────── */}
-      <div className="max-w-310 mx-auto pt-18 px-6 pb-5">
+      <div className="max-w-310 mx-auto pt-14 sm:pt-18 px-4 sm:px-6 pb-5">
         <div className="text-center max-w-150 mx-auto mb-11">
           <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-gold">Built for everyone</div>
           <h2 className="font-serif text-[clamp(28px,3.6vw,42px)] font-semibold text-ink leading-[1.12] tracking-[-0.02em] mt-3">
@@ -373,7 +364,7 @@ export default function Landing() {
       </div>
 
       {/* ─────────────────────── Featured Properties ─────────────────────── */}
-      <div className="max-w-310 mx-auto pt-11 px-6 pb-20">
+      <div className="max-w-310 mx-auto pt-11 px-4 sm:px-6 pb-16 sm:pb-20">
         <div className="flex items-end justify-between mb-6.5 flex-wrap gap-3">
           <div>
             <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea">Hand-picked</div>

@@ -66,7 +66,7 @@ function PropertyDetailInner() {
   const imgs   = [listing.img, ...GALLERY_EXTRAS]
 
   return (
-    <div className="max-w-310 mx-auto px-6 py-5 pb-20">
+    <div className="max-w-310 mx-auto px-4 sm:px-6 py-5 pb-20">
 
       {/* Back */}
       <button onClick={() => go('search')}
@@ -105,13 +105,15 @@ function PropertyDetailInner() {
       </div>
 
       {/* Gallery */}
-      <div className="mb-7 grid grid-cols-[2fr_1fr_1fr] grid-rows-[172px_172px] gap-2">
+      <div className="mb-7 grid grid-cols-[2fr_1fr] sm:grid-cols-[2fr_1fr_1fr] grid-rows-[130px_130px] sm:grid-rows-[172px_172px] gap-2">
         <div className="rounded-2xl overflow-hidden row-span-2 bg-cover bg-center"
           style={{ backgroundImage: `url(${imgs[0]})` }} />
-        {[1, 2, 3].map(i => (
-          <div key={i} className="rounded-xl overflow-hidden bg-cover bg-center"
-            style={{ backgroundImage: `url(${imgs[i]})` }} />
-        ))}
+        <div className="rounded-xl overflow-hidden bg-cover bg-center"
+          style={{ backgroundImage: `url(${imgs[1]})` }} />
+        <div className="rounded-xl overflow-hidden bg-cover bg-center hidden sm:block"
+          style={{ backgroundImage: `url(${imgs[2]})` }} />
+        <div className="rounded-xl overflow-hidden bg-cover bg-center hidden sm:block"
+          style={{ backgroundImage: `url(${imgs[3]})` }} />
         <div className="rounded-xl overflow-hidden bg-cover bg-center relative"
           style={{ backgroundImage: `url(${imgs[4] ?? imgs[1]})` }}>
           <div className="absolute inset-0 grid place-items-center text-white text-[13px] font-semibold font-sans bg-ink/52">
@@ -121,7 +123,7 @@ function PropertyDetailInner() {
       </div>
 
       {/* Main two-column layout */}
-      <div className="grid grid-cols-[1fr_360px] gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 items-start">
 
         {/* ── LEFT ── */}
         <div>
@@ -174,7 +176,7 @@ function PropertyDetailInner() {
 
               {/* KPI row */}
               <div className="px-6 pt-5 pb-4">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {summaryKpis.map(([n, l], i) => (
                     <div key={i} className={`relative ${i > 0 ? 'pl-4 border-l border-line-soft' : ''}`}>
                       <div className="text-[10.5px] font-bold tracking-wide uppercase text-muted mb-1.5">{l}</div>
@@ -208,7 +210,7 @@ function PropertyDetailInner() {
                   </label>
 
                   {/* Result cards */}
-                  <div className="grid grid-cols-3 gap-3 mt-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
                     {[
                       ['Net annual profit',  calc.net >= 0 ? `$${Math.round(calc.net).toLocaleString()}` : `-$${Math.abs(Math.round(calc.net)).toLocaleString()}`, calc.net >= 0],
                       ['Cash-on-cash ROI',   `${calc.roi.toFixed(1)}%`, calc.roi >= 0],
@@ -326,7 +328,7 @@ function PropertyDetailInner() {
           {/* Things to know */}
           <div className="mt-7">
             <h2 className="font-serif text-[22px] font-semibold text-ink mb-3.5">Things to know</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {THINGS_TO_KNOW.map(([title, items], i) => (
                 <div key={i}>
                   <div className="text-[14px] font-bold text-ink mb-2.5">{title}</div>
@@ -342,7 +344,7 @@ function PropertyDetailInner() {
               <Star size={20} className="text-gold fill-gold" />
               <h2 className="font-serif text-[22px] font-semibold text-ink">4.97 · 142 reviews</h2>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {REVIEWS.map((r, i) => (
                 <div key={i} className="bg-paper2 border border-line-soft rounded-2xl p-4">
                   <div className="flex items-center gap-2.5 mb-2.5">
@@ -370,7 +372,7 @@ function PropertyDetailInner() {
         </div>
 
         {/* ── RIGHT sticky sidebar ── */}
-        <div className="sticky top-22.5 border border-line rounded-2xl p-5.5 bg-white shadow-[0_18px_44px_-30px_rgba(0,16,46,.4)]">
+        <div className="lg:sticky lg:top-22.5 border border-line rounded-2xl p-5.5 bg-white shadow-[0_18px_44px_-30px_rgba(0,16,46,.4)]">
 
           {/* Rent / Buy tabs */}
           <div className="flex bg-paper2 rounded-lg p-1 mb-4.5">

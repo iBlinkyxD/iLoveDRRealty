@@ -2,6 +2,9 @@
 import { useNav } from '../hooks/useNav'
 import { useState, type ChangeEvent } from 'react'
 import { I, CHANNELS } from '../data/contactData'
+import { PhoneInput } from 'react-international-phone'
+import 'react-international-phone/style.css'
+import { isValidPhoneNumber } from 'libphonenumber-js'
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {
   return (
@@ -21,13 +24,39 @@ export default function Contact() {
   const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
 
+  const phoneValid = form.phone.length > 5 && isValidPhoneNumber(form.phone)
+
   const inputCls = 'w-full py-2.75 px-3.25 rounded-lg border border-line bg-paper font-sans text-sm text-ink outline-none'
+
+  const phoneInputStyle: React.CSSProperties = {
+    flex: 1,
+    width: '100%',
+    padding: '0.6875rem 0.8125rem',
+    border: '1px solid #e4ddcf',
+    borderLeft: 'none',
+    borderRadius: '0 0.5rem 0.5rem 0',
+    backgroundColor: '#ffffff',
+    fontFamily: 'inherit',
+    fontSize: '0.875rem',
+    color: '#00102e',
+    outline: 'none',
+  }
+
+  const phoneSelectorStyle: React.CSSProperties = {
+    border: '1px solid #e4ddcf',
+    borderRight: 'none',
+    borderRadius: '0.5rem 0 0 0.5rem',
+    backgroundColor: '#f3f1ea',
+    padding: '0 0.5rem',
+    cursor: 'pointer',
+    height: '100%',
+  }
 
   return (
     <div className="font-sans text-ink">
 
       {/* HERO */}
-      <div className="relative overflow-hidden pt-20 px-6 pb-18"
+      <div className="relative overflow-hidden pt-16 sm:pt-20 px-4 sm:px-6 pb-14 sm:pb-18"
         style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1600&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(135deg, rgba(0,16,46,.94) 0%, rgba(13,34,80,.86) 60%, rgba(0,58,115,.75) 100%)' }} />
@@ -45,8 +74,8 @@ export default function Contact() {
       </div>
 
       {/* CONTENT */}
-      <div className="max-w-275 mx-auto pt-15 px-6 pb-20">
-        <div className="grid gap-9 items-start" style={{ gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.3fr)' }}>
+      <div className="max-w-275 mx-auto pt-12 sm:pt-15 px-4 sm:px-6 pb-16 sm:pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-9 items-start">
 
           {/* Left — channels */}
           <div>
@@ -85,7 +114,7 @@ export default function Contact() {
                 <div className="relative"><Icon d={I.map} size={28} /></div>
                 <div className="relative text-white/70 text-3.25 font-medium">Sosúa, Puerto Plata · Santo Domingo</div>
               </div>
-              <div className="bg-paper2 py-3.5 px-4.5 flex gap-4.5 text-3.25 text-ink2">
+              <div className="bg-paper2 py-3.5 px-4.5 flex flex-wrap gap-x-4.5 gap-y-2 text-3.25 text-ink2">
                 <span><Icon d={I.map} size={14} /> <strong>North coast:</strong> Sosúa, Puerto Plata</span>
                 <span><Icon d={I.map} size={14} /> <strong>Capital:</strong> Santo Domingo</span>
               </div>
@@ -93,7 +122,7 @@ export default function Contact() {
           </div>
 
           {/* Right — form */}
-          <div className="bg-paper border border-line rounded-2xl p-9">
+          <div className="bg-paper border border-line rounded-2xl p-5 sm:p-9">
             {sent ? (
               <div className="text-center py-10 px-5">
                 <div className="text-5xl mb-4">✅</div>
@@ -112,13 +141,25 @@ export default function Contact() {
                     <label className="text-xs font-semibold text-ink2 mb-1.5 block">Full name</label>
                     <input value={form.name} onChange={set('name')} placeholder="Your full name" className={inputCls} />
                   </div>
-                  <div>
+                  <div className="col-span-2 sm:col-span-1">
                     <label className="text-xs font-semibold text-ink2 mb-1.5 block">Email</label>
                     <input type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" className={inputCls} />
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-ink2 mb-1.5 block">Phone / WhatsApp</label>
-                    <input value={form.phone} onChange={set('phone')} placeholder="+1 (829) …" className={inputCls} />
+                  <div className="col-span-2 sm:col-span-1">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-ink2">Phone / WhatsApp</label>
+                      {phoneValid && (
+                        <span className="text-[10.5px] font-semibold text-brand">✓ Valid</span>
+                      )}
+                    </div>
+                    <PhoneInput
+                      defaultCountry="do"
+                      value={form.phone}
+                      onChange={phone => setForm(f => ({ ...f, phone }))}
+                      inputStyle={phoneInputStyle}
+                      countrySelectorStyleProps={{ buttonStyle: phoneSelectorStyle }}
+                      style={{ width: '100%', display: 'flex' }}
+                    />
                   </div>
                 </div>
 
@@ -159,7 +200,7 @@ export default function Contact() {
       </div>
 
       {/* BOTTOM CTA */}
-      <div className="bg-paper2 border-t border-line py-14 px-6">
+      <div className="bg-paper2 border-t border-line py-12 sm:py-14 px-4 sm:px-6">
         <div className="max-w-175 mx-auto text-center">
           <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea mb-3">Not sure where to start?</div>
           <h2 className="font-serif text-[clamp(22px,3vw,34px)] font-bold text-ink mt-2 mb-3.5 tracking-[-.02em]">

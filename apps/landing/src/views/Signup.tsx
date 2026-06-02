@@ -50,10 +50,10 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-74px)] grid grid-cols-2 font-sans">
+    <div className="min-h-[calc(100vh-74px)] grid grid-cols-1 md:grid-cols-2 font-sans">
 
       {/* ── Left panel ── */}
-      <div className="flex flex-col py-15 px-14 relative overflow-hidden">
+      <div className="hidden md:flex flex-col py-15 px-14 relative overflow-hidden">
         {/* Background photo */}
         <div className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1683336474667-420dabe065b5?q=80&w=1471&auto=format&fit=crop)' }} />
@@ -103,7 +103,7 @@ export default function Signup() {
       </div>
 
       {/* ── Right panel — form ── */}
-      <div className="bg-paper2 flex items-center justify-center py-12 px-7 overflow-y-auto">
+      <div className="bg-paper2 flex items-center justify-center py-10 sm:py-12 px-4 sm:px-7 overflow-y-auto">
         <div className="w-full max-w-110">
 
           <h2 className="font-serif text-7 font-bold text-ink mb-1.5 tracking-[-.02em]">Create account</h2>
@@ -115,7 +115,7 @@ export default function Signup() {
             </button>
           </p>
 
-          <div className="bg-paper border border-line rounded-2xl p-7">
+          <div className="bg-paper border border-line rounded-2xl p-5 sm:p-7">
 
             {/* Role picker */}
             <div className="mb-5.5">
@@ -150,26 +150,29 @@ export default function Signup() {
             {/* Phone */}
             <div className="mb-3.5">
               <label className={labelCls}>Phone / WhatsApp</label>
-              <div className="flex rounded-xl border border-line bg-paper">
-                <PhoneInput
-                  defaultCountry="do"
-                  value={phone}
-                  onChange={setPhone}
-                  placeholder="+1 (809) 000-0000"
-                  inputStyle={{
-                    flex: 1, width: '100%', border: 'none', outline: 'none',
-                    background: 'transparent', padding: '0.75rem 0.875rem',
-                    fontFamily: 'inherit', fontSize: '0.9375rem', color: 'var(--color-ink)',
-                  }}
-                  countrySelectorStyleProps={{
-                    buttonStyle: {
-                      border: 'none', borderRight: '1px solid var(--color-line)',
-                      background: 'transparent', padding: '0 0.75rem', cursor: 'pointer',
-                    },
-                  }}
-                  style={{ width: '100%', display: 'flex' }}
-                />
-              </div>
+              <PhoneInput
+                defaultCountry="do"
+                value={phone}
+                onChange={setPhone}
+                placeholder="+1 (809) 000-0000"
+                inputStyle={{
+                  flex: 1, width: '100%', outline: 'none',
+                  border: '1px solid #e4ddcf', borderLeft: 'none',
+                  borderRadius: '0 0.75rem 0.75rem 0',
+                  background: '#ffffff', padding: '0.75rem 0.875rem',
+                  fontFamily: 'inherit', fontSize: '0.9375rem', color: '#00102e',
+                  height: 'auto', boxSizing: 'border-box',
+                }}
+                countrySelectorStyleProps={{
+                  buttonStyle: {
+                    border: '1px solid #e4ddcf', borderRight: 'none',
+                    borderRadius: '0.75rem 0 0 0.75rem',
+                    background: '#ffffff', padding: '0 0.75rem',
+                    cursor: 'pointer', height: '100%',
+                  },
+                }}
+                style={{ width: '100%', display: 'flex' }}
+              />
             </div>
 
             <div className="mb-3.5">
@@ -178,7 +181,7 @@ export default function Signup() {
             </div>
 
             {/* Password + confirm */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
               <div>
                 <label className={labelCls}>Password</label>
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" className={inputCls} />
@@ -225,11 +228,13 @@ export default function Signup() {
             <label className="flex items-start gap-2.25 mb-4.5 text-[12.5px] text-ink2 leading-normal cursor-pointer">
               <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
                 className="accent-coral w-3.75 h-3.75 mt-0.5 shrink-0" />
-              I agree to the{' '}
-              <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">Terms & Conditions</button>
-              {' '}and{' '}
-              <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">Privacy Policy</button>
-              .
+              <span>
+                I agree to the{' '}
+                <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">Terms & Conditions</button>
+                {' '}and{' '}
+                <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">Privacy Policy</button>
+                .
+              </span>
             </label>
 
             <button

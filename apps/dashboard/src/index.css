@@ -2,10 +2,7 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-@tailwind base;
-
 @custom-variant dark (&:is(.dark *));
-@tailwind components;
 @tailwind utilities;
 
 @layer base {
