@@ -2,8 +2,16 @@
 import { useNav } from '../hooks/useNav'
 import { useState } from 'react'
 import { DEMO_ROLES } from '../data/loginData'
+import { Star, Home, Users, Handshake } from 'lucide-react'
 
 const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://dashboard.ilovedrrealty.com'
+
+const STATS = [
+  { value: '4.9',    label: 'Rating',            Icon: Star,      iconCls: 'text-gold fill-gold' },
+  { value: '4,800+', label: 'Active Listings',   Icon: Home,      iconCls: 'text-white/80'       },
+  { value: '12K+',   label: 'Registered Buyers', Icon: Users,     iconCls: 'text-white/80'       },
+  { value: '$2.4B',  label: 'Closed Volume',     Icon: Handshake, iconCls: 'text-white/80'       },
+]
 
 export default function Login() {
   const go = useNav()
@@ -11,19 +19,19 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showDemo, setShowDemo] = useState(false)
 
-  const inputCls = 'w-full py-3 px-3.5 rounded-2.5 border border-line bg-paper font-sans text-3.75 text-ink outline-none transition-colors duration-150'
+  const inputCls = 'w-full py-3 px-3.5 rounded-xl border border-line bg-paper font-sans text-3.75 text-ink outline-none transition-colors duration-150'
 
   return (
     <div className="min-h-[calc(100vh-74px)] grid grid-cols-2 font-sans">
 
       {/* ── Left panel — decorative ── */}
-      <div className="relative overflow-hidden flex flex-col justify-between py-15 px-14"
-        style={{ background: 'linear-gradient(155deg, #00102e 0%, #0d2250 55%, #003a73 100%)' }}>
-        {/* Background orbs */}
-        <div className="absolute -top-20 -right-20 w-105 h-105 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(225,15,31,.15) 0%, transparent 65%)' }} />
-        <div className="absolute -bottom-15 -left-15 w-80 h-80 rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(11,99,171,.2) 0%, transparent 65%)' }} />
+      <div className="relative overflow-hidden flex flex-col justify-between py-15 px-14">
+        {/* Background photo */}
+        <div className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1683336474667-420dabe065b5?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=1200&q=80&auto=format&fit=crop)' }} />
+        {/* Dark gradient overlay — heavy top-left, fades to transparent bottom-right */}
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(135deg, rgba(0,8,24,.97) 0%, rgba(0,16,46,.88) 30%, rgba(0,20,50,.55) 60%, rgba(0,10,30,.18) 100%)' }} />
 
         <div className="relative">
           <button onClick={() => go('landing')} className="bg-transparent border-0 cursor-pointer p-0 mb-12 block">
@@ -40,11 +48,14 @@ export default function Login() {
         </div>
 
         {/* Stats strip */}
-        <div className="relative grid grid-cols-2 gap-4">
-          {[['4,800+', 'Active listings'], ['12K+', 'Registered buyers'], ['320+', 'Verified realtors'], ['$2.4B', 'Properties listed']].map(([v, l], i) => (
-            <div key={i} className="rounded-3 py-3.5 px-4 bg-white/6 border border-white/10">
-              <div className="font-serif text-5.5 font-bold text-white">{v}</div>
-              <div className="text-xs text-white/50 mt-0.75">{l}</div>
+        <div className="relative flex items-center bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 overflow-hidden divide-x divide-white/15">
+          {STATS.map((s, i) => (
+            <div key={i} className="flex-1 flex items-center gap-3 px-5 py-5">
+              <s.Icon size={22} className={s.iconCls} />
+              <div>
+                <div className="font-serif text-5.5 font-bold text-white leading-none">{s.value}</div>
+                <div className="text-xs text-white/55 mt-1.5 leading-none">{s.label}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -62,7 +73,7 @@ export default function Login() {
             </button>
           </p>
 
-          <div className="bg-paper border border-line rounded-4 p-8">
+          <div className="bg-paper border border-line rounded-2xl p-8">
             <div className="mb-4.5">
               <label className="text-xs font-semibold text-ink2 block mb-1.75">Email address</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com" className={inputCls} />
@@ -90,20 +101,21 @@ export default function Login() {
             </div>
 
             {/* Social auth stubs */}
-            <div className="flex flex-col gap-2.5">
-              {[['🇬 Google', '#fff', '#00102e', '#e4ddcf'], ['📘 Facebook', '#1877F2', '#fff', '#1877F2']].map(([l, bg, fg, bd], i) => (
-                <button key={i} style={{ background: bg as string, color: fg as string, border: `1px solid ${bd}` }}
-                  className="w-full py-2.75 rounded-full font-sans text-sm font-semibold cursor-pointer">
-                  {l}
-                </button>
-              ))}
-            </div>
+            <button className="w-full py-2.75 rounded-full font-sans text-sm font-semibold cursor-pointer bg-white border border-[#dadce0] text-[#3c4043] flex items-center justify-center gap-3 hover:bg-[#f8f9fa] transition-colors duration-150">
+              <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+              </svg>
+              Continue with Google
+            </button>
           </div>
 
           {/* Demo roles toggle */}
           <div className="mt-5">
             <button onClick={() => setShowDemo(d => !d)}
-              className="w-full py-3 rounded-3 border border-line bg-paper text-ink2 font-sans text-[13.5px] font-semibold cursor-pointer flex items-center justify-center gap-2">
+              className="w-full py-3 rounded-xl border border-line bg-paper text-ink2 font-sans text-[13.5px] font-semibold cursor-pointer flex items-center justify-center gap-2">
               👤 {showDemo ? 'Hide' : 'Explore'} demo accounts & role access
             </button>
 
@@ -114,9 +126,9 @@ export default function Login() {
                 </p>
                 {DEMO_ROLES.map((r, i) => (
                   <button key={i} onClick={() => window.open(`${DASHBOARD_URL}?role=${r.role}`, '_blank')}
-                    className="bg-paper border border-line-soft rounded-3 overflow-hidden cursor-pointer p-0 text-left w-full">
+                    className="bg-paper border border-line-soft rounded-xl overflow-hidden cursor-pointer p-0 text-left w-full">
                     <div className="flex items-center gap-3 py-3 px-3.5 bg-paper2">
-                      <div className="w-9 h-9 rounded-2.25 text-white grid place-items-center shrink-0 text-4.5"
+                      <div className="w-9 h-9 rounded-xl text-white grid place-items-center shrink-0 text-4.5"
                         style={{ background: r.tone }}>
                         {r.icon}
                       </div>
