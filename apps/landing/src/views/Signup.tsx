@@ -15,7 +15,7 @@ export default function Signup() {
   const [agreed, setAgreed] = useState(false)
   const [done, setDone] = useState(false)
 
-  const needsVerify = role === 'Realtor'
+  const needsVerify = role === 'Realtor' || role === 'Owner'
   const active = ROLES.find(r => r.key === role)!
 
   const inputCls = 'w-full py-3 px-3.5 rounded-xl border border-line bg-paper font-sans text-3.75 text-ink outline-none transition-colors duration-150'
