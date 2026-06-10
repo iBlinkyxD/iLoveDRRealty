@@ -24,7 +24,6 @@
   --color-brand: #1f7a3d;
 
   /* Typography */
-  --font-serif: 'Fraunces', 'Playfair Display', Georgia, serif;
   --font-sans: 'Geist Variable', sans-serif;
   --font-heading: var(--font-sans);
 

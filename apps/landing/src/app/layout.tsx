@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { Toaster } from 'react-hot-toast'
 
 export const metadata: Metadata = {
   title: {
@@ -32,6 +33,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         {children}
         <Footer />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 3500,
+            style: { fontFamily: 'inherit', fontSize: '14px', borderRadius: '12px' },
+          }}
+        />
       </body>
     </html>
   )

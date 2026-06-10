@@ -1,6 +1,6 @@
 'use client'
+import Link from 'next/link'
 import { useNav } from '../hooks/useNav'
-import { Logo } from './Navbar'
 
 const NAV_GROUPS = [
   {
@@ -35,7 +35,9 @@ export default function Footer() {
         {/* Brand — full width on mobile */}
         <div className="col-span-2 lg:col-span-1">
           <div className="mb-4.5">
-            <Logo size={44} />
+            <Link href="/" className="p-0 leading-none block">
+              <img src="/iLoveDRRealty_White.png" alt="I Love DR Realty" className="block w-auto h-11" />
+            </Link>
           </div>
           <p className="text-[13.5px] leading-[1.7] text-paper2/55 max-w-65 mb-5">
             The Dominican Republic's real estate marketplace — verified listings, ROI tools, and a bilingual team that's lived the process.
@@ -97,7 +99,7 @@ export default function Footer() {
             © {year} I Love DR Realty · All rights reserved
           </span>
           <div className="flex flex-wrap gap-4 sm:gap-5 text-3 items-center justify-center">
-            <span className="font-serif italic text-paper2/25 tracking-[.04em]">Dream · Invest · Live</span>
+            <span className="font-sans italic text-paper2/25 tracking-[.04em]">Dream · Invest · Live</span>
             <button onClick={() => go('contact')} className="bg-transparent border-none cursor-pointer p-0 text-3 text-paper2/35 font-sans">Privacy Policy</button>
             <button onClick={() => go('contact')} className="bg-transparent border-none cursor-pointer p-0 text-3 text-paper2/35 font-sans">Terms of Service</button>
           </div>

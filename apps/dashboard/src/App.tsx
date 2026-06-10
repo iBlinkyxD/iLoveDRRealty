@@ -1,16 +1,59 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import Dashboard  from './pages/demo/Dashboard'
-import RoleSelect from './pages/demo/RoleSelect'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { useCurrentUser } from './hooks/useCurrentUser'
+import { logout } from './api/auth'
+import DashLayout from './layouts/DashLayout'
+import Dashboard from './pages/Dashboard'
+import AdminDash from './pages/AdminDash'
 
-export type Role = 'Buyer' | 'Investor' | 'Owner' | 'Realtor' | 'Admin'
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'http://localhost:3000'
+
+export type Role = 'Buyer' | 'Owner' | 'Realtor' | 'Admin'
+
+const ROLE_MAP: Record<string, Role> = {
+  buyer: 'Buyer',
+  owner: 'Owner',
+  realtor: 'Realtor',
+  admin: 'Admin',
+}
+
+function DashboardPage() {
+  const { view = 'home' } = useParams<{ view?: string }>()
+  const navigate = useNavigate()
+  const { data: user, loading, error } = useCurrentUser()
+
+  useEffect(() => {
+    if (!loading && (error || !user)) {
+      window.location.href = `${LANDING_URL}/login`
+    }
+  }, [loading, user, error])
+
+  if (loading || !user) return null
+
+  const role: Role = ROLE_MAP[user.role] ?? 'Buyer'
+  const go = (v: string) => navigate(v === 'home' ? '/' : `/${v}`)
+
+  const handleLogout = async () => {
+    await logout()
+    window.location.href = `${LANDING_URL}/login`
+  }
+
+  return (
+    <DashLayout role={role} view={view} go={go} onLogout={handleLogout} user={user}>
+      {role === 'Admin'
+        ? <AdminDash go={go} view={view} />
+        : <Dashboard go={go} view={view} role={role} user={user} />
+      }
+    </DashLayout>
+  )
+}
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/"          element={<RoleSelect />} />
-      <Route path="/:role"     element={<Dashboard />} />
-      <Route path="/:role/:view" element={<Dashboard />} />
-      <Route path="*"          element={<Navigate to="/" replace />} />
+      <Route path="/"       element={<DashboardPage />} />
+      <Route path="/:view"  element={<DashboardPage />} />
+      <Route path="*"       element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

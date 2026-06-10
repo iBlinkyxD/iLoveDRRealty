@@ -1,0 +1,40 @@
+import axios from 'axios'
+import client from './axios'
+
+function errorMessage(err: unknown): never {
+  if (axios.isAxiosError(err)) {
+    throw new Error(err.response?.data?.detail ?? err.message)
+  }
+  throw err
+}
+
+export async function register(body: {
+  display_name: string
+  email: string
+  password: string
+  phone?: string
+}): Promise<{ email: string; message: string }> {
+  return client.post('/auth/register', body).then(r => r.data).catch(errorMessage)
+}
+
+export async function login(body: {
+  email: string
+  password: string
+}): Promise<{ access_token: string; expires_in: number }> {
+  return client.post('/auth/login', body).then(r => r.data).catch(errorMessage)
+}
+
+export async function verify(body: {
+  email: string
+  code: string
+}): Promise<{ access_token: string; expires_in: number }> {
+  return client.post('/auth/verify', body).then(r => r.data).catch(errorMessage)
+}
+
+export async function resendCode(body: { email: string }): Promise<void> {
+  return client.post('/auth/resend-code', body).then(r => r.data).catch(errorMessage)
+}
+
+export async function getMe(): Promise<{ id: string; email: string; role: string; display_name: string }> {
+  return client.get('/auth/me').then(r => r.data).catch(errorMessage)
+}

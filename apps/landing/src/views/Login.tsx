@@ -1,7 +1,9 @@
 'use client'
 import { useNav } from '../hooks/useNav'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Star, Home, Users, Handshake } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { login, getMe } from '../api/auth'
 
 const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://dashboard.ilovedrrealty.com'
 
@@ -16,7 +18,32 @@ export default function Login() {
   const go = useNav()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    getMe()
+      .then(() => { window.location.href = DASHBOARD_URL })
+      .catch(() => setChecking(false))
+  }, [])
+
+  if (checking) return null
   const inputCls = 'w-full py-3 px-3.5 rounded-xl border border-line bg-paper font-sans text-3.75 text-ink outline-none transition-colors duration-150'
+
+  async function handleLogin() {
+    if (!email || !password) return
+    setLoading(true)
+    try {
+      await login({ email, password })
+      toast.success('Welcome back! Redirecting…')
+      setTimeout(() => { window.location.href = DASHBOARD_URL }, 1500)
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-[calc(100vh-74px)] grid grid-cols-1 md:grid-cols-2 font-sans">
@@ -36,7 +63,7 @@ export default function Login() {
           </button>
 
           <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold mb-3.5">Welcome back</div>
-          <h1 className="font-serif text-[clamp(28px,3vw,42px)] font-extrabold text-white leading-[1.1] tracking-[-.02em] mb-4.5 max-w-95">
+          <h1 className="font-sans text-[clamp(28px,3vw,42px)] font-extrabold text-white leading-[1.1] tracking-[-.02em] mb-4.5 max-w-95">
             Your place in paradise is waiting
           </h1>
           <p className="text-3.75 text-white/65 leading-[1.7] max-w-85">
@@ -50,7 +77,7 @@ export default function Login() {
             <div key={i} className="flex-1 flex items-center gap-3 px-5 py-5">
               <s.Icon size={22} className={s.iconCls} />
               <div>
-                <div className="font-serif text-5.5 font-bold text-white leading-none">{s.value}</div>
+                <div className="font-sans text-5.5 font-bold text-white leading-none">{s.value}</div>
                 <div className="text-xs text-white/55 mt-1.5 leading-none">{s.label}</div>
               </div>
             </div>
@@ -62,7 +89,7 @@ export default function Login() {
       <div className="bg-paper2 flex items-center justify-center py-10 sm:py-15 px-4 sm:px-7">
         <div className="w-full max-w-105">
 
-          <h2 className="font-serif text-7.5 font-bold text-ink mb-1.5 tracking-[-.02em]">Log in</h2>
+          <h2 className="font-sans text-7.5 font-bold text-ink mb-1.5 tracking-[-.02em]">Log in</h2>
           <p className="text-[14.5px] text-ink2 mb-8">
             Don't have an account?{' '}
             <button onClick={() => go('signup')} className="bg-transparent border-0 cursor-pointer text-coral font-bold text-[14.5px] font-sans p-0">
@@ -81,14 +108,40 @@ export default function Login() {
                 <label className="text-xs font-semibold text-ink2">Password</label>
                 <button className="bg-transparent border-0 cursor-pointer text-xs text-sea font-semibold font-sans p-0">Forgot password?</button>
               </div>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className={inputCls} />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={`${inputCls} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer p-0 text-ink2 hover:text-ink transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>
+                    </svg>
+                  ) : (
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
-              onClick={() => window.open(DASHBOARD_URL, '_blank')}
-              className="w-full py-3.25 rounded-full border-none cursor-pointer bg-coral text-white font-sans text-3.75 font-bold transition-colors duration-150"
+              onClick={handleLogin}
+              disabled={loading || !email || !password}
+              className="w-full py-3.25 rounded-full border-none cursor-pointer bg-coral text-white font-sans text-3.75 font-bold transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Log in
+              {loading ? 'Logging in…' : 'Log in'}
             </button>
 
             <div className="flex items-center gap-3 my-5.5">

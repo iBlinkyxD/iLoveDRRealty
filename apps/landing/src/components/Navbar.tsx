@@ -6,13 +6,12 @@ import { NAV_ITEMS } from '../design'
 import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://dashboard.ilovedrrealty.com'
 
-export function Logo({ size = 44 }: { size?: number }) {
+export function Logo({ size = 42 }: { size?: number }) {
   return (
     <Link href="/" className="p-0 leading-none block">
       <img
-        src="/ILoveDRRealty_Logo.png"
+        src="/ILoveDRRealty_Dark.png"
         alt="I Love DR Realty"
         className="block w-auto"
         style={{ height: size }}
@@ -29,10 +28,10 @@ export default function Navbar() {
 
   return (
     <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-3.5 border-b border-line">
-      <div className="max-w-335 mx-auto px-4 sm:px-7 h-16 min-[1080px]:h-18.5 flex items-center gap-3.5">
+      <div className="max-w-335 mx-auto px-4 sm:px-7 h-24 flex items-center gap-3.5">
 
         <div className="flex-1 flex justify-start">
-          <Logo size={38} />
+          <Logo size={48} />
         </div>
 
         {/* Desktop nav */}
@@ -57,14 +56,6 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden min-[1080px]:flex flex-1 gap-2 items-center justify-end">
-          <a
-            href={DASHBOARD_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-sans text-[13.5px] font-semibold text-sea bg-transparent border border-sea py-2 px-3.5 rounded-full no-underline"
-          >
-            Dashboard →
-          </a>
           <button
             onClick={() => go('login')}
             className="font-sans text-[13.5px] font-semibold cursor-pointer text-ink bg-transparent border-none py-2.25 px-3.5"
@@ -120,14 +111,6 @@ export default function Navbar() {
           >
             Log in
           </button>
-          <a
-            href={DASHBOARD_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-sans text-sm font-semibold text-sea border border-sea py-3 px-4 rounded-xl text-center no-underline"
-          >
-            Dashboard →
-          </a>
         </div>
       )}
     </div>

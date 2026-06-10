@@ -89,7 +89,7 @@ function KpiCard({ label, value, kind, sub, highlight }: {
     <div className={`rounded-xl py-3.5 px-4 ${highlight ? 'border-none' : 'border border-[#E2E8F0]'}`}
       style={{ background: highlight ? 'linear-gradient(135deg, #0D1B3E 0%, #1a3a6e 100%)' : '#F8F9FC' }}>
       <div className={`text-[10.5px] font-bold tracking-[.08em] uppercase mb-1.5 ${highlight ? 'text-white/70' : 'text-[#556070]'}`}>{label}</div>
-      <div className={`font-serif text-6.5 font-bold leading-none ${valColor}`}>{value}</div>
+      <div className={`font-sans text-6.5 font-bold leading-none ${valColor}`}>{value}</div>
       <div className={`text-2.75 mt-1.5 ${highlight ? 'text-white/60' : 'text-[#556070]'}`}>{sub}</div>
     </div>
   )
@@ -253,7 +253,7 @@ export default function Calculator() {
           <div className="text-2.75 font-bold tracking-[.18em] uppercase text-[#F5A623] mb-3">
             DR Real Estate · ROI Calculator
           </div>
-          <h1 className="font-serif text-[clamp(28px,4vw,52px)] font-extrabold text-white leading-[1.05] tracking-[-.02em] mb-3.5 max-w-175">
+          <h1 className="font-sans text-[clamp(28px,4vw,52px)] font-extrabold text-white leading-[1.05] tracking-[-.02em] mb-3.5 max-w-175">
             Run the numbers before you <em className="not-italic text-[#F5A623]">buy</em>
           </h1>
           <p className="text-4 text-white/70 leading-[1.6] max-w-155">
@@ -368,7 +368,7 @@ export default function Calculator() {
           {!calc.flip && calc.years.length > 0 && (
             <Card>
               <div className="flex justify-between items-center mb-3.5">
-                <div className="font-serif text-4.25 font-bold text-[#0D1B3E]">5-Year Cash Flow Projection</div>
+                <div className="font-sans text-4.25 font-bold text-[#0D1B3E]">5-Year Cash Flow Projection</div>
                 <div className="flex gap-3.5 text-[11.5px] text-[#556070]">
                   {[['#10b981', 'Income'], ['#ef4444', 'Expenses'], ['#0099CC', 'Net']].map(([col, l], i) => (
                     <span key={i} className="inline-flex items-center gap-1.25">
@@ -478,7 +478,7 @@ export default function Calculator() {
           <div className="rounded-2xl p-6 text-center"
             style={{ background: 'linear-gradient(135deg, #0D1B3E 0%, #1a3a6e 100%)' }}>
             <div className="text-4.5 mb-2">🏡</div>
-            <div className="font-serif text-4.5 font-bold text-white mb-2">Ready to move forward?</div>
+            <div className="font-sans text-4.5 font-bold text-white mb-2">Ready to move forward?</div>
             <p className="text-3.25 text-white/65 mb-4 leading-normal">Our team can validate these numbers against real listings and current market data.</p>
             <div className="flex gap-2.5 justify-center flex-wrap">
               <button onClick={() => go('contact')}

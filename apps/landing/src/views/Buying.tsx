@@ -25,7 +25,7 @@ export default function Buying() {
         <div className="relative z-10 max-w-310 w-full mx-auto px-4 sm:px-7 py-16 sm:py-20 lg:py-0 lg:min-h-115 lg:flex lg:items-center">
           <div>
             <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">For buyers &amp; investors</div>
-            <h1 className="font-serif text-[clamp(28px,5.5vw,60px)] font-bold text-white leading-[1.04] tracking-[-.02em] mt-4 mb-4.5 max-w-190">
+            <h1 className="font-sans text-[clamp(28px,5.5vw,60px)] font-bold text-white leading-[1.04] tracking-[-.02em] mt-4 mb-4.5 max-w-190">
               Buying in the DR doesn't have to be a leap of faith.
             </h1>
             <p className="font-sans text-4 sm:text-4.5 text-white/78 leading-[1.6] max-w-140 mb-7">
@@ -50,7 +50,7 @@ export default function Buying() {
         <div className="max-w-275 mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
             <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">Why this matters</div>
-            <h2 className="font-serif text-8 font-semibold text-ink mt-2.5 leading-[1.15]">
+            <h2 className="font-sans text-8 font-semibold text-ink mt-2.5 leading-[1.15]">
               The DR market is fragmented. Local expertise is the whole difference.
             </h2>
           </div>
@@ -65,7 +65,7 @@ export default function Buying() {
       <div className="max-w-310 mx-auto pt-14 sm:pt-17.5 px-4 sm:px-7 pb-12.5">
         <div className="text-center max-w-155 mx-auto mb-8 sm:mb-11">
           <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-sea">Why buyers work with us</div>
-          <h2 className="font-serif text-7 sm:text-9 font-semibold text-ink mt-2.5 tracking-[-.01em]">
+          <h2 className="font-sans text-7 sm:text-9 font-semibold text-ink mt-2.5 tracking-[-.01em]">
             What you get with I♥DR Realty
           </h2>
         </div>
@@ -77,7 +77,7 @@ export default function Buying() {
                 <Icon d={p.icon} size={26} />
               </div>
               <div>
-                <h3 className="font-serif text-5 font-semibold text-ink mb-2">{p.title}</h3>
+                <h3 className="font-sans text-5 font-semibold text-ink mb-2">{p.title}</h3>
                 <p className="font-sans text-sm text-ink2 leading-[1.6]">{p.desc}</p>
               </div>
             </div>
@@ -90,7 +90,7 @@ export default function Buying() {
         <div className="max-w-310 mx-auto">
           <div className="text-center max-w-160 mx-auto mb-8 sm:mb-11">
             <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">More than a "real estate agent"</div>
-            <h2 className="font-serif text-7 sm:text-9 font-semibold text-white mt-2.5 tracking-[-.01em]">
+            <h2 className="font-sans text-7 sm:text-9 font-semibold text-white mt-2.5 tracking-[-.01em]">
               What our team actually does for you
             </h2>
             <p className="font-sans text-3.75 text-white/65 leading-[1.6] mt-3">
@@ -103,7 +103,7 @@ export default function Buying() {
                 <div className="w-10 h-10 rounded-lg bg-gold text-ink grid place-items-center mb-3.5">
                   <Icon d={s.icon} size={22} />
                 </div>
-                <h3 className="font-serif text-4.25 font-semibold text-white mb-2">{s.title}</h3>
+                <h3 className="font-sans text-4.25 font-semibold text-white mb-2">{s.title}</h3>
                 <p className="font-sans text-[13.5px] text-white/70 leading-[1.6]">{s.desc}</p>
               </div>
             ))}
@@ -115,7 +115,7 @@ export default function Buying() {
       <div className="max-w-275 mx-auto py-14 sm:py-17.5 px-4 sm:px-7">
         <div className="text-center max-w-155 mx-auto mb-11">
           <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">The process</div>
-          <h2 className="font-serif text-9 font-semibold text-ink mt-2.5 tracking-[-.01em]">
+          <h2 className="font-sans text-9 font-semibold text-ink mt-2.5 tracking-[-.01em]">
             From first call to keys in hand
           </h2>
           <p className="font-sans text-3.75 text-ink2 leading-[1.6] mt-3">
@@ -125,9 +125,9 @@ export default function Buying() {
         <div className="flex flex-col gap-3.5">
           {STEPS.map(([num, title, desc], i) => (
             <div key={i} className="flex gap-5.5 p-5.5 bg-paper border border-line-soft rounded-2xl">
-              <div className="font-serif text-8 font-bold text-coral leading-none min-w-12.5">{num}</div>
+              <div className="font-sans text-8 font-bold text-coral leading-none min-w-12.5">{num}</div>
               <div>
-                <h3 className="font-serif text-4.75 font-semibold text-ink mb-1.5">{title}</h3>
+                <h3 className="font-sans text-4.75 font-semibold text-ink mb-1.5">{title}</h3>
                 <p className="font-sans text-sm text-ink2 leading-[1.6]">{desc}</p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function Buying() {
             style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
           <div>
             <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-brand">Find a trusted partner</div>
-            <h2 className="font-serif text-8 font-semibold text-ink mt-2.5 tracking-[-.01em] mb-5">
+            <h2 className="font-sans text-8 font-semibold text-ink mt-2.5 tracking-[-.01em] mb-5">
               What working with I♥DR Realty actually means
             </h2>
             <ul className="list-none p-0 m-0">
@@ -163,7 +163,7 @@ export default function Buying() {
       <div className="bg-ink py-14 sm:py-17.5 px-4 sm:px-7">
         <div className="max-w-200 mx-auto text-center">
           <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">What we believe</div>
-          <p className="font-serif text-xl sm:text-2xl font-medium italic text-white leading-normal mt-4.5">
+          <p className="font-sans text-xl sm:text-2xl font-medium italic text-white leading-normal mt-4.5">
             "Buying property abroad shouldn't feel like a gamble. It should feel like making an informed decision — with someone in your corner who knows the country, the law, and the market better than you do, and is willing to tell you the truth."
           </p>
           <p className="font-sans text-3.25 text-white/55 mt-4.5 tracking-[.06em] uppercase font-bold">
@@ -176,7 +176,7 @@ export default function Buying() {
       <div className="bg-coral-deep py-12 sm:py-15 px-4 sm:px-7">
         <div className="max-w-240 mx-auto flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
           <div>
-            <h2 className="font-serif text-6 sm:text-7.5 font-semibold text-white mb-2">
+            <h2 className="font-sans text-6 sm:text-7.5 font-semibold text-white mb-2">
               Ready to find your place in paradise?
             </h2>
             <p className="font-sans text-3.75 text-white/85 leading-normal">

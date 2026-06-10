@@ -56,11 +56,11 @@ export default function ArticleDetail({ slug }: { slug: string }) {
               {a.catLabel} · {a.date}
             </span>
 
-            <h1 className="font-serif text-[clamp(26px,4vw,44px)] font-bold text-ink leading-[1.08] tracking-[-.02em] mb-4">
+            <h1 className="font-sans text-[clamp(26px,4vw,44px)] font-bold text-ink leading-[1.08] tracking-[-.02em] mb-4">
               {a.title}
             </h1>
 
-            <p className="font-serif text-[19px] italic text-ink2 leading-[1.6] mb-6">
+            <p className="font-sans text-[19px] italic text-ink2 leading-[1.6] mb-6">
               {a.lede}
             </p>
 
@@ -90,7 +90,7 @@ export default function ArticleDetail({ slug }: { slug: string }) {
                 type === 'h' ? (
                   <h2
                     key={i}
-                    className="font-serif text-6 font-semibold text-ink mt-8 mb-3 leading-[1.2]"
+                    className="font-sans text-6 font-semibold text-ink mt-8 mb-3 leading-[1.2]"
                   >
                     {content}
                   </h2>
@@ -133,7 +133,7 @@ export default function ArticleDetail({ slug }: { slug: string }) {
               <div className="flex flex-col gap-4">
                 {a.facts.map(([n, l], i) => (
                   <div key={i}>
-                    <div className="font-serif text-6 font-bold" style={{ color: '#f0a800' }}>{n}</div>
+                    <div className="font-sans text-6 font-bold" style={{ color: '#f0a800' }}>{n}</div>
                     <div className="text-[11.5px] font-sans mt-0.5" style={{ color: 'rgba(247,244,236,.65)' }}>{l}</div>
                   </div>
                 ))}
@@ -167,7 +167,7 @@ export default function ArticleDetail({ slug }: { slug: string }) {
 
             {/* CTA card */}
             <div className="rounded-2xl p-5.5 text-white" style={{ background: 'linear-gradient(135deg, #00102e 0%, #1a3a6e 100%)' }}>
-              <div className="font-serif text-5 font-semibold text-white leading-[1.2] mb-2.5">
+              <div className="font-sans text-5 font-semibold text-white leading-[1.2] mb-2.5">
                 Ready to make your move?
               </div>
               <p className="text-[12.5px] font-sans leading-[1.6] mb-4" style={{ color: 'rgba(247,244,236,.7)' }}>

@@ -5,7 +5,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Brand tokens — generates bg-ink, text-coral, font-serif, etc. */
+/* Brand tokens — generates bg-ink, text-coral, font-sans, etc. */
 @theme {
   --color-ink: #00102e;
   --color-ink2: #33425f;
@@ -22,7 +22,6 @@
   --color-brand: #1f7a3d;
   --color-dim: #7884a0;
 
-  --font-serif: 'Fraunces', 'Playfair Display', Georgia, serif;
   --font-sans: 'Mona Sans', 'Inter', -apple-system, system-ui, sans-serif;
 }
 

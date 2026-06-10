@@ -2,8 +2,10 @@
 import { useNav } from '../hooks/useNav'
 import { useState, useMemo, useEffect, type ReactNode } from 'react'
 import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp, SlidersHorizontal, X } from 'lucide-react'
-import { LISTINGS, fmt, type Listing } from '../data/listings'
+import { fmt, type Listing } from '../data/listings'
 import { DR_REGIONS } from '../data/searchData'
+import { fetchListings } from '../api/listings'
+import { GoogleMap, Marker, InfoWindow, OverlayView, useJsApiLoader } from '@react-google-maps/api'
 
 type TagTone = 'sand' | 'coral' | 'sea' | 'gold' | 'green'
 const TONE_CLASSES: Record<TagTone, string> = {
@@ -26,17 +28,63 @@ function regionOf(l: Listing): string {
   return r
 }
 
-function coordsForListing(l: Listing) {
+const titleCase = (s: string) =>
+  s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
+
+function strHash(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) >>> 0
+  return h
+}
+
+function coordsForListing(l: Listing): { lat: number; lng: number } {
   const match = (s: string, key: string) =>
     new RegExp(key.replace('á', '[áa]').replace('ú', '[úu]'), 'i').test(s)
   const base = DR_REGIONS.find(reg => match(l.region, reg.key))
     ?? DR_REGIONS.find(reg => reg.key === 'Santo Domingo')
     ?? DR_REGIONS[0]
-  const seed = (l.id * 9301 + 49297) % 233280
+  const seed = (strHash(l.id) * 9301 + 49297) % 233280
   const rand = (i: number) => (((seed * (i + 1)) % 233280) / 233280) * 2 - 1
-  return { x: base.x + rand(1) * 12, y: base.y + rand(2) * 8, tone: base.tone }
+  return { lat: base.lat + rand(1) * 0.055, lng: base.lng + rand(2) * 0.075 }
 }
 
+
+const MAP_CENTER = { lat: 18.73, lng: -70.16 }
+const MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: 'geometry',             stylers: [{ color: '#0c1f35' }] },
+  { elementType: 'labels.text.stroke',   stylers: [{ color: '#0c1f35' }] },
+  { elementType: 'labels.text.fill',     stylers: [{ color: '#7a93b8' }] },
+  { featureType: 'water', elementType: 'geometry',         stylers: [{ color: '#082a47' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4d6780' }] },
+  { featureType: 'road',  elementType: 'geometry',         stylers: [{ color: '#12324b' }] },
+  { featureType: 'road.highway', elementType: 'geometry',  stylers: [{ color: '#1d4a72' }] },
+  { featureType: 'poi',   elementType: 'geometry',         stylers: [{ color: '#0c2233' }] },
+  { featureType: 'poi',   elementType: 'labels',           stylers: [{ visibility: 'off' }] },
+  { featureType: 'landscape',   elementType: 'geometry',   stylers: [{ color: '#0e2840' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#1b3a5c' }] },
+  { featureType: 'transit', elementType: 'geometry',       stylers: [{ color: '#0c1f35' }] },
+]
+const MAP_OPTIONS: google.maps.MapOptions = {
+  disableDefaultUI: true,
+  zoomControl: true,
+  styles: MAP_STYLES,
+  gestureHandling: 'cooperative',
+  minZoom: 7,
+  maxZoom: 14,
+}
+
+function makePinIcon(hot: boolean): google.maps.Icon {
+  const size = hot ? 22 : 14
+  const r    = hot ? 7  : 4.5
+  const sw   = hot ? 2.5 : 1.5
+  const c    = size / 2
+  const svg  = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><circle cx='${c}' cy='${c}' r='${r}' fill='%23e10f1f' stroke='white' stroke-width='${sw}'/></svg>`
+  return {
+    url: `data:image/svg+xml,${svg}`,
+    scaledSize: new google.maps.Size(size, size),
+    anchor:     new google.maps.Point(c, c),
+  }
+}
 
 function Tag({ children, tone = 'sand' }: { children: ReactNode; tone?: string }) {
   const cls = TONE_CLASSES[(tone as TagTone)] ?? TONE_CLASSES.sand
@@ -77,11 +125,11 @@ function PropertyCard({ l, go, onHover }: {
         )}
       </div>
       <div className="pt-4 px-4.5 pb-4.5 font-sans">
-        <div className="font-serif text-5.25 font-semibold text-ink">
+        <div className="font-sans text-5.25 font-semibold text-ink">
           {fmt(l.price)}
           {l.purpose === 'rent' && <span className="text-3.25 text-dim font-sans"> / mo</span>}
         </div>
-        <div className="text-3.75 font-semibold text-ink mt-1.5 mb-1 leading-[1.3]">{l.title}</div>
+        <div className="text-3.75 font-semibold text-ink mt-1.5 mb-1 leading-[1.3]">{titleCase(l.title)}</div>
         <div className="flex items-center gap-1.25 text-dim text-[12.5px]">
           <MapPin size={13} />{l.region}
         </div>
@@ -95,8 +143,97 @@ function PropertyCard({ l, go, onHover }: {
   )
 }
 
-const SANS = '"Mona Sans", "Inter", -apple-system, system-ui, sans-serif'
-const SERIF = '"Fraunces", "Playfair Display", Georgia, serif'
+function LiveMap({ apiKey, active, onPick, counts, hovered, listings, onSelect }: {
+  apiKey: string
+  active: string | null
+  onPick: (r: string | null) => void
+  counts: Record<string, number>
+  hovered: Listing | null
+  listings: Listing[]
+  onSelect: (l: Listing) => void
+}) {
+  const { isLoaded } = useJsApiLoader({ id: 'google-map-script', googleMapsApiKey: apiKey })
+
+  if (!isLoaded) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#00102e', color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
+        Loading map…
+      </div>
+    )
+  }
+
+  return (
+    <GoogleMap
+      mapContainerStyle={{ width: '100%', height: '100%' }}
+      center={MAP_CENTER}
+      zoom={8}
+      options={MAP_OPTIONS}
+    >
+      {DR_REGIONS.map(r => {
+        const on = active === r.key
+        const n  = counts[r.key] || 0
+        return (
+          <OverlayView
+            key={r.key}
+            position={{ lat: r.lat, lng: r.lng }}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            getPixelPositionOffset={(w, h) => ({ x: -w / 2, y: -h / 2 })}
+          >
+            <div
+              onClick={() => onPick(on ? null : r.key)}
+              style={{
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontSize: '9px',
+                fontWeight: '700',
+                fontFamily: '"Mona Sans","Inter",system-ui,sans-serif',
+                padding: '3px 8px',
+                borderRadius: '9999px',
+                background: on ? '#e10f1f' : 'rgba(255,255,255,0.92)',
+                color: on ? '#fff' : '#00102e',
+                border: `1px solid ${on ? '#e10f1f' : 'rgba(0,0,0,0.12)'}`,
+                letterSpacing: '0.03em',
+                userSelect: 'none',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+              }}
+            >
+              {r.key}{n ? ` · ${n}` : ''}
+            </div>
+          </OverlayView>
+        )
+      })}
+
+      {listings.map(l => {
+        const pos   = coordsForListing(l)
+        const isHot = hovered?.id === l.id
+        return (
+          <Marker
+            key={l.id}
+            position={pos}
+            onClick={() => onSelect(l)}
+            zIndex={isHot ? 10 : 1}
+            icon={makePinIcon(isHot)}
+          >
+            {isHot && (
+              <InfoWindow
+                options={{ disableAutoPan: true, pixelOffset: new google.maps.Size(0, -12) }}
+                onCloseClick={() => {}}
+              >
+                <div style={{ fontFamily: '"Mona Sans","Inter",system-ui,sans-serif', minWidth: 172, padding: '2px 4px' }}>
+                  <div style={{ color: '#e10f1f', fontWeight: 700, fontSize: 14 }}>
+                    {fmt(l.price)}{l.purpose === 'rent' ? ' / mo' : ''}
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: '#00102e', marginTop: 3 }}>{titleCase(l.title)}</div>
+                  <div style={{ color: '#7884a0', fontSize: 11, marginTop: 2 }}>📍 {l.region}</div>
+                </div>
+              </InfoWindow>
+            )}
+          </Marker>
+        )
+      })}
+    </GoogleMap>
+  )
+}
 
 function DRMap({ active, onPick, counts, hovered, listings, onSelect }: {
   active: string | null
@@ -106,11 +243,13 @@ function DRMap({ active, onPick, counts, hovered, listings, onSelect }: {
   listings: Listing[]
   onSelect: (l: Listing) => void
 }) {
-  const hoverPos = hovered ? coordsForListing(hovered) : null
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
+  const hasKey = Boolean(apiKey && apiKey !== 'YOUR_KEY_HERE')
+
   return (
     <div className="bg-ink rounded-2xl overflow-hidden border border-line">
       <div className="pt-3.5 px-4.5 pb-2">
-        <div className="font-serif text-4.25 font-semibold text-paper">Dominican Republic</div>
+        <div className="font-sans text-4.25 font-semibold text-paper">Dominican Republic</div>
         <div className="text-xs text-white/60 mt-0.5 font-sans">
           {listings.length > 0
             ? `${listings.length} ${listings.length === 1 ? 'property' : 'properties'} mapped · hover a card`
@@ -118,113 +257,24 @@ function DRMap({ active, onPick, counts, hovered, listings, onSelect }: {
         </div>
       </div>
 
-      <svg viewBox="0 0 540 240" preserveAspectRatio="none" className="w-full h-65 block">
-        <defs>
-          <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#0e3656" /><stop offset="1" stopColor="#082a47" />
-          </linearGradient>
-          <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#3a8a52" /><stop offset="1" stopColor="#2c6e3f" />
-          </linearGradient>
-          <radialGradient id="hoverGlow">
-            <stop offset="0" stopColor="#e10f1f" stopOpacity=".7" />
-            <stop offset="1" stopColor="#e10f1f" stopOpacity="0" />
-          </radialGradient>
-        </defs>
+      <div style={{ width: '100%', height: '260px' }}>
+        {hasKey ? (
+          <LiveMap
+            apiKey={apiKey}
+            active={active}
+            onPick={onPick}
+            counts={counts}
+            hovered={hovered}
+            listings={listings}
+            onSelect={onSelect}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#00102e', color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
+            Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env
+          </div>
+        )}
+      </div>
 
-        <rect x="0" y="0" width="540" height="240" fill="url(#water)" />
-        <g opacity="0.18" stroke="#6fbdf2" strokeWidth=".7" fill="none">
-          <path d="M0 218 Q135 212 270 218 T540 218" />
-          <path d="M0 12 Q135 6 270 12 T540 12" />
-        </g>
-
-        {/* Haiti */}
-        <path d="M0 50 L70 42 L80 90 L70 140 L62 180 L40 215 L0 220 Z" fill="#1d3b58" opacity="0.55" />
-        <text x="32" y="135" textAnchor="middle" fontSize="9" fontWeight="600"
-          fill="rgba(255,255,255,.32)" fontFamily={SANS}>HAITI</text>
-
-        {/* DR landmass */}
-        <path d="M 65 95 C 78 72,105 58,132 56 C 165 53,200 55,235 57 C 270 59,300 58,325 57
-          C 355 56,380 58,400 62 L 415 66 L 430 64 C 445 62,458 64,462 70 C 466 76,460 82,448 84
-          L 432 84 L 418 82 C 408 80,398 80,390 84 L 386 90 C 392 96,408 98,422 96 L 445 92
-          C 465 91,485 97,500 110 C 510 122,510 138,502 152 C 494 168,480 176,460 180
-          C 440 182,415 178,392 174 C 372 170,352 168,332 172 C 312 178,296 188,280 198
-          C 262 204,240 206,215 204 C 188 200,162 192,138 180 C 115 168,95 154,80 138
-          C 70 124,62 108,65 95 Z"
-          fill="url(#land)" stroke="#1a5230" strokeWidth="1.2" />
-
-        {/* Mountain ranges */}
-        <g opacity="0.55" fill="#1f5e33">
-          <path d="M155 112 l16 -14 14 14 z" /><path d="M178 118 l14 -12 14 12 z" />
-          <path d="M198 120 l16 -16 16 16 z" /><path d="M222 122 l14 -12 14 12 z" />
-          <path d="M150 142 l12 -10 12 10 z" /><path d="M168 148 l14 -12 14 12 z" />
-        </g>
-        <path d="M150 80 Q165 110 190 138 Q220 164 252 180"
-          stroke="#6fbdf2" strokeWidth="1.1" strokeDasharray="3 3" fill="none" opacity="0.4" />
-
-        {/* Region labels */}
-        {DR_REGIONS.map(r => {
-          const on = active === r.key
-          const n = counts[r.key] || 0
-          const w = r.key.length * 5.6 + (n ? 18 : 10)
-          return (
-            <g key={r.key} onClick={() => onPick(on ? null : r.key)} style={{ cursor: 'pointer' }}>
-              <line x1={r.x} y1={r.y} x2={r.lx} y2={r.ly + 6} stroke="rgba(255,255,255,.28)" strokeWidth="1" />
-              <circle cx={r.x} cy={r.y} r={on ? 5 : 3.5}
-                fill={on ? r.tone : '#fff'} stroke={on ? '#fff' : r.tone} strokeWidth="1.4" opacity="0.95" />
-              <rect x={r.lx - w / 2} y={r.ly - 7} width={w} height="14" rx="7"
-                fill={on ? r.tone : 'rgba(255,255,255,.92)'} />
-              <text x={r.lx} y={r.ly + 2.5} textAnchor="middle" fontSize="9" fontWeight="700"
-                fill={on ? '#fff' : '#00102e'} fontFamily={SANS}>
-                {r.key}{n ? ` · ${n}` : ''}
-              </text>
-            </g>
-          )
-        })}
-
-        {/* Property pins */}
-        {listings.map(l => {
-          const pos = coordsForListing(l)
-          const isHot = hovered?.id === l.id
-          return (
-            <g key={l.id} onClick={() => onSelect(l)} style={{ cursor: 'pointer' }}>
-              {isHot && <circle cx={pos.x} cy={pos.y} r="14" fill="url(#hoverGlow)" />}
-              <circle cx={pos.x} cy={pos.y} r={isHot ? 6 : 3.4}
-                fill={isHot ? '#e10f1f' : '#fff'} stroke={isHot ? '#fff' : '#e10f1f'}
-                strokeWidth={isHot ? 2 : 1.2} />
-            </g>
-          )
-        })}
-
-        {/* Hover tooltip */}
-        {hovered && hoverPos && (() => {
-          const tw = 196, th = 56
-          const above = hoverPos.y > 90
-          const ty = above ? hoverPos.y - th - 14 : hoverPos.y + 14
-          const tx = Math.max(6, Math.min(540 - tw - 6, hoverPos.x - tw / 2))
-          const arrowX = hoverPos.x
-          const arrowY = above ? ty + th : ty
-          const title  = hovered.title.length  > 28 ? hovered.title.slice(0, 27)  + '…' : hovered.title
-          const region = hovered.region.length > 28 ? hovered.region.slice(0, 27) + '…' : hovered.region
-          const price  = fmt(hovered.price) + (hovered.purpose === 'rent' ? ' / mo' : '')
-          return (
-            <g key="tooltip" style={{ pointerEvents: 'none' }}>
-              <rect x={tx} y={ty + 1} width={tw} height={th} rx="8" fill="rgba(0,16,46,.25)" />
-              <rect x={tx} y={ty}     width={tw} height={th} rx="8" fill="#ffffff" stroke="#e4ddcf" strokeWidth="1" />
-              <text x={tx + 12} y={ty + 18} fontSize="13" fontWeight="700" fill="#e10f1f"  fontFamily={SERIF}>{price}</text>
-              <text x={tx + 12} y={ty + 34} fontSize="11" fontWeight="600" fill="#00102e"  fontFamily={SANS}>{title}</text>
-              <text x={tx + 12} y={ty + 48} fontSize="10"                  fill="#7884a0"  fontFamily={SANS}>📍 {region}</text>
-              <polygon
-                points={above
-                  ? `${arrowX - 6},${arrowY - 1} ${arrowX + 6},${arrowY - 1} ${arrowX},${arrowY + 6}`
-                  : `${arrowX - 6},${arrowY + 1} ${arrowX + 6},${arrowY + 1} ${arrowX},${arrowY - 6}`}
-                fill="#ffffff" stroke="#e4ddcf" strokeWidth="1" />
-            </g>
-          )
-        })()}
-      </svg>
-
-      {/* Quick region shortcuts */}
       <div className="pt-2.5 px-4 pb-3.5 flex flex-wrap gap-1.5">
         {['Punta Cana', 'Cap Cana', 'Santo Domingo', 'Las Terrenas', 'Puerto Plata', 'Sosúa'].map(k => {
           const on = active === k
@@ -242,6 +292,8 @@ function DRMap({ active, onPick, counts, hovered, listings, onSelect }: {
 
 export default function Search() {
   const go = useNav()
+  const [listings, setListings] = useState<Listing[]>([])
+  const [loading,  setLoading]  = useState(true)
   const [purpose,  setPurpose]  = useState<'sale' | 'rent' | 'investment'>('sale')
   const [type,     setType]     = useState('All')
   const [minPrice, setMinPrice] = useState(0)
@@ -257,6 +309,13 @@ export default function Search() {
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
+    fetchListings()
+      .then(setListings)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
     document.body.style.overflow = filtersOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [filtersOpen])
@@ -267,12 +326,12 @@ export default function Search() {
 
   const counts = useMemo(() => {
     const m: Record<string, number> = {}
-    LISTINGS.forEach(l => { const k = regionOf(l); m[k] = (m[k] || 0) + 1 })
+    listings.forEach(l => { const k = regionOf(l); m[k] = (m[k] || 0) + 1 })
     return m
-  }, [])
+  }, [listings])
 
   const results = useMemo(() => {
-    let r = LISTINGS.filter(l =>
+    let r = listings.filter(l =>
       (purpose === 'sale' || l.purpose === purpose || (purpose === 'investment' && l.roi >= 7)) &&
       (type === 'All' || l.type === type) &&
       (!region || regionOf(l) === region) &&
@@ -284,7 +343,7 @@ export default function Search() {
     if (sort === 'high') r = [...r].sort((a, b) => b.price - a.price)
     if (sort === 'roi')  r = [...r].sort((a, b) => b.roi   - a.roi)
     return r
-  }, [purpose, type, minPrice, maxPrice, sort, region, minROI, beds])
+  }, [listings, purpose, type, minPrice, maxPrice, sort, region, minROI, beds])
 
   const insights = useMemo(() => {
     if (!results.length) return null
@@ -304,13 +363,13 @@ export default function Search() {
 
   const alsoLike = useMemo(() => {
     const ids = new Set(results.map(l => l.id))
-    const rest = LISTINGS.filter(l => !ids.has(l.id))
+    const rest = listings.filter(l => !ids.has(l.id))
     if (region) {
       const nearby = rest.filter(l => regionOf(l) === region)
       return nearby.length ? nearby.slice(0, 3) : rest.slice(0, 3)
     }
     return rest.slice(0, 3)
-  }, [results, region])
+  }, [listings, results, region])
 
   const chips: { label: string; clear: () => void }[] = []
   if (purpose !== 'sale') chips.push({ label: purpose === 'rent' ? 'For Rent' : 'Investment', clear: () => setPurpose('sale') })
@@ -349,7 +408,7 @@ export default function Search() {
   const Insight = ({ label, value, tone }: { label: string; value: string | number; tone?: 'brand' }) => (
     <div className="py-2.5 border-b border-line-soft">
       <div className="text-[10.5px] font-bold tracking-[.08em] uppercase text-dim mb-1">{label}</div>
-      <div className={`font-serif text-5.5 font-bold leading-none ${tone === 'brand' ? 'text-brand' : 'text-ink'}`}>{value}</div>
+      <div className={`font-sans text-5.5 font-bold leading-none ${tone === 'brand' ? 'text-brand' : 'text-ink'}`}>{value}</div>
     </div>
   )
 
@@ -363,7 +422,7 @@ export default function Search() {
       <aside className="hidden lg:block self-start sticky top-22.5 max-h-[calc(100vh-110px)] overflow-y-auto bg-paper border border-line-soft rounded-2xl p-4.5">
 
         <div className="flex items-center justify-between mb-4.5 pb-3 border-b border-line-soft">
-          <div className="font-serif text-4.5 font-bold text-ink">Filters / Filtros</div>
+          <div className="font-sans text-4.5 font-bold text-ink">Filters</div>
           {chips.length > 0 &&
             <span className="text-2.5 font-bold py-0.75 px-2 rounded-full bg-coral text-white">
               {chips.length}
@@ -461,7 +520,7 @@ export default function Search() {
       {/* ===== CENTER: RESULTS ===== */}
       <main className="min-w-0">
         <div className="flex items-start justify-between flex-wrap gap-3 mb-3.5">
-          <h1 className="font-serif text-5 sm:text-6.5 font-semibold text-ink leading-[1.1] m-0">
+          <h1 className="font-sans text-5 sm:text-6.5 font-semibold text-ink leading-[1.1] m-0">
             {results.length} properties{' '}
             <span className="text-dim text-3.25 sm:text-3.75 font-sans font-normal">
               {region ? `in ${region}` : 'across the DR'}
@@ -513,8 +572,26 @@ export default function Search() {
           </div>
         )}
 
-        {results.length === 0
-          ? (
+        {loading ? (
+            <div className={`grid gap-4.5 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-paper rounded-xl overflow-hidden border border-line-soft animate-pulse">
+                  <div className="h-46 bg-line-soft" />
+                  <div className="p-4.5 space-y-3">
+                    <div className="h-5 bg-line-soft rounded w-2/5" />
+                    <div className="h-4 bg-line-soft rounded w-3/4" />
+                    <div className="h-3.5 bg-line-soft rounded w-1/3" />
+                    <div className="h-px bg-line-soft" />
+                    <div className="flex gap-4">
+                      <div className="h-3.5 bg-line-soft rounded w-12" />
+                      <div className="h-3.5 bg-line-soft rounded w-12" />
+                      <div className="h-3.5 bg-line-soft rounded w-14" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : results.length === 0 ? (
             <div className="p-15 text-center text-dim border border-dashed border-line rounded-2xl">
               No properties match these filters. Try widening your price range or clearing a region.
             </div>
@@ -559,7 +636,7 @@ export default function Search() {
                 <div className="w-14 h-11 rounded-md shrink-0 overflow-hidden"
                   style={{ backgroundImage: `url(${l.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-ink truncate">{l.title}</div>
+                  <div className="text-xs font-semibold text-ink truncate">{titleCase(l.title)}</div>
                   <div className="text-[10.5px] text-dim mt-px truncate">{l.region}</div>
                   <div className="text-[11.5px] font-bold text-coral mt-0.5">{fmt(l.price)}</div>
                 </div>
@@ -576,7 +653,7 @@ export default function Search() {
               Local team online
             </span>
           </div>
-          <div className="font-serif text-4.25 font-semibold leading-tight mb-1.5">
+          <div className="font-sans text-4.25 font-semibold leading-tight mb-1.5">
             Need help narrowing down?
           </div>
           <div className="text-[12.5px] text-white/70 leading-normal mb-3">
@@ -597,7 +674,7 @@ export default function Search() {
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-line-soft shrink-0">
-          <div className="font-serif text-4.5 font-bold text-ink">Filters / Filtros</div>
+          <div className="font-sans text-4.5 font-bold text-ink">Filters / Filtros</div>
           <div className="flex items-center gap-2">
             {chips.length > 0 && (
               <span className="text-2.5 font-bold py-0.75 px-2 rounded-full bg-coral text-white">{chips.length}</span>

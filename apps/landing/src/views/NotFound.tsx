@@ -10,7 +10,7 @@ export default function NotFound() {
 
         {/* Large 404 */}
         <div
-          className="font-serif font-bold leading-none mb-2 select-none"
+          className="font-sans font-bold leading-none mb-2 select-none"
           style={{ fontSize: 'clamp(100px, 22vw, 180px)', color: 'rgba(230,80,60,.12)' }}
         >
           404
@@ -19,7 +19,7 @@ export default function NotFound() {
         {/* Palm icon */}
         <div className="text-5xl mb-5">🌴</div>
 
-        <h1 className="font-serif text-[clamp(22px,4vw,34px)] font-bold text-ink leading-[1.1] tracking-[-0.02em] mb-3">
+        <h1 className="font-sans text-[clamp(22px,4vw,34px)] font-bold text-ink leading-[1.1] tracking-[-0.02em] mb-3">
           Lost in paradise?
         </h1>
 

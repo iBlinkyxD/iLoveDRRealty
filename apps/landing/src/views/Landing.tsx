@@ -23,13 +23,13 @@ function PropertyCard({ prop, go }: { prop: typeof SAMPLE_PROPERTIES[0]; go: GoF
       </div>
       <div className="pt-4 px-4.5 pb-4.5">
         <div className="font-sans text-2.75 text-dim mb-1">📍 {prop.region}</div>
-        <div className="font-serif text-4.25 font-semibold text-ink leading-tight mb-2.5">
+        <div className="font-sans text-4.25 font-semibold text-ink leading-tight mb-2.5">
           {prop.title}
         </div>
         <div className="flex gap-3.5 text-3 text-dim font-sans mb-3">
           <span>{prop.bd} bd</span><span>{prop.ba} ba</span><span>{prop.m2} m²</span>
         </div>
-        <div className="font-serif text-5.5 font-bold text-ink">{fmt(prop.price)}</div>
+        <div className="font-sans text-5.5 font-bold text-ink">{fmt(prop.price)}</div>
       </div>
     </div>
   )
@@ -57,7 +57,7 @@ export default function Landing() {
               <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold font-sans">
                 Discover · Invest · Live
               </div>
-              <h1 className="font-serif text-[clamp(34px,5vw,64px)] font-semibold text-white leading-[1.03] tracking-[-0.02em] mt-4 max-w-155">
+              <h1 className="font-sans text-[clamp(34px,5vw,64px)] font-semibold text-white leading-[1.03] tracking-[-0.02em] mt-4 max-w-155">
                 Discover, Invest, and Live in Paradise.
               </h1>
               <p className="text-[rgba(247,244,236,0.78)] text-4.25 leading-[1.6] max-w-130 mt-4.5 font-sans">
@@ -152,7 +152,7 @@ export default function Landing() {
         <div className="max-w-310 mx-auto px-4 sm:px-6 py-6.5 grid grid-cols-2 sm:flex sm:flex-wrap gap-6 sm:justify-between">
           {STATS.map(({ value, label }) => (
             <div key={label}>
-              <div className="font-serif text-7.5 font-semibold text-white">{value}</div>
+              <div className="font-sans text-7.5 font-semibold text-white">{value}</div>
               <div className="font-sans text-3 text-[rgba(246,241,231,0.55)] tracking-[0.04em] mt-0.5">{label}</div>
             </div>
           ))}
@@ -187,7 +187,7 @@ export default function Landing() {
             {/* Right — details */}
             <div className="px-5 py-6 sm:px-9 sm:py-8 flex flex-col">
               <div className="font-sans text-3 font-bold tracking-[0.12em] uppercase text-coral mb-2">This week's pick</div>
-              <h2 className="font-serif text-7 font-bold text-ink leading-[1.15] mb-2">Two condos, one rooftop, one fantastic price.</h2>
+              <h2 className="font-sans text-7 font-bold text-ink leading-[1.15] mb-2">Two condos, one rooftop, one fantastic price.</h2>
               <p className="font-sans text-[14.5px] text-ink2 leading-[1.65] mb-4.5">
                 A 2BR + 1BR pair above one of Sosúa's most beloved restaurants — with a private rooftop terrace and a per-square-meter price that's hard to find on the north coast. The seller is offering{' '}
                 <strong className="text-ink">$77,000 in financing for 12 months</strong> to qualified buyers.
@@ -195,13 +195,13 @@ export default function Landing() {
               <div className="flex divide-x divide-line-soft py-4 border-t border-b border-line-soft mb-4.5">
                 {[['2+1', 'Bedrooms'], ['2+1', 'Bathrooms'], ['184 m²', 'Total area']].map(([val, lbl]) => (
                   <div key={lbl} className="flex-1 pr-3 last:pr-0 first:pl-0 pl-3">
-                    <div className="font-serif text-5 sm:text-5.5 font-bold text-ink">{val}</div>
+                    <div className="font-sans text-5 sm:text-5.5 font-bold text-ink">{val}</div>
                     <div className="font-sans text-[10px] sm:text-2.75 text-dim sm:tracking-[0.06em] uppercase mt-0.5 leading-tight">{lbl}</div>
                   </div>
                 ))}
               </div>
               <div className="flex items-baseline gap-3 mb-5">
-                <div className="font-serif text-9.5 font-bold text-ink leading-none">$177,000</div>
+                <div className="font-sans text-9.5 font-bold text-ink leading-none">$177,000</div>
                 <div className="font-sans text-4 text-dim line-through">$199,000</div>
                 <div className="font-sans text-3 text-brand font-bold px-2 py-0.75 bg-brand/10 rounded-full">−11%</div>
               </div>
@@ -248,7 +248,7 @@ export default function Landing() {
             {/* Right — story */}
             <div>
               <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-coral">★ Why we built this</div>
-              <h2 className="font-serif text-[clamp(28px,3.4vw,42px)] font-semibold text-ink leading-[1.1] tracking-[-0.02em] mt-3 mb-5.5">
+              <h2 className="font-sans text-[clamp(28px,3.4vw,42px)] font-semibold text-ink leading-[1.1] tracking-[-0.02em] mt-3 mb-5.5">
                 We were once where{' '}
                 <span className="text-coral italic">you are now.</span>
               </h2>
@@ -284,7 +284,7 @@ export default function Landing() {
           <div className="mt-20">
             <div className="text-center max-w-160 mx-auto mb-10">
               <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-gold">★ Lessons we paid for, so you don't have to</div>
-              <h3 className="font-serif text-[clamp(24px,2.6vw,32px)] font-semibold text-ink leading-[1.15] tracking-[-0.01em] mt-3">
+              <h3 className="font-sans text-[clamp(24px,2.6vw,32px)] font-semibold text-ink leading-[1.15] tracking-[-0.01em] mt-3">
                 Six mistakes we made — and how we help you skip them
               </h3>
             </div>
@@ -309,7 +309,7 @@ export default function Landing() {
 
           {/* Pull quote */}
           <div className="mt-17.5 max-w-205 mx-auto text-center">
-            <div className="font-serif text-[clamp(22px,2.4vw,30px)] font-normal italic text-ink leading-[1.35] tracking-[-0.01em]">
+            <div className="font-sans text-[clamp(22px,2.4vw,30px)] font-normal italic text-ink leading-[1.35] tracking-[-0.01em]">
               "If we'd had a team like ours when we started, we'd have closed our first DR property six months sooner — and paid forty thousand dollars less."
             </div>
             <div className="mt-4.5 font-sans text-3.25 text-dim tracking-[.08em] uppercase font-bold">
@@ -328,7 +328,7 @@ export default function Landing() {
       <div className="max-w-310 mx-auto pt-14 sm:pt-18 px-4 sm:px-6 pb-5">
         <div className="text-center max-w-150 mx-auto mb-11">
           <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-gold">Built for everyone</div>
-          <h2 className="font-serif text-[clamp(28px,3.6vw,42px)] font-semibold text-ink leading-[1.12] tracking-[-0.02em] mt-3">
+          <h2 className="font-sans text-[clamp(28px,3.6vw,42px)] font-semibold text-ink leading-[1.12] tracking-[-0.02em] mt-3">
             One platform. Three powerful experiences.
           </h2>
           <p className="font-sans text-ink2 text-[15.5px] leading-[1.6] mt-3.5">
@@ -349,7 +349,7 @@ export default function Landing() {
                 >
                   <role.Icon />
                 </div>
-                <div className="font-serif text-5.75 font-semibold text-ink">{role.label}</div>
+                <div className="font-sans text-5.75 font-semibold text-ink">{role.label}</div>
                 <p className="font-sans text-ink2 text-3.5 leading-[1.6] mt-2.5 mb-4.5">{role.sub}</p>
                 {role.perks.map((perk, j) => (
                   <div key={perk} className={`flex items-center gap-2.25 py-1.75 font-sans text-[13.5px] text-ink${j ? ' border-t border-line-soft' : ''}`}>
@@ -368,7 +368,7 @@ export default function Landing() {
         <div className="flex items-end justify-between mb-6.5 flex-wrap gap-3">
           <div>
             <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea">Hand-picked</div>
-            <h2 className="font-serif text-8.5 font-semibold text-ink mt-2">Featured properties</h2>
+            <h2 className="font-sans text-8.5 font-semibold text-ink mt-2">Featured properties</h2>
           </div>
           <button
             onClick={() => go('search')}

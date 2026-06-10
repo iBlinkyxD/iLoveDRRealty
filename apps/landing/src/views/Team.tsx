@@ -22,7 +22,7 @@ export default function Team() {
           style={{ background: 'radial-gradient(circle, rgba(225,15,31,.10) 0%, transparent 70%)' }} />
         <div className="max-w-275 mx-auto text-center relative">
           <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">Our Team</div>
-          <h1 className="font-serif text-[clamp(30px,4.5vw,48px)] font-bold text-paper mt-3 mb-2.5 tracking-[-.02em]">
+          <h1 className="font-sans text-[clamp(30px,4.5vw,48px)] font-bold text-paper mt-3 mb-2.5 tracking-[-.02em]">
             The people behind{' '}
             <span className="italic text-gold">I♥DR Realty</span>
           </h1>
@@ -32,7 +32,7 @@ export default function Team() {
           <div className="mt-5.5 flex justify-center gap-7 flex-wrap">
             {TEAM_STATS.map(([n, label, color]) => (
               <div key={label}>
-                <div className="font-serif text-6.5 font-bold" style={{ color }}>{n}</div>
+                <div className="font-sans text-6.5 font-bold" style={{ color }}>{n}</div>
                 <div className="font-sans text-2.75 text-white/55 tracking-[.06em] uppercase mt-0.5">{label}</div>
               </div>
             ))}
@@ -44,7 +44,7 @@ export default function Team() {
       <div className="max-w-295 mx-auto pt-12.5 px-4 sm:px-6 pb-5">
         <div className="mb-6">
           <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">★ The principals</div>
-          <h2 className="font-serif text-6.5 font-semibold text-ink mt-2 mb-1.5">Brokerage leaders</h2>
+          <h2 className="font-sans text-6.5 font-semibold text-ink mt-2 mb-1.5">Brokerage leaders</h2>
           <p className="font-sans text-sm text-dim max-w-145 leading-[1.55]">
             Each principal runs an independent brokerage on the platform. See the agents they lead in the section below.
           </p>
@@ -61,7 +61,7 @@ export default function Team() {
                 </div>
               </div>
               <div className="py-4.5 px-5 font-sans">
-                <h3 className="font-serif text-4.75 font-bold text-ink leading-[1.15]">{p.name}</h3>
+                <h3 className="font-sans text-4.75 font-bold text-ink leading-[1.15]">{p.name}</h3>
                 <div className="text-2.75 font-bold tracking-[.08em] uppercase text-coral mt-1">{p.role}</div>
                 {p.team && <div className="text-[12.5px] text-sea font-semibold mt-1.25">{p.team}</div>}
                 <p className="text-3.25 text-ink2 leading-[1.55] mt-3">{p.bio}</p>
@@ -80,7 +80,7 @@ export default function Team() {
         <div className="max-w-295 mx-auto">
           <div className="mb-7">
             <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-sea">★ The agents</div>
-            <h2 className="font-serif text-6.5 font-semibold text-ink mt-2 mb-1.5">Agents by brokerage team</h2>
+            <h2 className="font-sans text-6.5 font-semibold text-ink mt-2 mb-1.5">Agents by brokerage team</h2>
             <p className="font-sans text-sm text-dim max-w-145 leading-[1.55]">
               Eight agents organized under three of our principal brokerages — each vetted by the principal they work under and approved by the platform.
             </p>
@@ -94,7 +94,7 @@ export default function Team() {
                   <div className="w-1 h-7 rounded bg-coral shrink-0" />
                   <div>
                     <div className="font-sans text-2.75 font-bold tracking-widest uppercase text-dim">Team led by {p.name.split(' ')[0]}</div>
-                    <div className="font-serif text-5 font-semibold text-ink">{p.team}</div>
+                    <div className="font-sans text-5 font-semibold text-ink">{p.team}</div>
                   </div>
                   <span className="sm:ml-auto font-sans text-xs text-dim font-semibold">
                     {team.length} {team.length === 1 ? 'agent' : 'agents'}
@@ -109,7 +109,7 @@ export default function Team() {
                           style={{ background: 'linear-gradient(0deg,rgba(0,16,46,.3),transparent 55%)' }} />
                       </div>
                       <div className="py-4 px-4.5 font-sans">
-                        <h4 className="font-serif text-4.25 font-semibold text-ink leading-[1.2]">{a.name}</h4>
+                        <h4 className="font-sans text-4.25 font-semibold text-ink leading-[1.2]">{a.name}</h4>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-[10.5px] font-bold tracking-[.08em] uppercase text-coral">{a.role}</span>
                           <span className="text-2.75 text-dim">·</span>
@@ -140,7 +140,7 @@ export default function Team() {
           <div className="absolute -top-15 -right-15 w-60 h-60 rounded-full"
             style={{ background: 'radial-gradient(circle, rgba(240,168,0,.12) 0%, transparent 70%)' }} />
           <div className="relative">
-            <div className="font-serif text-6.5 font-semibold text-paper leading-[1.2] mb-2">
+            <div className="font-sans text-6.5 font-semibold text-paper leading-[1.2] mb-2">
               Ready to start your DR journey?
             </div>
             <p className="font-sans text-sm text-white/65 leading-[1.55] max-w-115">

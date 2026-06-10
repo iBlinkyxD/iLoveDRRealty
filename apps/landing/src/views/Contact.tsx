@@ -64,7 +64,7 @@ export default function Contact() {
           style={{ backgroundImage: 'radial-gradient(circle at 70% 40%, rgba(11,99,171,.25) 0%, transparent 55%), radial-gradient(circle at 20% 80%, rgba(225,15,31,.1) 0%, transparent 45%)' }} />
         <div className="relative max-w-180 mx-auto text-center">
           <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-coral mb-3">Get in touch</div>
-          <h1 className="font-serif text-[clamp(32px,5vw,52px)] font-extrabold text-white leading-[1.05] tracking-[-.02em] mb-4.5">
+          <h1 className="font-sans text-[clamp(32px,5vw,52px)] font-extrabold text-white leading-[1.05] tracking-[-.02em] mb-4.5">
             Let's find your place in paradise
           </h1>
           <p className="text-4.25 text-white/72 leading-[1.65] max-w-135 mx-auto">
@@ -81,7 +81,7 @@ export default function Contact() {
           <div>
             <div className="mb-8">
               <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea mb-3">Reach us directly</div>
-              <h2 className="font-serif text-7 font-bold text-ink mt-1 mb-2 tracking-[-.02em]">
+              <h2 className="font-sans text-7 font-bold text-ink mt-1 mb-2 tracking-[-.02em]">
                 Multiple ways to connect
               </h2>
               <p className="text-[14.5px] text-ink2 leading-[1.6]">
@@ -126,7 +126,7 @@ export default function Contact() {
             {sent ? (
               <div className="text-center py-10 px-5">
                 <div className="text-5xl mb-4">✅</div>
-                <h3 className="font-serif text-2xl font-bold text-ink mb-2.5">Message sent!</h3>
+                <h3 className="font-sans text-2xl font-bold text-ink mb-2.5">Message sent!</h3>
                 <p className="text-[14.5px] text-ink2 leading-[1.6] mb-6">We'll get back to you within a few hours. In the meantime, feel free to browse listings.</p>
                 <button onClick={() => go('search')} className="font-sans text-sm font-semibold cursor-pointer py-3 px-7 rounded-full bg-coral text-white border-none">
                   Browse listings
@@ -134,7 +134,7 @@ export default function Contact() {
               </div>
             ) : (
               <>
-                <h3 className="font-serif text-2xl font-bold text-ink mb-6">Send us a message</h3>
+                <h3 className="font-sans text-2xl font-bold text-ink mb-6">Send us a message</h3>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
@@ -203,7 +203,7 @@ export default function Contact() {
       <div className="bg-paper2 border-t border-line py-12 sm:py-14 px-4 sm:px-6">
         <div className="max-w-175 mx-auto text-center">
           <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea mb-3">Not sure where to start?</div>
-          <h2 className="font-serif text-[clamp(22px,3vw,34px)] font-bold text-ink mt-2 mb-3.5 tracking-[-.02em]">
+          <h2 className="font-sans text-[clamp(22px,3vw,34px)] font-bold text-ink mt-2 mb-3.5 tracking-[-.02em]">
             Explore our resources first
           </h2>
           <p className="text-3.75 text-ink2 leading-[1.65] mb-7">

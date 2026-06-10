@@ -1,0 +1,105 @@
+import client from './axios'
+
+export interface Listing {
+  id: string
+  title: string
+  description: string | null
+  type: string
+  transaction: string
+  price: number
+  location: string
+  bedrooms: number | null
+  bathrooms: number | null
+  area_sqft: number | null
+  lot_size_sqft: number | null
+  roi: number | null
+  seller_financing: boolean
+  hoa: boolean
+  hoa_fee: number | null
+  tax_exempt: boolean
+  gated_community: boolean
+  construction_status: string | null
+  year_built: number | null
+  features: string[]
+  maps_url: string | null
+  tag: string | null
+  images: string[]
+  status: string
+  rejection_reason: string | null
+  submitted_by: string
+  owner_id: string | null
+}
+
+export interface ListingUpdate {
+  title?: string
+  description?: string
+  type?: string
+  transaction?: string
+  price?: number
+  location?: string
+  bedrooms?: number
+  bathrooms?: number
+  area_sqft?: number
+  lot_size_sqft?: number
+  roi?: number
+  seller_financing?: boolean
+  hoa?: boolean
+  hoa_fee?: number
+  tax_exempt?: boolean
+  gated_community?: boolean
+  construction_status?: string
+  year_built?: number
+  features?: string[]
+  maps_url?: string
+  tag?: string
+  images?: string[]
+}
+
+export interface ListingCreate {
+  title: string
+  description?: string
+  type: string
+  transaction: string
+  price: number
+  location: string
+  bedrooms?: number
+  bathrooms?: number
+  area_sqft?: number
+  lot_size_sqft?: number
+  roi?: number
+  seller_financing?: boolean
+  hoa?: boolean
+  hoa_fee?: number
+  tax_exempt?: boolean
+  gated_community?: boolean
+  construction_status?: string
+  year_built?: number
+  features?: string[]
+  maps_url?: string
+  tag?: string
+  images?: string[]
+}
+
+export async function uploadListingImages(files: File[]): Promise<string[]> {
+  const fd = new FormData()
+  files.forEach(f => fd.append('files', f))
+  const res = await client.post<{ urls: string[] }>('/listings/upload-images', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data.urls
+}
+
+export async function submitListing(data: ListingCreate): Promise<Listing> {
+  const res = await client.post<Listing>('/listings', data)
+  return res.data
+}
+
+export async function getMyListings(): Promise<Listing[]> {
+  const res = await client.get<Listing[]>('/listings/mine')
+  return res.data
+}
+
+export async function updateListing(id: string, data: ListingUpdate): Promise<Listing> {
+  const res = await client.put<Listing>(`/listings/${id}`, data)
+  return res.data
+}

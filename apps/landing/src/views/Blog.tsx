@@ -36,7 +36,7 @@ export default function Blog() {
             <span className="inline-block py-1.5 px-3.5 rounded-full bg-gold text-ink text-2.75 font-extrabold tracking-[.14em] uppercase font-sans">
               📚 Education &amp; Relocation Hub
             </span>
-            <h1 className="font-serif text-[clamp(28px,5.5vw,60px)] font-bold text-white mt-5 mb-4 tracking-[-.02em] leading-[1.02]">
+            <h1 className="font-sans text-[clamp(28px,5.5vw,60px)] font-bold text-white mt-5 mb-4 tracking-[-.02em] leading-[1.02]">
               Your guide to{' '}
               <span style={{ background: 'linear-gradient(135deg, #f0a800, #e10f1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontStyle: 'italic' }}>
                 living &amp; investing
@@ -50,7 +50,7 @@ export default function Blog() {
             <div className="flex flex-wrap gap-7 sm:gap-9 mt-9.5">
               {STATS.map(([n, l], i) => (
                 <div key={i}>
-                  <div className="font-serif text-7 font-bold" style={{ color: STAT_COLORS[i] }}>{n}</div>
+                  <div className="font-sans text-7 font-bold" style={{ color: STAT_COLORS[i] }}>{n}</div>
                   <div className="text-[11.5px] text-white/65 mt-0.5 tracking-[.02em] font-sans">{l}</div>
                 </div>
               ))}
@@ -63,7 +63,7 @@ export default function Blog() {
       <div className="bg-paper pt-12 sm:pt-15 px-4 sm:px-7 pb-7.5">
         <div className="max-w-310 mx-auto">
           <div className="text-2.75 font-bold tracking-[.22em] uppercase text-coral font-sans">★ Featured this week</div>
-          <h2 className="font-serif text-6 sm:text-7 font-semibold text-ink mt-2 mb-5 sm:mb-6.5">
+          <h2 className="font-sans text-6 sm:text-7 font-semibold text-ink mt-2 mb-5 sm:mb-6.5">
             Where to start your Dominican journey
           </h2>
           <div className="relative rounded-3xl overflow-hidden cursor-pointer shadow-[0_30px_80px_-30px_rgba(0,16,46,.35)] flex flex-col lg:grid lg:grid-cols-[1.1fr_1fr] lg:min-h-95">
@@ -80,7 +80,7 @@ export default function Blog() {
             {/* Content */}
             <div className="pt-8 sm:pt-12 px-7 sm:px-11 pb-8 sm:pb-12 flex flex-col justify-center text-white"
               style={{ background: 'linear-gradient(135deg, #00102e 0%, #1a3a6e 100%)' }}>
-              <h3 className="font-serif text-6 sm:text-8 font-semibold text-white leading-[1.12] mb-4 tracking-[-.01em]">
+              <h3 className="font-sans text-6 sm:text-8 font-semibold text-white leading-[1.12] mb-4 tracking-[-.01em]">
                 {FEATURED.title}
               </h3>
               <p className="text-3.75 text-white/78 leading-[1.65] mb-6 font-sans">
@@ -124,7 +124,7 @@ export default function Blog() {
                 <div className="py-5 px-5.5">
                   <div className="text-2.5 font-extrabold tracking-[.14em] uppercase font-sans"
                     style={{ color: info.a }}>{info.label}</div>
-                  <h3 className="font-serif text-4.75 font-semibold text-ink mt-2 mb-1.5 leading-[1.2]">{p.title}</h3>
+                  <h3 className="font-sans text-4.75 font-semibold text-ink mt-2 mb-1.5 leading-[1.2]">{p.title}</h3>
                   <p className="text-3.25 text-ink2 leading-[1.55] font-sans">{p.desc}</p>
                   <div className="text-[11.5px] text-dim mt-2.5 font-sans">{p.author} · {p.read} read</div>
                 </div>
@@ -138,7 +138,7 @@ export default function Blog() {
       <div className="bg-paper2 py-12 sm:py-15 px-4 sm:px-7">
         <div className="max-w-310 mx-auto">
           <div className="text-2.75 font-bold tracking-[.22em] uppercase text-sea font-sans">Browse by topic</div>
-          <h2 className="font-serif text-6 sm:text-7 font-semibold text-ink mt-2 mb-5 sm:mb-6.5">
+          <h2 className="font-sans text-6 sm:text-7 font-semibold text-ink mt-2 mb-5 sm:mb-6.5">
             What are you exploring?
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
@@ -171,7 +171,7 @@ export default function Blog() {
           <div>
             <div className="text-2.75 font-bold tracking-[.22em] uppercase font-sans"
               style={{ color: catInfo(cat).a }}>{cat === 'All' ? 'All guides' : catInfo(cat).label}</div>
-            <h2 className="font-serif text-6 sm:text-7 font-semibold text-ink mt-2">{shownGuides.length} guides</h2>
+            <h2 className="font-sans text-6 sm:text-7 font-semibold text-ink mt-2">{shownGuides.length} guides</h2>
           </div>
           <span className="text-3.25 text-dim font-sans">Sorted by reader favorites</span>
         </div>
@@ -194,7 +194,7 @@ export default function Blog() {
                   </div>
                 </div>
                 <div className="p-5" style={{ borderTop: `3px solid ${info.a}` }}>
-                  <h3 className="font-serif text-4.5 font-semibold text-ink leading-tight mb-2">{g.title}</h3>
+                  <h3 className="font-sans text-4.5 font-semibold text-ink leading-tight mb-2">{g.title}</h3>
                   <p className="text-3.25 text-ink2 leading-[1.55] mb-3.5 font-sans">{g.desc}</p>
                   <div className="flex justify-between items-center text-xs text-dim pt-3 border-t border-line-soft font-sans">
                     <span>📖 {g.read} read</span>
@@ -214,7 +214,7 @@ export default function Blog() {
           style={{ background: 'radial-gradient(ellipse at 80% 20%, rgba(240,168,0,.2) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(225,15,31,.18) 0%, transparent 50%)' }} />
         <div className="max-w-310 mx-auto relative">
           <div className="text-2.75 font-bold tracking-[.22em] uppercase text-gold font-sans">Step-by-step</div>
-          <h2 className="font-serif text-7 sm:text-8 font-semibold text-white mt-2.5 mb-2">
+          <h2 className="font-sans text-7 sm:text-8 font-semibold text-white mt-2.5 mb-2">
             The Dominican buying process
           </h2>
           <p className="text-[15.5px] text-white/70 mb-9 max-w-150 font-sans">
@@ -233,7 +233,7 @@ export default function Blog() {
                 <div className="text-center">
                   <div className="font-sans text-3.25 font-bold tracking-widest"
                     style={{ color: STEP_COLORS[i] }}>STEP {n}</div>
-                  <h3 className="font-serif text-4 font-semibold text-white mt-1.5 mb-2 leading-[1.2]">{title}</h3>
+                  <h3 className="font-sans text-4 font-semibold text-white mt-1.5 mb-2 leading-[1.2]">{title}</h3>
                   <p className="text-xs text-white/65 leading-normal font-sans">{desc}</p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function Blog() {
         <div className="max-w-230 mx-auto">
           <div className="text-center mb-9">
             <div className="text-2.75 font-bold tracking-[.22em] uppercase text-coral font-sans">❓ Frequently asked</div>
-            <h2 className="font-serif text-7 sm:text-8 font-semibold text-ink mt-2.5 mb-2">
+            <h2 className="font-sans text-7 sm:text-8 font-semibold text-ink mt-2.5 mb-2">
               Your questions, answered
             </h2>
             <p className="text-3.75 text-ink2 max-w-135 mx-auto font-sans">
@@ -298,7 +298,7 @@ export default function Blog() {
           <span className="inline-block py-1.5 px-3.5 rounded-full bg-white/18 text-white text-2.75 font-extrabold tracking-[.14em] uppercase backdrop-blur-2.5 border border-white/25 font-sans">
             ✉️ Weekly briefing
           </span>
-          <h2 className="font-serif text-7 sm:text-9 font-semibold text-white mt-4.5 mb-3 leading-[1.1] tracking-[-.01em]">
+          <h2 className="font-sans text-7 sm:text-9 font-semibold text-white mt-4.5 mb-3 leading-[1.1] tracking-[-.01em]">
             DR real estate intelligence, every Friday
           </h2>
           <p className="text-4 text-white/88 leading-[1.6] max-w-135 mx-auto mb-7 font-sans">

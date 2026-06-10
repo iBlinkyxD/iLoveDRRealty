@@ -1,0 +1,137 @@
+import { useState } from 'react'
+import { Lock } from 'lucide-react'
+import type { Role } from '../App'
+import type { UserInfo } from '../lib/auth'
+import { BuyerHome } from '../components/dashboard/BuyerHome'
+import { OwnerHome } from '../components/dashboard/OwnerHome'
+import { RealtorHome } from '../components/dashboard/RealtorHome'
+import { LockedView } from '../components/dashboard/LockedView'
+import { SavedHomes } from './buyer/SavedHomes'
+import { SavedSearches } from './buyer/SavedSearches'
+import { Inquiries } from './buyer/Inquiries'
+import { ROICalculator } from './buyer/ROICalculator'
+import { Resources } from './buyer/Resources'
+import { BuyerBookings } from './buyer/Bookings'
+import { OwnerListings } from './owner/Listings'
+import { OwnerCalendar } from './owner/Calendar'
+import { OwnerBookings } from './owner/Bookings'
+import { OwnerLeads } from './owner/Leads'
+import { Earnings } from './owner/Earnings'
+import { RealtorListings } from './realtor/Listings'
+import { SubmitListing } from './realtor/SubmitListing'
+import { RealtorCalendar } from './realtor/Calendar'
+import { RealtorLeads } from './realtor/Leads'
+import { Pipeline } from './realtor/Pipeline'
+import { Profile } from './Profile'
+
+const ROLE_ORDER: Role[] = ['Buyer', 'Owner', 'Realtor']
+const ROLE_ACCESS: Record<string, Role[]> = {
+  Buyer:   ['Buyer'],
+  Owner:   ['Buyer', 'Owner'],
+  Realtor: ['Buyer', 'Realtor'],
+  Admin:   ['Buyer', 'Owner', 'Realtor', 'Admin'],
+}
+const ROLE_TONE: Record<Role, string> = {
+  Buyer: '#e10f1f', Owner: '#f0a800', Realtor: '#1f7a3d', Admin: '#0d9488',
+}
+
+const PAGE_TITLES: Record<Role, Record<string, string>> = {
+  Buyer: {
+    home: 'Your search dashboard', saved: 'Saved Homes', searches: 'Saved Searches',
+    inquiries: 'My Inquiries', bookings: 'Bookings', calculator: 'ROI Calculator',
+    resources: 'Resources', profile: 'Profile',
+  },
+  Owner: {
+    home: 'Overview', listings: 'My Listings', calendar: 'Booking Calendar',
+    bookings: 'Bookings', leads: 'Leads', earnings: 'Earnings', profile: 'Profile',
+  },
+  Realtor: {
+    home: 'Overview', listings: 'My Listings', leads: 'Leads',
+    pipeline: 'Sales Pipeline', calendar: 'Calendar', profile: 'Profile',
+    'submit-listing': 'Submit New Listing',
+  },
+  Admin: {},
+}
+
+interface Props {
+  go: (v: string) => void
+  view?: string
+  role: Role
+  user: UserInfo
+}
+
+export default function Dashboard({ go, view = 'home', role, user }: Props) {
+  const [activeTab, setActiveTab] = useState<Role>(role)
+
+  const isLocked = (tab: Role) => !ROLE_ACCESS[role]?.includes(tab)
+  const tone = ROLE_TONE[role]
+  const tabTone = ROLE_TONE[activeTab]
+
+  function renderView() {
+    if (view === 'home') {
+      return (
+        <div>
+          <div className="flex gap-1.5 mb-6 p-1 bg-paper border border-line rounded-xl w-fit">
+            {ROLE_ORDER.map((tab: Role) => {
+              const isActive = activeTab === tab
+              const locked = isLocked(tab)
+              const tTone = ROLE_TONE[tab]
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="flex items-center gap-1.5 px-4 py-1.75 rounded-lg text-[12.5px] font-semibold cursor-pointer transition-all duration-150 border-0"
+                  style={{
+                    background: isActive ? tTone : 'transparent',
+                    color: isActive ? '#fff' : locked ? 'rgba(0,0,0,.3)' : 'rgba(0,0,0,.45)',
+                  }}
+                >
+                  {locked && <Lock size={11} />}
+                  {tab}
+                </button>
+              )
+            })}
+          </div>
+          {activeTab === 'Buyer'   && <BuyerHome go={go} />}
+          {activeTab === 'Owner'   && (isLocked('Owner')   ? <LockedView tab="Owner"   tone={tabTone} /> : <OwnerHome   go={go} tone={tabTone} />)}
+          {activeTab === 'Realtor' && (isLocked('Realtor') ? <LockedView tab="Realtor" tone={tabTone} /> : <RealtorHome go={go} tone={tabTone} />)}
+        </div>
+      )
+    }
+
+    switch (view) {
+      // Buyer
+      case 'saved':      return <SavedHomes />
+      case 'searches':   return <SavedSearches />
+      case 'inquiries':  return <Inquiries />
+      case 'calculator': return <ROICalculator />
+      case 'resources':  return <Resources />
+      // Owner
+      case 'earnings':   return <Earnings tone={tone} />
+      // Realtor
+      case 'pipeline':   return <Pipeline />
+      // Shared by role
+      case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} /> : <RealtorListings tone={tone} go={go} />
+      case 'submit-listing':  return <SubmitListing go={go} tone={tone} />
+      case 'calendar':   return role === 'Owner' ? <OwnerCalendar tone={tone} /> : <RealtorCalendar />
+      case 'bookings':   return role === 'Owner' ? <OwnerBookings /> : <BuyerBookings />
+      case 'leads':      return role === 'Owner' ? <OwnerLeads tone={tone} /> : <RealtorLeads />
+      case 'profile':    return <Profile user={user} role={role} tone={tone} />
+      default:           return null
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <div className="text-[11px] font-bold tracking-[.14em] uppercase mb-1.5" style={{ color: tone }}>
+          {role} Portal · {user.display_name}
+        </div>
+        <h1 className="font-sans text-[22px] sm:text-[28px] font-extrabold text-ink tracking-[-0.02em]">
+          {PAGE_TITLES[role][view] ?? PAGE_TITLES[role].home ?? 'Dashboard'}
+        </h1>
+      </div>
+      {renderView()}
+    </div>
+  )
+}
