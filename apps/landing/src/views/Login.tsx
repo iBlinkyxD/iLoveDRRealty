@@ -59,7 +59,7 @@ export default function Login() {
 
         <div className="relative">
           <button onClick={() => go('landing')} className="bg-transparent border-0 cursor-pointer p-0 mb-12 block">
-            <img src="/ILoveDRRealty_Logo.png" alt="I Love DR Realty" className="h-10 w-auto block" />
+            <img src="/iLoveDRRealty_White.png" alt="I Love DR Realty" className="h-10 w-auto block" />
           </button>
 
           <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold mb-3.5">Welcome back</div>

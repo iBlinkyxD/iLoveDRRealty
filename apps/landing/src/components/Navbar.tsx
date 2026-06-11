@@ -11,7 +11,7 @@ export function Logo({ size = 42 }: { size?: number }) {
   return (
     <Link href="/" className="p-0 leading-none block">
       <img
-        src="/ILoveDRRealty_Dark.png"
+        src="/iLoveDRRealty_Dark.png"
         alt="I Love DR Realty"
         className="block w-auto"
         style={{ height: size }}
