@@ -49,7 +49,7 @@ export function RichTextEditor({ value, onChange, tone }: Props) {
 
   return (
     <div
-      className="rounded-lg border border-line overflow-hidden bg-white transition-colors focus-within:border-[#1f7a3d]"
+      className="rounded-lg border border-line overflow-hidden bg-white transition-colors focus-within:border-brand"
     >
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-line bg-[#f8f9fc]">
@@ -113,7 +113,7 @@ export function RichTextEditor({ value, onChange, tone }: Props) {
       <EditorContent
         editor={editor}
         className={[
-          'px-3 py-2.5 text-[13.5px] text-ink min-h-[110px] cursor-text',
+          'px-3 py-2.5 text-[13.5px] text-ink min-h-27.5 cursor-text',
           // scope all tiptap content styles
           '[&_.tiptap]:outline-none',
           '[&_.tiptap_p]:my-1 [&_.tiptap_p]:leading-[1.55]',
@@ -121,7 +121,7 @@ export function RichTextEditor({ value, onChange, tone }: Props) {
           '[&_.tiptap_h3]:text-[13.5px] [&_.tiptap_h3]:font-semibold [&_.tiptap_h3]:text-ink [&_.tiptap_h3]:mt-2 [&_.tiptap_h3]:mb-0.5',
           '[&_.tiptap_ul]:list-disc [&_.tiptap_ul]:pl-5 [&_.tiptap_ul]:my-1',
           '[&_.tiptap_ol]:list-decimal [&_.tiptap_ol]:pl-5 [&_.tiptap_ol]:my-1',
-          '[&_.tiptap_li]:my-0.5 [&_.tiptap_li]:leading-[1.5]',
+          '[&_.tiptap_li]:my-0.5 [&_.tiptap_li]:leading-normal',
           '[&_.tiptap_strong]:font-bold',
           '[&_.tiptap_em]:italic',
         ].join(' ')}
