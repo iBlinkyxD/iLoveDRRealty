@@ -12,6 +12,8 @@ export interface Listing {
   purpose: 'sale' | 'rent'
   v: number
   img: string
+  latitude?: number | null
+  longitude?: number | null
 }
 
 export const LISTINGS: Listing[] = [

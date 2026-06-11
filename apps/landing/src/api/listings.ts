@@ -14,6 +14,8 @@ interface ApiListing {
   roi: number | null
   tag: string | null
   images: string[]
+  latitude: number | null
+  longitude: number | null
 }
 
 export interface ApiListingDetail {
@@ -38,6 +40,8 @@ export interface ApiListingDetail {
   year_built: number | null
   features: string[]
   maps_url: string | null
+  latitude: number | null
+  longitude: number | null
   tag: string | null
   images: string[]
   status: string
@@ -63,6 +67,10 @@ export async function fetchListingById(id: string): Promise<ApiListingDetail> {
   return res.data
 }
 
+export async function recordListingView(id: string): Promise<void> {
+  await client.post(`/listings/${id}/view`)
+}
+
 export async function fetchListings(): Promise<Listing[]> {
   const res = await client.get<ApiListing[]>('/listings')
   return res.data.map(l => ({
@@ -79,5 +87,7 @@ export async function fetchListings(): Promise<Listing[]> {
     purpose: l.transaction === 'rent' ? 'rent' : 'sale',
     v: 0,
     img: l.images?.[0] ?? '',
+    latitude: l.latitude,
+    longitude: l.longitude,
   }))
 }

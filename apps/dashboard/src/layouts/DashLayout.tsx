@@ -32,7 +32,7 @@ const GENERAL_NAV: { Icon: LucideIcon; label: string; view: string }[] = [
   { Icon: Settings,        label: 'Settings',  view: 'settings' },
 ]
 
-const NAV: Record<Role, { Icon: LucideIcon; label: string; view: string }[]> = {
+const NAV: Record<Exclude<Role, 'Admin'>, { Icon: LucideIcon; label: string; view: string }[]> = {
   Buyer: [
     { Icon: Heart,         label: 'Saved Homes',    view: 'saved'      },
     { Icon: Search,        label: 'Saved Searches', view: 'searches'   },
@@ -54,15 +54,16 @@ const NAV: Record<Role, { Icon: LucideIcon; label: string; view: string }[]> = {
     { Icon: GitBranch,     label: 'Pipeline',  view: 'pipeline' },
     { Icon: CalendarDays,  label: 'Calendar',  view: 'calendar' },
   ],
-  Admin: [
-    { Icon: LayoutDashboard, label: 'Overview',         view: 'home'             },
-    { Icon: CircleCheck,     label: 'Upgrade Requests', view: 'upgrade-requests' },
-    { Icon: Home,            label: 'Listings Queue',   view: 'listings-queue'   },
-    { Icon: Home,            label: 'All Listings',     view: 'listings'         },
-    { Icon: Users,           label: 'Users',            view: 'users'            },
-    { Icon: Settings,        label: 'Settings',         view: 'settings'         },
-  ],
 }
+
+const ADMIN_NAV: { Icon: LucideIcon; label: string; view: string }[] = [
+  { Icon: LayoutDashboard, label: 'Dashboard',        view: 'home'             },
+  { Icon: Users,           label: 'Users',            view: 'users'            },
+  { Icon: CircleCheck,     label: 'Upgrade Requests', view: 'upgrade-requests' },
+  { Icon: Building2,       label: 'Listings',         view: 'listings'         },
+  { Icon: ClipboardList,   label: 'Add Listing',      view: 'submit-listing'   },
+  { Icon: Settings,        label: 'Settings',         view: 'settings'         },
+]
 
 interface Props {
   role: Role
@@ -75,7 +76,9 @@ interface Props {
 
 export default function DashLayout({ role, view, go, onLogout, user, children }: Props) {
   const tone = ROLE_TONE[role]
-  const ownNavItems = role === 'Admin' ? NAV.Admin : [...GENERAL_NAV, ...NAV[role]]
+  const ownNavItems = role === 'Admin'
+    ? ADMIN_NAV
+    : [...GENERAL_NAV, ...NAV[role as Exclude<Role, 'Admin'>]]
   const RoleIcon = ROLE_ICON[role]
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedLocked, setExpandedLocked] = useState<Record<string, boolean>>({})
@@ -85,21 +88,21 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
   const isSectionLocked = (r: Role) => !ROLE_ACCESS[role]?.includes(r)
 
   const navContent = role === 'Admin' ? (
-    // Admin: flat list, no role sections
-    NAV.Admin.map(item => {
+    // Admin: flat list
+    ADMIN_NAV.map(item => {
       const active = view === item.view
       return (
         <button
           key={item.view}
           onClick={() => { go(item.view); closeNav() }}
-          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border-0 cursor-pointer text-[13.5px] text-left transition-all duration-120"
+          className="flex items-center gap-2.5 w-full px-3 py-1.75 rounded-lg border-0 cursor-pointer text-[13px] text-left transition-all duration-120"
           style={{
             background: active ? `${tone}22` : 'transparent',
             color: active ? tone : 'rgba(255,255,255,.82)',
             fontWeight: active ? 700 : 500,
           }}
         >
-          <item.Icon size={15} className="shrink-0" />
+          <item.Icon size={14} className="shrink-0" />
           <span className="flex-1">{item.label}</span>
           {active && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: tone }} />}
         </button>
@@ -168,7 +171,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
             </button>
 
             {/* Items — hidden when locked and collapsed */}
-            {isExpanded && NAV[r].map(item => {
+            {isExpanded && NAV[r as Exclude<Role, 'Admin'>].map(item => {
               const active = !sectionLocked && view === item.view
               return (
                 <button

@@ -103,6 +103,43 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Rich-text description rendered on property detail page */
+.listing-prose {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--color-ink2);
+}
+.listing-prose p { margin: 0.5em 0; }
+.listing-prose p:first-child { margin-top: 0; }
+.listing-prose p:last-child  { margin-bottom: 0; }
+.listing-prose h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 1.2em 0 0.4em;
+  line-height: 1.25;
+}
+.listing-prose h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 1em 0 0.35em;
+  line-height: 1.3;
+}
+.listing-prose ul {
+  list-style: disc;
+  padding-left: 1.4em;
+  margin: 0.5em 0;
+}
+.listing-prose ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+  margin: 0.5em 0;
+}
+.listing-prose li { margin: 0.2em 0; }
+.listing-prose strong { font-weight: 700; color: var(--color-ink); }
+.listing-prose em { font-style: italic; }
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

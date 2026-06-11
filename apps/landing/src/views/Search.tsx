@@ -5,7 +5,8 @@ import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp, SlidersHorizonta
 import { fmt, type Listing } from '../data/listings'
 import { DR_REGIONS } from '../data/searchData'
 import { fetchListings } from '../api/listings'
-import { GoogleMap, Marker, InfoWindow, OverlayView, useJsApiLoader } from '@react-google-maps/api'
+import { getMySavedIds, saveHome, unsaveHome } from '../api/savedHomes'
+import { GoogleMap, OverlayView, useJsApiLoader } from '@react-google-maps/api'
 
 type TagTone = 'sand' | 'coral' | 'sea' | 'gold' | 'green'
 const TONE_CLASSES: Record<TagTone, string> = {
@@ -38,6 +39,9 @@ function strHash(s: string): number {
 }
 
 function coordsForListing(l: Listing): { lat: number; lng: number } {
+  if (l.latitude != null && l.longitude != null) {
+    return { lat: l.latitude, lng: l.longitude }
+  }
   const match = (s: string, key: string) =>
     new RegExp(key.replace('á', '[áa]').replace('ú', '[úu]'), 'i').test(s)
   const base = DR_REGIONS.find(reg => match(l.region, reg.key))
@@ -51,18 +55,13 @@ function coordsForListing(l: Listing): { lat: number; lng: number } {
 
 const MAP_CENTER = { lat: 18.73, lng: -70.16 }
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
-  { elementType: 'geometry',             stylers: [{ color: '#0c1f35' }] },
-  { elementType: 'labels.text.stroke',   stylers: [{ color: '#0c1f35' }] },
-  { elementType: 'labels.text.fill',     stylers: [{ color: '#7a93b8' }] },
-  { featureType: 'water', elementType: 'geometry',         stylers: [{ color: '#082a47' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4d6780' }] },
-  { featureType: 'road',  elementType: 'geometry',         stylers: [{ color: '#12324b' }] },
-  { featureType: 'road.highway', elementType: 'geometry',  stylers: [{ color: '#1d4a72' }] },
-  { featureType: 'poi',   elementType: 'geometry',         stylers: [{ color: '#0c2233' }] },
-  { featureType: 'poi',   elementType: 'labels',           stylers: [{ visibility: 'off' }] },
-  { featureType: 'landscape',   elementType: 'geometry',   stylers: [{ color: '#0e2840' }] },
-  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#1b3a5c' }] },
-  { featureType: 'transit', elementType: 'geometry',       stylers: [{ color: '#0c1f35' }] },
+  { featureType: 'poi',     elementType: 'labels.icon',   stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', elementType: 'labels.icon',   stylers: [{ visibility: 'off' }] },
+  { featureType: 'road',    elementType: 'geometry.fill', stylers: [{ color: '#f0ede8' }] },
+  { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#e4dfd8' }] },
+  { featureType: 'water',   elementType: 'geometry',      stylers: [{ color: '#cfe0f0' }] },
+  { featureType: 'landscape', elementType: 'geometry',    stylers: [{ color: '#f7f5f2' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#d8d3cc' }] },
 ]
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
@@ -73,17 +72,15 @@ const MAP_OPTIONS: google.maps.MapOptions = {
   maxZoom: 14,
 }
 
-function makePinIcon(hot: boolean): google.maps.Icon {
-  const size = hot ? 22 : 14
-  const r    = hot ? 7  : 4.5
-  const sw   = hot ? 2.5 : 1.5
-  const c    = size / 2
-  const svg  = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><circle cx='${c}' cy='${c}' r='${r}' fill='%23e10f1f' stroke='white' stroke-width='${sw}'/></svg>`
-  return {
-    url: `data:image/svg+xml,${svg}`,
-    scaledSize: new google.maps.Size(size, size),
-    anchor:     new google.maps.Point(c, c),
+function fmtPill(l: { price: number; purpose: string }, currency: 'USD' | 'DOP', dopRate: number): string {
+  if (currency === 'DOP') {
+    const dp = Math.round(l.price * dopRate)
+    const short = dp >= 1_000_000 ? `RD$${(dp / 1_000_000).toFixed(1)}M` : `RD$${Math.round(dp / 1_000)}K`
+    return l.purpose === 'rent' ? `RD$${dp.toLocaleString()}/mo` : short
   }
+  const p = l.price
+  const short = p >= 1_000_000 ? `$${(p / 1_000_000).toFixed(1)}M USD` : `$${Math.round(p / 1_000)}K USD`
+  return l.purpose === 'rent' ? `$${Math.round(p).toLocaleString()} USD/mo` : short
 }
 
 function Tag({ children, tone = 'sand' }: { children: ReactNode; tone?: string }) {
@@ -95,12 +92,21 @@ function Tag({ children, tone = 'sand' }: { children: ReactNode; tone?: string }
   )
 }
 
-function PropertyCard({ l, go, onHover }: {
+function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSave }: {
   l: Listing
   go: (p: string) => void
   onHover?: (l: Listing | null) => void
+  currency: 'USD' | 'DOP'
+  dopRate: number
+  savedIds: Set<string>
+  onToggleSave: (id: string) => void
 }) {
   const [hot, setHot] = useState(false)
+  const isSaved = savedIds.has(l.id)
+  const dp = currency === 'DOP' ? Math.round(l.price * dopRate) : null
+  const displayPrice = dp != null
+    ? dp >= 1_000_000 ? `RD$${(dp / 1_000_000).toFixed(1)}M` : `RD$${Math.round(dp / 1_000)}K`
+    : `${fmt(l.price)} USD`
   return (
     <div
       onMouseEnter={() => { setHot(true); onHover?.(l) }}
@@ -113,10 +119,10 @@ function PropertyCard({ l, go, onHover }: {
           {l.tags.map(([tag, tone], i) => <Tag key={i} tone={tone}>{tag}</Tag>)}
         </div>
         <button
-          onClick={e => e.stopPropagation()}
-          className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 text-coral grid place-items-center border-none cursor-pointer"
+          onClick={e => { e.stopPropagation(); onToggleSave(l.id) }}
+          className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 grid place-items-center border-none cursor-pointer transition-colors ${isSaved ? 'text-coral' : 'text-ink/30 hover:text-coral'}`}
         >
-          <Heart size={16} />
+          <Heart size={16} fill={isSaved ? 'currentColor' : 'none'} />
         </button>
         {l.roi > 0 && (
           <div className="absolute bottom-3 right-3 flex items-center gap-1.25 bg-ink/90 text-paper py-1.25 px-2.5 rounded-md text-xs font-semibold">
@@ -126,7 +132,7 @@ function PropertyCard({ l, go, onHover }: {
       </div>
       <div className="pt-4 px-4.5 pb-4.5 font-sans">
         <div className="font-sans text-5.25 font-semibold text-ink">
-          {fmt(l.price)}
+          {displayPrice}
           {l.purpose === 'rent' && <span className="text-3.25 text-dim font-sans"> / mo</span>}
         </div>
         <div className="text-3.75 font-semibold text-ink mt-1.5 mb-1 leading-[1.3]">{titleCase(l.title)}</div>
@@ -143,14 +149,13 @@ function PropertyCard({ l, go, onHover }: {
   )
 }
 
-function LiveMap({ apiKey, active, onPick, counts, hovered, listings, onSelect }: {
+function LiveMap({ apiKey, hovered, listings, onSelect, currency, dopRate }: {
   apiKey: string
-  active: string | null
-  onPick: (r: string | null) => void
-  counts: Record<string, number>
   hovered: Listing | null
   listings: Listing[]
   onSelect: (l: Listing) => void
+  currency: 'USD' | 'DOP'
+  dopRate: number
 }) {
   const { isLoaded } = useJsApiLoader({ id: 'google-map-script', googleMapsApiKey: apiKey })
 
@@ -169,91 +174,80 @@ function LiveMap({ apiKey, active, onPick, counts, hovered, listings, onSelect }
       zoom={8}
       options={MAP_OPTIONS}
     >
-      {DR_REGIONS.map(r => {
-        const on = active === r.key
-        const n  = counts[r.key] || 0
-        return (
-          <OverlayView
-            key={r.key}
-            position={{ lat: r.lat, lng: r.lng }}
-            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-            getPixelPositionOffset={(w, h) => ({ x: -w / 2, y: -h / 2 })}
-          >
-            <div
-              onClick={() => onPick(on ? null : r.key)}
-              style={{
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                fontSize: '9px',
-                fontWeight: '700',
-                fontFamily: '"Mona Sans","Inter",system-ui,sans-serif',
-                padding: '3px 8px',
-                borderRadius: '9999px',
-                background: on ? '#e10f1f' : 'rgba(255,255,255,0.92)',
-                color: on ? '#fff' : '#00102e',
-                border: `1px solid ${on ? '#e10f1f' : 'rgba(0,0,0,0.12)'}`,
-                letterSpacing: '0.03em',
-                userSelect: 'none',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
-              }}
-            >
-              {r.key}{n ? ` · ${n}` : ''}
-            </div>
-          </OverlayView>
-        )
-      })}
-
-      {listings.map(l => {
+{listings.map(l => {
         const pos   = coordsForListing(l)
         const isHot = hovered?.id === l.id
         return (
-          <Marker
+          <OverlayView
             key={l.id}
             position={pos}
-            onClick={() => onSelect(l)}
-            zIndex={isHot ? 10 : 1}
-            icon={makePinIcon(isHot)}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            getPixelPositionOffset={(w, h) => ({ x: -w / 2, y: -h / 2 })}
           >
-            {isHot && (
-              <InfoWindow
-                options={{ disableAutoPan: true, pixelOffset: new google.maps.Size(0, -12) }}
-                onCloseClick={() => {}}
-              >
-                <div style={{ fontFamily: '"Mona Sans","Inter",system-ui,sans-serif', minWidth: 172, padding: '2px 4px' }}>
-                  <div style={{ color: '#e10f1f', fontWeight: 700, fontSize: 14 }}>
-                    {fmt(l.price)}{l.purpose === 'rent' ? ' / mo' : ''}
-                  </div>
-                  <div style={{ fontWeight: 600, fontSize: 12, color: '#00102e', marginTop: 3 }}>{titleCase(l.title)}</div>
-                  <div style={{ color: '#7884a0', fontSize: 11, marginTop: 2 }}>📍 {l.region}</div>
-                </div>
-              </InfoWindow>
-            )}
-          </Marker>
+            <div style={{ overflow: 'visible', whiteSpace: 'nowrap' }}>
+            <div
+              onClick={() => onSelect(l)}
+              style={{
+                display: 'inline-block',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                overflow: 'visible',
+                fontSize: '13px',
+                fontWeight: '700',
+                fontFamily: '"Mona Sans","Inter",system-ui,sans-serif',
+                padding: '7px 13px',
+                borderRadius: '9999px',
+                background: isHot ? '#00102e' : 'white',
+                color: isHot ? 'white' : '#00102e',
+                border: `1.5px solid ${isHot ? '#00102e' : 'rgba(0,0,0,0.18)'}`,
+                userSelect: 'none',
+                boxShadow: isHot ? '0 2px 10px rgba(0,0,0,0.35)' : '0 2px 6px rgba(0,0,0,0.14)',
+                zIndex: isHot ? 10 : 1,
+                position: 'relative',
+                transform: isHot ? 'scale(1.08)' : 'scale(1)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {fmtPill(l, currency, dopRate)}
+            </div>
+            </div>
+          </OverlayView>
         )
       })}
     </GoogleMap>
   )
 }
 
-function DRMap({ active, onPick, counts, hovered, listings, onSelect }: {
-  active: string | null
-  onPick: (r: string | null) => void
-  counts: Record<string, number>
+function DRMap({ hovered, listings, onSelect, currency, dopRate, onCurrencyChange }: {
   hovered: Listing | null
   listings: Listing[]
   onSelect: (l: Listing) => void
+  currency: 'USD' | 'DOP'
+  dopRate: number
+  onCurrencyChange: (c: 'USD' | 'DOP') => void
 }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
   const hasKey = Boolean(apiKey && apiKey !== 'YOUR_KEY_HERE')
 
   return (
-    <div className="bg-ink rounded-2xl overflow-hidden border border-line">
-      <div className="pt-3.5 px-4.5 pb-2">
-        <div className="font-sans text-4.25 font-semibold text-paper">Dominican Republic</div>
-        <div className="text-xs text-white/60 mt-0.5 font-sans">
-          {listings.length > 0
-            ? `${listings.length} ${listings.length === 1 ? 'property' : 'properties'} mapped · hover a card`
-            : 'Tap a region to filter'}
+    <div className="bg-paper rounded-2xl overflow-hidden border border-line">
+      <div className="pt-3.5 px-4.5 pb-3.5 flex items-start justify-between gap-2">
+        <div>
+          <div className="font-sans text-4.25 font-semibold text-ink">Dominican Republic</div>
+          <div className="text-xs text-dim mt-0.5 font-sans">
+            {listings.length > 0
+              ? `${listings.length} ${listings.length === 1 ? 'property' : 'properties'} mapped · hover a card`
+              : 'Tap a region to filter'}
+          </div>
+        </div>
+        <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold shrink-0">
+          {(['DOP', 'USD'] as const).map(c => (
+            <button key={c} type="button" onClick={() => onCurrencyChange(c)}
+              className="px-2.5 py-1 transition-colors cursor-pointer"
+              style={{ background: currency === c ? '#00102e' : 'white', color: currency === c ? 'white' : '#64748b' }}>
+              {c}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -261,12 +255,11 @@ function DRMap({ active, onPick, counts, hovered, listings, onSelect }: {
         {hasKey ? (
           <LiveMap
             apiKey={apiKey}
-            active={active}
-            onPick={onPick}
-            counts={counts}
             hovered={hovered}
             listings={listings}
             onSelect={onSelect}
+            currency={currency}
+            dopRate={dopRate}
           />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#00102e', color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
@@ -275,17 +268,6 @@ function DRMap({ active, onPick, counts, hovered, listings, onSelect }: {
         )}
       </div>
 
-      <div className="pt-2.5 px-4 pb-3.5 flex flex-wrap gap-1.5">
-        {['Punta Cana', 'Cap Cana', 'Santo Domingo', 'Las Terrenas', 'Puerto Plata', 'Sosúa'].map(k => {
-          const on = active === k
-          return (
-            <button key={k} onClick={() => onPick(on ? null : k)}
-              className={`font-sans text-2.75 cursor-pointer py-1.25 px-2.5 rounded-full border ${on ? 'bg-coral text-white border-coral font-bold' : 'bg-white/10 text-white/80 border-white/18 font-medium'}`}>
-              {k}
-            </button>
-          )
-        })}
-      </div>
     </div>
   )
 }
@@ -307,6 +289,10 @@ export default function Search() {
   const [hovered,  setHovered]  = useState<Listing | null>(null)
   const [view,        setView]        = useState<'grid' | 'list'>('grid')
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [currency,    setCurrency]    = useState<'USD' | 'DOP'>('DOP')
+  const [dopRate,     setDopRate]     = useState(59.5)
+  const [savedIds,    setSavedIds]    = useState<Set<string>>(new Set())
+  const [isLoggedIn,  setIsLoggedIn]  = useState(false)
 
   useEffect(() => {
     fetchListings()
@@ -314,6 +300,30 @@ export default function Search() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(r => r.json())
+      .then(d => { if (d.rates?.DOP) setDopRate(d.rates.DOP) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    getMySavedIds()
+      .then(ids => { setSavedIds(new Set(ids)); setIsLoggedIn(true) })
+      .catch(() => {})
+  }, [])
+
+  const handleToggleSave = async (id: string) => {
+    if (!isLoggedIn) { go('login'); return }
+    const wasSaved = savedIds.has(id)
+    setSavedIds(prev => { const n = new Set(prev); wasSaved ? n.delete(id) : n.add(id); return n })
+    try {
+      await (wasSaved ? unsaveHome(id) : saveHome(id))
+    } catch {
+      setSavedIds(prev => { const n = new Set(prev); wasSaved ? n.add(id) : n.delete(id); return n })
+    }
+  }
 
   useEffect(() => {
     document.body.style.overflow = filtersOpen ? 'hidden' : ''
@@ -324,11 +334,6 @@ export default function Search() {
   const ALL_REGIONS  = ['Punta Cana', 'Santo Domingo', 'Cap Cana', 'Las Terrenas', 'Samaná', 'Jarabacoa', 'Santiago', 'Puerto Plata', 'Sosúa', 'Cabarete']
   const ALL_AMENITIES = ['Pool', 'Ocean View', 'Beachfront', 'Garage', 'Gated', 'A/C', 'Gym', 'Golf', 'Furnished', 'Generator']
 
-  const counts = useMemo(() => {
-    const m: Record<string, number> = {}
-    listings.forEach(l => { const k = regionOf(l); m[k] = (m[k] || 0) + 1 })
-    return m
-  }, [listings])
 
   const results = useMemo(() => {
     let r = listings.filter(l =>
@@ -412,7 +417,13 @@ export default function Search() {
     </div>
   )
 
-  const fmtMedian = (v: number) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M` : `$${Math.round(v / 1_000)}K`
+  const fmtMedian = (v: number) => {
+    if (currency === 'DOP') {
+      const dp = Math.round(v * dopRate)
+      return dp >= 1_000_000 ? `RD$${(dp / 1_000_000).toFixed(1)}M` : `RD$${Math.round(dp / 1_000)}K`
+    }
+    return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M USD` : `$${Math.round(v / 1_000)}K USD`
+  }
 
   return (
     <>
@@ -597,7 +608,7 @@ export default function Search() {
             </div>
           ) : (
             <div className={`grid gap-4.5 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
-              {results.map(l => <PropertyCard key={l.id} l={l} go={go} onHover={setHovered} />)}
+              {results.map(l => <PropertyCard key={l.id} l={l} go={go} onHover={setHovered} currency={currency} dopRate={dopRate} savedIds={savedIds} onToggleSave={handleToggleSave} />)}
             </div>
           )}
       </main>
@@ -606,12 +617,12 @@ export default function Search() {
       <aside className="hidden lg:flex flex-col self-start sticky top-22.5 max-h-[calc(100vh-110px)] overflow-y-auto gap-3.5">
 
         <DRMap
-          active={region}
-          onPick={setRegion}
-          counts={counts}
           hovered={hovered}
           listings={results}
           onSelect={(l) => go(`detail?id=${l.id}`)}
+          currency={currency}
+          dopRate={dopRate}
+          onCurrencyChange={setCurrency}
         />
 
         {insights && (
@@ -638,7 +649,11 @@ export default function Search() {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-semibold text-ink truncate">{titleCase(l.title)}</div>
                   <div className="text-[10.5px] text-dim mt-px truncate">{l.region}</div>
-                  <div className="text-[11.5px] font-bold text-coral mt-0.5">{fmt(l.price)}</div>
+                  <div className="text-[11.5px] font-bold text-coral mt-0.5">
+                    {currency === 'DOP'
+                      ? (() => { const dp = Math.round(l.price * dopRate); return dp >= 1_000_000 ? `RD$${(dp/1_000_000).toFixed(1)}M` : `RD$${Math.round(dp/1_000)}K` })()
+                      : `${fmt(l.price)} USD`}
+                  </div>
                 </div>
               </button>
             ))}

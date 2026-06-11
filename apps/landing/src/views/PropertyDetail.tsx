@@ -1,6 +1,8 @@
 "use client";
-import { Suspense, useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useMemo, useEffect, type FormEvent } from "react";
+import DOMPurify from "dompurify";
 import { useSearchParams } from "next/navigation";
+import { GoogleMap, OverlayView, useJsApiLoader } from "@react-google-maps/api";
 import {
   ArrowLeft,
   BedDouble,
@@ -21,13 +23,12 @@ import {
 } from "lucide-react";
 import { useNav } from "../hooks/useNav";
 import { fmt } from "../data/listings";
-import {
-  TONE_MAP,
-  THINGS_TO_KNOW,
-  REVIEWS,
-} from "../data/propertyDetailData";
-import { fetchListingById } from "../api/listings";
+import { TONE_MAP } from "../data/propertyDetailData";
+import { fetchListingById, recordListingView } from "../api/listings";
 import type { ApiListingDetail } from "../api/listings";
+import { submitInquiry } from "../api/inquiries";
+import { createBooking } from "../api/bookings";
+import { getMe } from "../api/auth";
 
 function Slider({
   label,
@@ -105,6 +106,118 @@ function Slider({
   );
 }
 
+const MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { featureType: "poi", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#f0ede8" }] },
+  { featureType: "road.highway", elementType: "geometry.fill", stylers: [{ color: "#e4dfd8" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#cfe0f0" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f7f5f2" }] },
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#d8d3cc" }] },
+]
+
+function parseLatLng(url: string): { lat: number; lng: number } | null {
+  try {
+    // Format 1: /maps/place/.../@lat,lng,zoom
+    const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) }
+    // Format 2: ?q=lat,lng or &q=lat,lng
+    const qMatch = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) }
+  } catch { /* ignore */ }
+  return null
+}
+
+function PropertyMap({ mapsUrl, locationName, latitude, longitude }: {
+  mapsUrl: string | null
+  locationName: string
+  latitude: number | null
+  longitude: number | null
+}) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""
+  const coords: { lat: number; lng: number } | null =
+    latitude != null && longitude != null
+      ? { lat: latitude, lng: longitude }
+      : mapsUrl ? parseLatLng(mapsUrl) : null
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: apiKey,
+    id: "google-map-script",
+  })
+
+  if (!apiKey || !coords) {
+    // Fallback: iframe embed by location name or maps_url
+    const ALLOWED_HOSTS = new Set(["maps.google.com", "www.google.com", "google.com", "maps.googleapis.com"])
+    const fallback = `https://maps.google.com/maps?q=${encodeURIComponent(locationName + ", Dominican Republic")}&output=embed`
+    let embedSrc = fallback
+    if (mapsUrl) {
+      try {
+        const u = new URL(mapsUrl)
+        if (u.protocol === "https:" && ALLOWED_HOSTS.has(u.hostname)) {
+          if (!u.searchParams.has("output")) u.searchParams.set("output", "embed")
+          embedSrc = u.toString()
+        }
+      } catch { /* invalid URL */ }
+    }
+    return (
+      <iframe
+        src={embedSrc}
+        width="100%"
+        height="100%"
+        style={{ border: 0, display: "block" }}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        sandbox="allow-scripts allow-same-origin"
+      />
+    )
+  }
+
+  if (!isLoaded) {
+    return <div className="w-full h-full bg-paper2 animate-pulse rounded-2xl" />
+  }
+
+  return (
+    <GoogleMap
+      mapContainerStyle={{ width: "100%", height: "100%" }}
+      center={coords}
+      zoom={15}
+      options={{ styles: MAP_STYLES, disableDefaultUI: false, zoomControl: true, streetViewControl: false, mapTypeControl: false, fullscreenControl: false }}
+    >
+      <OverlayView
+        position={coords}
+        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+        getPixelPositionOffset={(w, h) => ({ x: -w / 2, y: -h })}
+      >
+        <div style={{ overflow: "visible", whiteSpace: "nowrap" }}>
+          <div style={{
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "center",
+            cursor: "default",
+            userSelect: "none",
+          }}>
+            <div style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50% 50% 50% 0",
+              transform: "rotate(-45deg)",
+              background: "#00102e",
+              boxShadow: "0 3px 12px rgba(0,16,46,0.45)",
+              border: "2.5px solid white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <div style={{ transform: "rotate(45deg)", width: 10, height: 10, borderRadius: "50%", background: "white" }} />
+            </div>
+            <div style={{ width: 2, height: 6, background: "#00102e", borderRadius: 2, marginTop: -1 }} />
+          </div>
+        </div>
+      </OverlayView>
+    </GoogleMap>
+  )
+}
+
 const TAG_TONES: Record<string, string> = {
   Luxury: "gold",
   Investment: "coral",
@@ -121,10 +234,35 @@ function PropertyDetailInner() {
   const [listing, setListing] = useState<ApiListingDetail | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [dopRate, setDopRate] = useState(59.5);
+  const [currency, setCurrency] = useState<'USD' | 'DOP'>('DOP');
   const [aPrice, setAPrice] = useState(0);
   const [aDown, setADown] = useState(30);
   const [aRate, setARate] = useState(7);
   const [aTerm, setATerm] = useState(25);
+
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inquiryForm, setInquiryForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [inquirySending, setInquirySending] = useState(false);
+  const [inquirySent, setInquirySent] = useState(false);
+
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingForm, setBookingForm] = useState({ checkIn: '', checkOut: '', guests: 1, notes: '' });
+  const [bookingSending, setBookingSending] = useState(false);
+  const [bookingSent, setBookingSent] = useState(false);
+  const [bookingError, setBookingError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    getMe().then(() => setIsLoggedIn(true)).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(r => r.json())
+      .then(d => { if (d.rates?.DOP) setDopRate(d.rates.DOP) })
+      .catch(() => {})
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -135,9 +273,14 @@ function PropertyDetailInner() {
       .then((data) => {
         setListing(data);
         setAPrice(Number(data.price));
+        recordListingView(id).catch(() => {});
       })
       .catch(() => setLoadError(true));
   }, [id]);
+
+  const fmtM = (v: number) => currency === 'DOP'
+    ? `RD$${Math.round(v * dopRate).toLocaleString("en-US")}`
+    : `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const mortgage = useMemo(() => {
     const loan = aPrice * (1 - aDown / 100);
@@ -149,6 +292,28 @@ function PropertyDetailInner() {
     const totalInterest = totalPaid - loan;
     return { loan, down, monthly, totalPaid, totalInterest };
   }, [aPrice, aDown, aRate, aTerm]);
+  const handleInquiry = async (e: FormEvent) => {
+    e.preventDefault()
+    setInquirySending(true)
+    try {
+      await submitInquiry({ listing_id: id, name: inquiryForm.name, email: inquiryForm.email, phone: inquiryForm.phone || undefined, message: inquiryForm.message })
+      setInquirySent(true)
+    } catch { /* keep form open */ }
+    finally { setInquirySending(false) }
+  }
+
+  const handleBooking = async (e: FormEvent) => {
+    e.preventDefault()
+    setBookingSending(true)
+    setBookingError('')
+    try {
+      await createBooking({ listing_id: id, check_in: bookingForm.checkIn, check_out: bookingForm.checkOut, guests: bookingForm.guests, notes: bookingForm.notes || undefined })
+      setBookingSent(true)
+    } catch (err: any) {
+      setBookingError(err?.response?.status === 401 ? 'Please log in to request a booking.' : 'Something went wrong. Please try again.')
+    } finally { setBookingSending(false) }
+  }
+
   const imgs: string[] = listing?.images ?? [];
 
   const remainingCount = imgs.length - 4;
@@ -203,37 +368,28 @@ function PropertyDetailInner() {
       </button>
 
       {/* Header */}
-      <div className="flex items-end justify-between flex-wrap gap-3 mb-3.5">
-        <div>
-          <div className="flex flex-wrap gap-1.5 mb-2.5">
-            {listing.tag && (
-              <span
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${TONE_MAP[tagTone] ?? TONE_MAP.sand}`}
-              >
-                {listing.tag}
-              </span>
-            )}
-            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full border bg-brand text-white border-brand">
-              Verified
+      <div className="mb-3.5">
+        <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+          {listing.tag && (
+            <span
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${TONE_MAP[tagTone] ?? TONE_MAP.sand}`}
+            >
+              {listing.tag}
             </span>
-          </div>
-          <h1 className="font-sans text-[clamp(26px,4vw,40px)] font-bold text-ink leading-[1.07] tracking-tight">
-            {listing.title.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
-          </h1>
-          <div className="flex flex-wrap items-center gap-3.5 text-ink2 text-[14px] mt-2">
-            <span className="flex items-center gap-1.5">
-              <MapPin size={15} />
-              {listing.location}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Star size={15} className="text-gold fill-gold" />
-              4.97 · 142 reviews
-            </span>
-          </div>
+          )}
+          <button className="ml-auto flex items-center gap-2 bg-transparent border border-line text-ink text-[13px] font-semibold px-4 py-2 rounded-full cursor-pointer font-sans">
+            <Share2 size={14} /> Share
+          </button>
         </div>
-        <button className="flex items-center gap-2 bg-transparent border border-line text-ink text-[13px] font-semibold px-4 py-2.5 rounded-full cursor-pointer font-sans">
-          <Share2 size={15} /> Share
-        </button>
+        <h1 className="font-sans text-[clamp(26px,4vw,40px)] font-bold text-ink leading-[1.07] tracking-tight">
+          {listing.title.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+        </h1>
+        <div className="flex flex-wrap items-center gap-3.5 text-ink2 text-[14px] mt-2">
+          <span className="flex items-center gap-1.5">
+            <MapPin size={15} />
+            {listing.location}
+          </span>
+        </div>
       </div>
 
       {/* Gallery */}
@@ -310,13 +466,19 @@ function PropertyDetailInner() {
           </div>
 
           {/* Description */}
-          <p className="font-sans text-[19px] leading-[1.65] text-ink2 py-4 border-b border-line-soft">
-            {(() => {
-              const raw = listing.description ??
-                `Nestled along the pristine shores of ${listing.location.split(",")[0]}, this property is an architectural masterpiece that redefines Caribbean luxury — an extraordinary residence offering an unparalleled fusion of indoor-outdoor living in one of the DR's most sought-after destinations.`
-              return raw.toLowerCase().replace(/(?:^|\.\s+)\S/g, (c) => c.toUpperCase())
-            })()}
-          </p>
+          {(() => {
+            const fallback = `<p>Nestled along the pristine shores of ${listing.location.split(",")[0]}, this property is an architectural masterpiece that redefines Caribbean luxury — an extraordinary residence offering an unparalleled fusion of indoor-outdoor living in one of the DR's most sought-after destinations.</p>`
+            const raw = listing.description ?? fallback
+            // Support both plain-text (legacy) and Tiptap HTML
+            const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
+            const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
+            return (
+              <div
+                className="listing-prose font-sans py-4 border-b border-line-soft"
+                dangerouslySetInnerHTML={{ __html: safe }}
+              />
+            )
+          })()}
 
           {/* Property details */}
           <h3 className="font-sans text-[22px] font-semibold text-ink mt-7 mb-4">
@@ -346,6 +508,26 @@ function PropertyDetailInner() {
                 label: "Est. ROI",
                 value: `${listing.roi}% / yr`,
               },
+              listing.seller_financing && {
+                icon: <CheckCircle2 size={18} />,
+                label: "Seller Financing",
+                value: "Available",
+              },
+              listing.tax_exempt && {
+                icon: <CheckCircle2 size={18} />,
+                label: "Tax Exemption",
+                value: "CONFOTUR Exempt",
+              },
+              listing.gated_community && {
+                icon: <CheckCircle2 size={18} />,
+                label: "Gated Community",
+                value: "Private Access",
+              },
+              listing.hoa && {
+                icon: <CheckCircle2 size={18} />,
+                label: "HOA Community",
+                value: "Included",
+              },
             ]
               .filter(Boolean)
               .map((d: any, i) => (
@@ -365,38 +547,6 @@ function PropertyDetailInner() {
                 </div>
               ))}
           </div>
-
-          {/* Boolean attributes */}
-          {[
-            {
-              on: listing.seller_financing,
-              label: "Seller Financing Available",
-            },
-            { on: listing.tax_exempt, label: "CONFOTUR Tax Exempt" },
-            { on: listing.gated_community, label: "Gated Community" },
-            { on: listing.hoa, label: "HOA Community" },
-          ].some((b) => b.on) && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {[
-                {
-                  on: listing.seller_financing,
-                  label: "Seller Financing Available",
-                },
-                { on: listing.tax_exempt, label: "CONFOTUR Tax Exempt" },
-                { on: listing.gated_community, label: "Gated Community" },
-                { on: listing.hoa, label: "HOA Community" },
-              ]
-                .filter((b) => b.on)
-                .map((b, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  >
-                    <CheckCircle2 size={12} /> {b.label}
-                  </span>
-                ))}
-            </div>
-          )}
 
           {/* Features & amenities */}
           {listing.features.length > 0 && (
@@ -421,7 +571,7 @@ function PropertyDetailInner() {
               {/* Header */}
               <div className="px-6 py-4 bg-[linear-gradient(135deg,var(--color-coral)_0%,#a8000d_100%)] text-white">
                 <div className="text-[11px] font-bold tracking-[.14em] uppercase">Mortgage Calculator</div>
-                <div className="text-[12px] mt-0.5 text-white/70">Estimate your monthly payment for this property</div>
+                <div className="text-[12px] mt-0.5 text-white/70">Estimate your monthly payment · Amounts in {currency === 'DOP' ? 'DOP' : 'USD'}</div>
               </div>
 
               <div className="px-6 pt-5 pb-6">
@@ -436,10 +586,10 @@ function PropertyDetailInner() {
                 {/* Results */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                   {[
-                    ["Monthly payment", `${fmt(mortgage.monthly)}/mo`],
-                    ["Loan amount", fmt(mortgage.loan)],
-                    ["Down payment", fmt(mortgage.down)],
-                    ["Total interest", fmt(mortgage.totalInterest)],
+                    ["Monthly payment", `${fmtM(mortgage.monthly)}/mo`],
+                    ["Loan amount", fmtM(mortgage.loan)],
+                    ["Down payment", fmtM(mortgage.down)],
+                    ["Total interest", fmtM(mortgage.totalInterest)],
                   ].map(([label, value], i) => (
                     <div key={i} className={`border rounded-xl p-4 ${i === 0 ? "bg-coral/10 border-coral/30" : "bg-paper2 border-line-soft"}`}>
                       <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{label}</div>
@@ -464,42 +614,7 @@ function PropertyDetailInner() {
               className="rounded-2xl overflow-hidden border border-line"
               style={{ height: 300 }}
             >
-              {(() => {
-                const ALLOWED_HOSTS = new Set([
-                  "maps.google.com",
-                  "www.google.com",
-                  "google.com",
-                  "maps.googleapis.com",
-                ]);
-                const fallback = `https://maps.google.com/maps?q=${encodeURIComponent(listing.location + ", Dominican Republic")}&output=embed`;
-                let embedSrc = fallback;
-                if (listing.maps_url) {
-                  try {
-                    const u = new URL(listing.maps_url);
-                    if (
-                      u.protocol === "https:" &&
-                      ALLOWED_HOSTS.has(u.hostname)
-                    ) {
-                      if (!u.searchParams.has("output"))
-                        u.searchParams.set("output", "embed");
-                      embedSrc = u.toString();
-                    }
-                  } catch {
-                    /* invalid URL — use fallback */
-                  }
-                }
-                return (
-                  <iframe
-                    src={embedSrc}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0, display: "block" }}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    sandbox="allow-scripts allow-same-origin"
-                  />
-                );
-              })()}
+              <PropertyMap mapsUrl={listing.maps_url ?? null} locationName={listing.location} latitude={listing.latitude ?? null} longitude={listing.longitude ?? null} />
             </div>
             <div className="flex items-center justify-between mt-2">
               <p className="text-[12.5px] text-ink2 leading-[1.55]">
@@ -518,75 +633,6 @@ function PropertyDetailInner() {
             </div>
           </div>
 
-          {/* Things to know */}
-          <div className="mt-7">
-            <h2 className="font-sans text-[22px] font-semibold text-ink mb-3.5">
-              Things to know
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {THINGS_TO_KNOW.map(([title, items], i) => (
-                <div key={i}>
-                  <div className="text-[14px] font-bold text-ink mb-2.5">
-                    {title}
-                  </div>
-                  {items.map((it, j) => (
-                    <div
-                      key={j}
-                      className="text-[13px] text-ink2 leading-[1.7]"
-                    >
-                      {it}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Reviews */}
-          <div className="mt-7">
-            <div className="flex items-center gap-2.5 mb-4">
-              <Star size={20} className="text-gold fill-gold" />
-              <h2 className="font-sans text-[22px] font-semibold text-ink">
-                4.97 · 142 reviews
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {REVIEWS.map((r, i) => (
-                <div
-                  key={i}
-                  className="bg-paper2 border border-line-soft rounded-2xl p-4"
-                >
-                  <div className="flex items-center gap-2.5 mb-2.5">
-                    <span
-                      className={`w-8 h-8 rounded-full grid place-items-center text-[12px] font-bold text-white shrink-0 ${r.colClass}`}
-                    >
-                      {r.ini}
-                    </span>
-                    <div>
-                      <div className="text-[13.5px] font-semibold text-ink">
-                        {r.name}
-                      </div>
-                      <div className="flex gap-0.5 mt-0.5">
-                        {Array.from({ length: 5 }).map((_, j) => (
-                          <Star
-                            key={j}
-                            size={10}
-                            className="text-gold fill-gold"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[13px] text-ink2 leading-[1.6]">
-                    {r.text}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <button className="mt-4 flex items-center gap-2 bg-transparent border border-line text-ink text-[13px] font-semibold px-4 py-2.5 rounded-full cursor-pointer font-sans">
-              Show all 142 reviews
-            </button>
-          </div>
         </div>
 
         {/* ── Lightbox ── */}
@@ -655,22 +701,38 @@ function PropertyDetailInner() {
 
         {/* ── RIGHT sticky sidebar ── */}
         <div className="lg:sticky lg:top-22.5 border border-line rounded-2xl p-5.5 bg-white shadow-[0_18px_44px_-30px_rgba(0,16,46,.4)]">
-          {/* Transaction type label */}
-          <div className="mb-4">
+          {/* Transaction type label + currency toggle */}
+          <div className="flex items-center justify-between mb-4">
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-[11.5px] font-bold border ${listing.transaction === "rent" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}
             >
               {listing.transaction === "rent" ? "For Rent" : "For Sale"}
             </span>
+            <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+              {(['DOP', 'USD'] as const).map(c => (
+                <button key={c} type="button" onClick={() => setCurrency(c)}
+                  className="px-2.5 py-1 transition-colors cursor-pointer"
+                  style={{ background: currency === c ? '#00102e' : 'white', color: currency === c ? 'white' : '#64748b' }}>
+                  {c}
+                </button>
+              ))}
+            </div>
           </div>
 
           {listing.transaction !== "rent" ? (
             <>
               <div className="text-[32px] font-bold text-ink">
-                {fmt(listing.price)}{" "}
+                {currency === 'DOP'
+                  ? `RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")}`
+                  : fmt(listing.price)}{" "}
                 <span className="text-[13px] text-ink2 mt-1">
-                  Sale price{listing.tax_exempt ? " · CONFOTUR eligible" : ""}
+                  {currency === 'DOP' ? 'DOP' : 'USD'}
                 </span>
+              </div>
+              <div className="text-[12.5px] text-ink2 mt-0.5">
+                {currency === 'DOP'
+                  ? `≈ ${fmt(listing.price)} USD`
+                  : `≈ RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")} DOP`}
               </div>
 
               {[
@@ -701,10 +763,17 @@ function PropertyDetailInner() {
           ) : (
             <>
               <div className="font-sans text-[30px] font-semibold text-ink">
-                {fmt(listing.price)}{" "}
+                {currency === 'DOP'
+                  ? `RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")}`
+                  : fmt(listing.price)}{" "}
                 <span className="text-[16px] text-ink2 font-sans font-normal">
-                  / mo
+                  {currency === 'DOP' ? 'DOP / mo' : 'USD / mo'}
                 </span>
+              </div>
+              <div className="text-[12.5px] text-ink2 mt-0.5">
+                {currency === 'DOP'
+                  ? `≈ ${fmt(listing.price)} USD / mo`
+                  : `≈ RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")} DOP / mo`}
               </div>
               {[
                 listing.hoa_fee && [
@@ -722,12 +791,53 @@ function PropertyDetailInner() {
                     <span className="text-ink font-semibold">{v}</span>
                   </div>
                 ))}
-              <button
-                onClick={() => go("contact")}
-                className="w-full flex justify-center items-center py-3 mt-4 rounded-full border-none cursor-pointer text-white font-sans text-[13.5px] font-bold bg-coral"
-              >
-                Request to book
-              </button>
+              {bookingSent ? (
+                <div className="mt-4 py-3 text-center text-[13px] text-emerald-700 font-semibold">
+                  <CheckCircle2 size={15} className="inline mr-1.5" />Booking request sent!
+                </div>
+              ) : bookingOpen ? (
+                <form onSubmit={handleBooking} className="mt-4 flex flex-col gap-2">
+                  {bookingError && <div className="text-[12px] text-coral font-semibold text-center">{bookingError}</div>}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">Check-in</div>
+                      <input required type="date" value={bookingForm.checkIn}
+                        onChange={e => setBookingForm(f => ({ ...f, checkIn: e.target.value }))}
+                        className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                    </div>
+                    <div>
+                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">Check-out</div>
+                      <input required type="date" value={bookingForm.checkOut}
+                        onChange={e => setBookingForm(f => ({ ...f, checkOut: e.target.value }))}
+                        className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">Guests</div>
+                    <input type="number" min={1} max={20} value={bookingForm.guests}
+                      onChange={e => setBookingForm(f => ({ ...f, guests: parseInt(e.target.value) || 1 }))}
+                      className="w-full text-[13px] border border-line rounded-lg px-3 py-1.5 font-sans outline-none" />
+                  </div>
+                  <textarea rows={2} placeholder="Notes (optional)" value={bookingForm.notes}
+                    onChange={e => setBookingForm(f => ({ ...f, notes: e.target.value }))}
+                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none resize-none" />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => { setBookingOpen(false); setBookingError('') }}
+                      className="flex-1 py-2 rounded-full border border-line text-[13px] font-semibold text-ink2 cursor-pointer bg-transparent font-sans">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={bookingSending}
+                      className="flex-1 py-2 rounded-full bg-coral text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
+                      {bookingSending ? 'Sending…' : 'Request'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <button onClick={() => isLoggedIn ? setBookingOpen(true) : go('login')}
+                  className="w-full flex justify-center items-center py-3 mt-4 rounded-full border-none cursor-pointer text-white font-sans text-[13.5px] font-bold bg-coral">
+                  Request to book
+                </button>
+              )}
             </>
           )}
 
@@ -760,14 +870,41 @@ function PropertyDetailInner() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2.5">
-                <button className="flex-1 justify-center flex items-center gap-1.5 bg-transparent border border-line text-ink px-3 py-2.5 rounded-full text-[13px] font-semibold cursor-pointer font-sans hover:bg-paper2 transition-colors">
-                  <MessageCircle size={14} /> Message
+              {inquirySent ? (
+                <div className="py-3 text-center text-[13px] text-emerald-700 font-semibold">
+                  <CheckCircle2 size={15} className="inline mr-1.5" />Message sent! We'll be in touch.
+                </div>
+              ) : inquiryOpen ? (
+                <form onSubmit={handleInquiry} className="flex flex-col gap-2">
+                  <input required placeholder="Your name" value={inquiryForm.name}
+                    onChange={e => setInquiryForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
+                  <input required type="email" placeholder="Email" value={inquiryForm.email}
+                    onChange={e => setInquiryForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
+                  <input placeholder="Phone (optional)" value={inquiryForm.phone}
+                    onChange={e => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
+                  <textarea required rows={3} placeholder="Your message…" value={inquiryForm.message}
+                    onChange={e => setInquiryForm(f => ({ ...f, message: e.target.value }))}
+                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none resize-none" />
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setInquiryOpen(false)}
+                      className="flex-1 py-2 rounded-full border border-line text-[13px] font-semibold text-ink2 cursor-pointer bg-transparent font-sans">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={inquirySending}
+                      className="flex-1 py-2 rounded-full bg-sea text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
+                      {inquirySending ? 'Sending…' : 'Send'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <button onClick={() => isLoggedIn ? setInquiryOpen(true) : go('login')}
+                  className="w-full flex justify-center items-center gap-1.5 bg-transparent border border-line text-ink px-3 py-2.5 rounded-full text-[13px] font-semibold cursor-pointer font-sans hover:bg-paper2 transition-colors">
+                  <MessageCircle size={14} /> Message Agent
                 </button>
-                <button className="flex-1 justify-center flex items-center gap-1.5 bg-transparent border border-line text-ink px-3 py-2.5 rounded-full text-[13px] font-semibold cursor-pointer font-sans hover:bg-paper2 transition-colors">
-                  WhatsApp
-                </button>
-              </div>
+              )}
             </div>
           )}
         </div>

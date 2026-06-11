@@ -22,10 +22,15 @@ export interface Listing {
   year_built: number | null
   features: string[]
   maps_url: string | null
+  latitude: number | null
+  longitude: number | null
   tag: string | null
   images: string[]
   status: string
   rejection_reason: string | null
+  view_count: number
+  leads_count: number
+  updated_at: string | null
   submitted_by: string
   owner_id: string | null
 }
@@ -51,6 +56,8 @@ export interface ListingUpdate {
   year_built?: number
   features?: string[]
   maps_url?: string
+  latitude?: number
+  longitude?: number
   tag?: string
   images?: string[]
 }
@@ -76,6 +83,8 @@ export interface ListingCreate {
   year_built?: number
   features?: string[]
   maps_url?: string
+  latitude?: number
+  longitude?: number
   tag?: string
   images?: string[]
 }

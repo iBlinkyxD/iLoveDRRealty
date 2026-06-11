@@ -20,14 +20,14 @@ export async function register(body: {
 export async function login(body: {
   email: string
   password: string
-}): Promise<{ access_token: string; expires_in: number }> {
+}): Promise<{ expires_in: number }> {
   return client.post('/auth/login', body).then(r => r.data).catch(errorMessage)
 }
 
 export async function verify(body: {
   email: string
   code: string
-}): Promise<{ access_token: string; expires_in: number }> {
+}): Promise<{ expires_in: number }> {
   return client.post('/auth/verify', body).then(r => r.data).catch(errorMessage)
 }
 
