@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import type { Role } from '../App'
 import type { UserInfo } from '../lib/auth'
-import logo from '../assets/ILoveDRRealty_White.png'
+import logo from '../assets/iLoveDRRealty_White.png'
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
 
