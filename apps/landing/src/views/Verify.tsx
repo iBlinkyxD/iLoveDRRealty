@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { verify, resendCode } from '../api/auth'
 
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://dashboard.ilovedrrealty.com'
+const _dashRaw = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://app.ilovedrrealty.com'
+const DASHBOARD_URL = _dashRaw.startsWith('http') ? _dashRaw : `https://${_dashRaw}`
 
 export default function Verify() {
   const go = useNav()

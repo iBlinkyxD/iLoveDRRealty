@@ -5,7 +5,8 @@ import { Star, Home, Users, Handshake } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { login, getMe } from '../api/auth'
 
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://dashboard.ilovedrrealty.com'
+const _dashRaw = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://app.ilovedrrealty.com'
+const DASHBOARD_URL = _dashRaw.startsWith('http') ? _dashRaw : `https://${_dashRaw}`
 
 const STATS = [
   { value: '4.9',    label: 'Rating',            Icon: Star,      iconCls: 'text-gold fill-gold' },
