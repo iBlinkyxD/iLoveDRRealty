@@ -501,7 +501,9 @@ function PropertyDetailInner() {
               listing.hoa_fee && {
                 icon: <MapPin size={18} />,
                 label: "HOA Fee",
-                value: `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
+                value: currency === 'DOP'
+                  ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
+                  : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
               },
               listing.roi && {
                 icon: <Star size={18} />,
@@ -739,7 +741,9 @@ function PropertyDetailInner() {
                 listing.roi && ["Est. ROI", `${listing.roi}% / yr`],
                 listing.hoa_fee && [
                   "HOA Fee",
-                  `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
+                  currency === 'DOP'
+                    ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
+                    : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
                 ],
                 listing.tax_exempt && ["Tax", "CONFOTUR exempt (IPI waived)"],
               ]
@@ -778,7 +782,9 @@ function PropertyDetailInner() {
               {[
                 listing.hoa_fee && [
                   "HOA Fee",
-                  `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
+                  currency === 'DOP'
+                    ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
+                    : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
                 ],
               ]
                 .filter(Boolean)

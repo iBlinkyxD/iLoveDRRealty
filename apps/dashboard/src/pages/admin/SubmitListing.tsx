@@ -175,8 +175,11 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
   const [thumbnail, setThumbnail] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [priceCurrency, setPriceCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [hoaFeeCurrency, setHoaFeeCurrency] = useState<'USD' | 'DOP'>('USD')
   const [dopRate, setDopRate] = useState(59.5)
   const [customInput, setCustomInput] = useState('')
+  const [customTagInput, setCustomTagInput] = useState('')
+  const [customTags, setCustomTags] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -193,10 +196,31 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
     setPriceCurrency(newCurrency)
   }
 
+  function handleHoaFeeCurrencyToggle(newCurrency: 'USD' | 'DOP') {
+    const raw = parseFloat(form.hoa_fee || '0') || 0
+    if (newCurrency === 'DOP' && hoaFeeCurrency === 'USD') set('hoa_fee', Math.round(raw * dopRate).toString())
+    else if (newCurrency === 'USD' && hoaFeeCurrency === 'DOP') set('hoa_fee', Math.round(raw / dopRate).toString())
+    setHoaFeeCurrency(newCurrency)
+  }
+
   function addCustomFeature() {
-    const val = customInput.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
-    if (val && !form.features.includes(val)) set('features', [...form.features, val])
+    const toTitle = (s: string) => s.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    const entries = customInput.split(',').map(toTitle).filter(s => s && !form.features.includes(s))
+    if (entries.length) set('features', [...form.features, ...entries])
     setCustomInput('')
+  }
+
+  function addCustomTag() {
+    const val = customTagInput.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    if (!val || customTags.includes(val) || TAGS.includes(val)) return
+    setCustomTags(prev => [...prev, val])
+    set('tag', val)
+    setCustomTagInput('')
+  }
+
+  function removeCustomTag(t: string) {
+    setCustomTags(prev => prev.filter(x => x !== t))
+    if (form.tag === t) set('tag', '')
   }
 
   function set(f: string, v: unknown) { setForm(p => ({ ...p, [f]: v })) }
@@ -240,7 +264,7 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
         year_built: form.year_built ? parseInt(form.year_built) : undefined,
         roi: form.roi ? parseFloat(form.roi) : undefined,
         seller_financing: form.seller_financing, hoa: form.hoa,
-        hoa_fee: form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
+        hoa_fee: form.hoa && form.hoa_fee ? (hoaFeeCurrency === 'DOP' ? Math.round(parseFloat(form.hoa_fee) / dopRate) : parseFloat(form.hoa_fee)) : undefined,
         tax_exempt: form.tax_exempt, gated_community: form.gated_community,
         features: form.features.length ? form.features : undefined,
         maps_url: form.maps_url.trim() || undefined,
@@ -380,11 +404,32 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormToggle value={form.seller_financing} onChange={v => set('seller_financing', v)} label="Seller Financing Available" tone={tone} />
               <FormToggle value={form.tax_exempt} onChange={v => set('tax_exempt', v)} label="CONFOTUR Tax Exempt" tone={tone} />
-              <FormToggle value={form.hoa} onChange={v => { set('hoa', v); if (!v) set('hoa_fee', '') }} label="HOA Community" tone={tone} />
+              <FormToggle value={form.hoa} onChange={v => { set('hoa', v); if (!v) { set('hoa_fee', ''); setHoaFeeCurrency('USD') } }} label="HOA Community" tone={tone} />
               {form.hoa && (
                 <div>
-                  <Lbl>Monthly HOA Fee (USD)</Lbl>
-                  <input className={inp} type="number" value={form.hoa_fee} onChange={e => set('hoa_fee', e.target.value)} placeholder="e.g. 350" min="0" />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Monthly HOA Fee</div>
+                    <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+                      {(['USD', 'DOP'] as const).map(c => (
+                        <button key={c} type="button" onClick={() => handleHoaFeeCurrencyToggle(c)}
+                          className="px-2.5 py-1 transition-colors cursor-pointer"
+                          style={{ background: hoaFeeCurrency === c ? tone : 'white', color: hoaFeeCurrency === c ? 'white' : '#64748b' }}>
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <input className={inp} type="text" inputMode="numeric"
+                    value={form.hoa_fee ? Number(form.hoa_fee).toLocaleString('en-US') : ''}
+                    onChange={e => set('hoa_fee', e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder={hoaFeeCurrency === 'USD' ? 'e.g. 350' : 'e.g. 20,650'} min="0" />
+                  {form.hoa_fee ? (
+                    <p className="text-[11.5px] text-dim mt-1">
+                      {hoaFeeCurrency === 'USD'
+                        ? `≈ RD$${Math.round(parseFloat(form.hoa_fee) * dopRate).toLocaleString('en-US')} DOP`
+                        : `≈ $${Math.round(parseFloat(form.hoa_fee) / dopRate).toLocaleString('en-US')} USD`}
+                    </p>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -429,7 +474,7 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
                 <input className={inp + ' flex-1'} type="text" value={customInput}
                   onChange={e => setCustomInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomFeature() } }}
-                  placeholder="Add custom feature…" maxLength={50} />
+                  placeholder="e.g. Pool, Ocean View, Smart Home" />
                 <button type="button" onClick={addCustomFeature} disabled={!customInput.trim()}
                   className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
                   style={{ background: tone, color: 'white' }}>Add</button>
@@ -478,6 +523,22 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
                 {t}
               </button>
             ))}
+            {customTags.map(t => (
+              <span key={t} className="inline-flex items-center gap-1 rounded-full border text-[13px] font-semibold transition-all"
+                style={{ borderColor: form.tag === t ? tone : '#e2e8f0', background: form.tag === t ? tone : 'white', color: form.tag === t ? 'white' : '#64748b' }}>
+                <button type="button" onClick={() => set('tag', form.tag === t ? '' : t)} className="pl-4 pr-2 py-2 cursor-pointer bg-transparent border-0 font-semibold text-[13px]" style={{ color: 'inherit' }}>{t}</button>
+                <button type="button" onClick={() => removeCustomTag(t)} className="pr-3 py-2 cursor-pointer bg-transparent border-0 text-[11px] leading-none" style={{ color: 'inherit' }}>×</button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <input className={inp + ' flex-1'} type="text" value={customTagInput}
+              onChange={e => setCustomTagInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTag() } }}
+              placeholder="e.g. Pre-Construction" />
+            <button type="button" onClick={addCustomTag} disabled={!customTagInput.trim()}
+              className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
+              style={{ background: tone, color: 'white' }}>Add</button>
           </div>
         </Sec>
 
@@ -532,8 +593,14 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
   const [uploading,    setUploading]    = useState(false)
   const [submitting,   setSubmitting]   = useState(false)
   const [priceCurrency, setPriceCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [hoaFeeCurrency, setHoaFeeCurrency] = useState<'USD' | 'DOP'>('USD')
   const [dopRate, setDopRate] = useState(59.5)
   const [customInput, setCustomInput] = useState('')
+  const [customTagInput, setCustomTagInput] = useState('')
+  const [customTags, setCustomTags] = useState<string[]>(() => {
+    const t = listing.tag ?? ''
+    return t && !TAGS.includes(t) ? [t] : []
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -549,6 +616,13 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
     set('features', form.features.includes(f) ? form.features.filter(x => x !== f) : [...form.features, f])
   }
 
+  function handleHoaFeeCurrencyToggleEdit(newCurrency: 'USD' | 'DOP') {
+    const raw = parseFloat(form.hoa_fee || '0') || 0
+    if (newCurrency === 'DOP' && hoaFeeCurrency === 'USD') set('hoa_fee', Math.round(raw * dopRate).toString())
+    else if (newCurrency === 'USD' && hoaFeeCurrency === 'DOP') set('hoa_fee', Math.round(raw / dopRate).toString())
+    setHoaFeeCurrency(newCurrency)
+  }
+
   function handleCurrencyToggleEdit(newCurrency: 'USD' | 'DOP') {
     const raw = parseFloat(form.price || '0') || 0
     if (newCurrency === 'DOP' && priceCurrency === 'USD') set('price', Math.round(raw * dopRate).toString())
@@ -557,9 +631,23 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
   }
 
   function addCustomFeatureEdit() {
-    const val = customInput.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
-    if (val && !form.features.includes(val)) set('features', [...form.features, val])
+    const toTitle = (s: string) => s.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    const entries = customInput.split(',').map(toTitle).filter(s => s && !form.features.includes(s))
+    if (entries.length) set('features', [...form.features, ...entries])
     setCustomInput('')
+  }
+
+  function addCustomTagEdit() {
+    const val = customTagInput.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    if (!val || customTags.includes(val) || TAGS.includes(val)) return
+    setCustomTags(prev => [...prev, val])
+    set('tag', val)
+    setCustomTagInput('')
+  }
+
+  function removeCustomTagEdit(t: string) {
+    setCustomTags(prev => prev.filter(x => x !== t))
+    if (form.tag === t) set('tag', '')
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -597,7 +685,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
         year_built: form.year_built ? parseInt(form.year_built) : undefined,
         roi: form.roi ? parseFloat(form.roi) : undefined,
         seller_financing: form.seller_financing, hoa: form.hoa,
-        hoa_fee: form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
+        hoa_fee: form.hoa && form.hoa_fee ? (hoaFeeCurrency === 'DOP' ? Math.round(parseFloat(form.hoa_fee) / dopRate) : parseFloat(form.hoa_fee)) : undefined,
         tax_exempt: form.tax_exempt, gated_community: form.gated_community,
         features: form.features.length ? form.features : undefined,
         maps_url: form.maps_url.trim() || undefined,
@@ -607,7 +695,16 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
         images: orderedImages,
       })
       toast.success('Changes saved!')
-      onSaved({ ...listing, ...updated })
+      onSaved({
+        ...listing,
+        ...updated,
+        submitted_by: listing.submitted_by,
+        submitted_by_name: listing.submitted_by_name,
+        submitted_by_email: listing.submitted_by_email,
+        reviewed_by_name: listing.reviewed_by_name,
+        reviewed_by_email: listing.reviewed_by_email,
+        reviewed_at: listing.reviewed_at,
+      })
     } catch { toast.error('Something went wrong. Please try again.') }
     finally { setSubmitting(false) }
   }
@@ -737,11 +834,32 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormToggle value={form.seller_financing} onChange={v => set('seller_financing', v)} label="Seller Financing Available" tone={TONE} />
               <FormToggle value={form.tax_exempt} onChange={v => set('tax_exempt', v)} label="CONFOTUR Tax Exempt" tone={TONE} />
-              <FormToggle value={form.hoa} onChange={v => { set('hoa', v); if (!v) set('hoa_fee', '') }} label="HOA Community" tone={TONE} />
+              <FormToggle value={form.hoa} onChange={v => { set('hoa', v); if (!v) { set('hoa_fee', ''); setHoaFeeCurrency('USD') } }} label="HOA Community" tone={TONE} />
               {form.hoa && (
                 <div>
-                  <Lbl>Monthly HOA Fee (USD)</Lbl>
-                  <input className={inp} type="number" value={form.hoa_fee} onChange={e => set('hoa_fee', e.target.value)} placeholder="e.g. 350" min="0" />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Monthly HOA Fee</div>
+                    <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+                      {(['USD', 'DOP'] as const).map(c => (
+                        <button key={c} type="button" onClick={() => handleHoaFeeCurrencyToggleEdit(c)}
+                          className="px-2.5 py-1 transition-colors cursor-pointer"
+                          style={{ background: hoaFeeCurrency === c ? TONE : 'white', color: hoaFeeCurrency === c ? 'white' : '#64748b' }}>
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <input className={inp} type="text" inputMode="numeric"
+                    value={form.hoa_fee ? Number(form.hoa_fee).toLocaleString('en-US') : ''}
+                    onChange={e => set('hoa_fee', e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder={hoaFeeCurrency === 'USD' ? 'e.g. 350' : 'e.g. 20,650'} min="0" />
+                  {form.hoa_fee ? (
+                    <p className="text-[11.5px] text-dim mt-1">
+                      {hoaFeeCurrency === 'USD'
+                        ? `≈ RD$${Math.round(parseFloat(form.hoa_fee) * dopRate).toLocaleString('en-US')} DOP`
+                        : `≈ $${Math.round(parseFloat(form.hoa_fee) / dopRate).toLocaleString('en-US')} USD`}
+                    </p>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -786,7 +904,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
                 <input className={inp + ' flex-1'} type="text" value={customInput}
                   onChange={e => setCustomInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomFeatureEdit() } }}
-                  placeholder="Add custom feature…" maxLength={50} />
+                  placeholder="e.g. Pool, Ocean View, Smart Home" />
                 <button type="button" onClick={addCustomFeatureEdit} disabled={!customInput.trim()}
                   className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
                   style={{ background: TONE, color: 'white' }}>Add</button>
@@ -835,6 +953,22 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
                 {t}
               </button>
             ))}
+            {customTags.map(t => (
+              <span key={t} className="inline-flex items-center gap-1 rounded-full border text-[13px] font-semibold transition-all"
+                style={{ borderColor: form.tag === t ? TONE : '#e2e8f0', background: form.tag === t ? TONE : 'white', color: form.tag === t ? 'white' : '#64748b' }}>
+                <button type="button" onClick={() => set('tag', form.tag === t ? '' : t)} className="pl-4 pr-2 py-2 cursor-pointer bg-transparent border-0 font-semibold text-[13px]" style={{ color: 'inherit' }}>{t}</button>
+                <button type="button" onClick={() => removeCustomTagEdit(t)} className="pr-3 py-2 cursor-pointer bg-transparent border-0 text-[11px] leading-none" style={{ color: 'inherit' }}>×</button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <input className={inp + ' flex-1'} type="text" value={customTagInput}
+              onChange={e => setCustomTagInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTagEdit() } }}
+              placeholder="e.g. Pre-Construction" />
+            <button type="button" onClick={addCustomTagEdit} disabled={!customTagInput.trim()}
+              className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
+              style={{ background: TONE, color: 'white' }}>Add</button>
           </div>
         </Sec>
 

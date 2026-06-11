@@ -1,33 +1,42 @@
 'use client'
 import { useNav } from '../hooks/useNav'
-import { useState } from 'react'
-import { Search, Check, ArrowRight } from 'lucide-react'
-import { SAMPLE_PROPERTIES, STATS, MISTAKES, ROLES } from '../data/landingData'
+import { useState, useEffect } from 'react'
+import { Search, Check, ArrowRight, MapPin } from 'lucide-react'
+import { STATS, MISTAKES, ROLES } from '../data/landingData'
+import { fetchListings } from '../api/listings'
+import type { Listing } from '../data/listings'
 
 type GoFn = (page: string) => void
 
-function PropertyCard({ prop, go }: { prop: typeof SAMPLE_PROPERTIES[0]; go: GoFn }) {
+function PropertyCard({ prop, go }: { prop: Listing; go: GoFn }) {
   const fmt = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`
+  const tag = prop.tags?.[0]?.[0] ?? ''
   return (
     <div
-      onClick={() => go('search')}
+      onClick={() => go(`property/${prop.id}`)}
       className="bg-paper rounded-2xl border border-line-soft overflow-hidden cursor-pointer"
     >
       <div className="h-45 relative bg-ink" style={{ backgroundImage: `url(${prop.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        <span className="absolute top-3 left-3 text-2.75 font-bold tracking-[.04em] bg-black/35 text-white px-2.25 py-0.75 rounded-md font-sans">
-          {prop.tag}
-        </span>
-        <span className="absolute top-3 right-3 text-2.75 font-bold bg-gold/18 text-gold px-2.25 py-0.75 rounded-md font-sans border border-gold/30">
-          {prop.roi}% ROI
-        </span>
+        {tag && (
+          <span className="absolute top-3 left-3 text-2.75 font-bold tracking-[.04em] bg-black/35 text-white px-2.25 py-0.75 rounded-md font-sans">
+            {tag}
+          </span>
+        )}
+        {prop.roi > 0 && (
+          <span className="absolute top-3 right-3 text-2.75 font-bold bg-amber-600 text-white px-2.25 py-0.75 rounded-md font-sans">
+            {prop.roi}% ROI
+          </span>
+        )}
       </div>
       <div className="pt-4 px-4.5 pb-4.5">
-        <div className="font-sans text-2.75 text-dim mb-1">📍 {prop.region}</div>
+        <div className="font-sans text-2.75 text-dim mb-1 flex items-center gap-1"><MapPin size={11} /> {prop.region}</div>
         <div className="font-sans text-4.25 font-semibold text-ink leading-tight mb-2.5">
           {prop.title}
         </div>
         <div className="flex gap-3.5 text-3 text-dim font-sans mb-3">
-          <span>{prop.bd} bd</span><span>{prop.ba} ba</span><span>{prop.m2} m²</span>
+          {prop.bd > 0 && <span>{prop.bd} bd</span>}
+          {prop.ba > 0 && <span>{prop.ba} ba</span>}
+          {prop.m2 > 0 && <span>{prop.m2} m²</span>}
         </div>
         <div className="font-sans text-5.5 font-bold text-ink">{fmt(prop.price)}</div>
       </div>
@@ -42,6 +51,11 @@ export default function Landing() {
   const [hLoc,    setHLoc]    = useState('')
   const [hType,   setHType]   = useState('All')
   const [hBudget, setHBudget] = useState('')
+  const [featured, setFeatured] = useState<Listing[]>([])
+
+  useEffect(() => {
+    fetchListings().then(all => setFeatured(all.slice(0, 4))).catch(() => {})
+  }, [])
 
   return (
     <div className="bg-paper">
@@ -160,7 +174,7 @@ export default function Landing() {
       </div>
 
       {/* ─────────────────────── Deal of the Week ─────────────────────── */}
-      <div className="bg-paper pt-14 sm:pt-17.5 px-4 sm:px-6 pb-7.5">
+      {false && <div className="bg-paper pt-14 sm:pt-17.5 px-4 sm:px-6 pb-7.5">
         <div className="max-w-310 mx-auto">
           <div className="flex items-center gap-3 mb-5.5 flex-wrap">
             <span className="inline-flex items-center gap-1.75 px-3.5 py-1.5 rounded-full bg-gold text-ink text-2.75 font-extrabold tracking-[0.14em] uppercase">
@@ -221,7 +235,7 @@ export default function Landing() {
             <strong className="text-ink2">Sellers can submit a property for consideration</strong> — our team reviews every submission for value and quality before featuring it.
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* ─────────────────────── Founder Story ─────────────────────── */}
       <div className="bg-paper2 py-14 sm:py-20 px-4 sm:px-6 relative overflow-hidden">
@@ -377,9 +391,8 @@ export default function Landing() {
             View all 4,812 <ArrowRight size={16} />
           </button>
         </div>
-        {/* TODO: map over src/data/properties.ts instead of SAMPLE_PROPERTIES when data file is ready */}
         <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-5">
-          {SAMPLE_PROPERTIES.map(p => <PropertyCard key={p.id} prop={p} go={go} />)}
+          {featured.map(p => <PropertyCard key={p.id} prop={p} go={go} />)}
         </div>
       </div>
 
