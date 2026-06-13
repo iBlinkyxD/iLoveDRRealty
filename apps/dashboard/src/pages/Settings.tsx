@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
-import { Shield, Bell, Eye, EyeOff, Mail, Unlink, AlertTriangle, Camera, Save } from 'lucide-react'
+import { Shield, Bell, Eye, EyeOff, Mail, Unlink, Link2, AlertTriangle, Camera, Save } from 'lucide-react'
+import { useGoogleLogin } from '@react-oauth/google'
 import { PhoneInput } from 'react-international-phone'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import 'react-international-phone/style.css'
 import toast from 'react-hot-toast'
 import type { UserInfo } from '../lib/auth'
 import type { Role } from '../App'
-import { changePassword, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../api/auth'
+import { changePassword, linkGoogle, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../api/auth'
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488] disabled:bg-[#f4f5f7] disabled:text-dim'
 
@@ -138,6 +139,23 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
   const [saving, setSaving] = useState(false)
   const [unlinkOpen, setUnlinkOpen] = useState(false)
   const [unlinking, setUnlinking] = useState(false)
+  const [linking, setLinking] = useState(false)
+
+  const startLinkGoogle = useGoogleLogin({
+    onSuccess: async ({ access_token }) => {
+      setLinking(true)
+      try {
+        await linkGoogle(access_token)
+        setHasGoogle(true)
+        toast.success('Google account linked')
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Failed to link Google')
+      } finally {
+        setLinking(false)
+      }
+    },
+    onError: () => toast.error('Google sign-in was cancelled or failed'),
+  })
 
   // Notifications state
   const [notifs, setNotifs] = useState({
@@ -507,8 +525,19 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                         <span className="group-hover:hidden">Connected</span>
                         <span className="hidden group-hover:inline">Unlink</span>
                       </button>
+                    ) : hasGoogle ? (
+                      <StatusBadge active={true} label="Connected" />
                     ) : (
-                      <StatusBadge active={hasGoogle} label={hasGoogle ? 'Connected' : 'Not linked'} />
+                      <button
+                        type="button"
+                        onClick={() => startLinkGoogle()}
+                        disabled={linking}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11.5px] font-semibold transition-colors cursor-pointer disabled:opacity-60"
+                        style={{ background: '#f8faff', color: '#2563eb', borderColor: '#bfdbfe' }}
+                      >
+                        <Link2 size={10} />
+                        {linking ? 'Linking…' : 'Link account'}
+                      </button>
                     )}
                   </div>
                 </div>

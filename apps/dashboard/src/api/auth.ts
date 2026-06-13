@@ -23,6 +23,10 @@ export async function setPassword(newPassword: string): Promise<void> {
   await client.post('/auth/set-password', { new_password: newPassword })
 }
 
+export async function linkGoogle(accessToken: string): Promise<void> {
+  await client.post('/auth/link-google', { access_token: accessToken })
+}
+
 export async function unlinkGoogle(): Promise<void> {
   await client.delete('/auth/unlink-google')
 }
