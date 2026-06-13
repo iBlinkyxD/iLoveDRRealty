@@ -1,6 +1,12 @@
 import { Calendar } from 'lucide-react'
 import { Card, StatusPill } from '../../components/dashboard/shared'
-import { OWNER_CAL_EVENTS } from '../../components/dashboard/OwnerHome'
+
+const OWNER_CAL_EVENTS = [
+  { guest: 'Michael Torres',  property: 'Villa Paraíso',     date: 'Jun 14 – Jun 21', tone: '#1f7a3d' },
+  { guest: 'Sarah Mitchell',  property: 'Casa del Mar',      date: 'Jun 28 – Jul 5',  tone: '#0b63ab' },
+  { guest: 'David Chen',      property: 'Villa Paraíso',     date: 'Jul 10 – Jul 17', tone: '#f0a800' },
+  { guest: 'Emma Johansson',  property: 'Playa Hermosa',     date: 'Jul 22 – Jul 29', tone: '#9333ea' },
+]
 
 export function OwnerCalendar({ tone }: { tone: string }) {
   return (

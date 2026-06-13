@@ -1,5 +1,4 @@
 import { type ReactNode } from 'react'
-import { type LucideIcon } from 'lucide-react'
 
 const GRADS = [
   'linear-gradient(135deg,#87ceeb,#0099cc 60%,#006994 100%)',
@@ -31,9 +30,9 @@ export function Card({ title, sub, action, children, padded = true }: {
   )
 }
 
-export function CardLink({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
+export function CardLink({ children, onClick, color }: { children: ReactNode; onClick?: () => void; color?: string }) {
   return (
-    <button onClick={onClick} className="text-xs font-semibold text-sea bg-transparent border-0 cursor-pointer">
+    <button onClick={onClick} className="text-xs font-semibold text-sea bg-transparent border-0 cursor-pointer" style={color ? { color } : undefined}>
       {children}
     </button>
   )
@@ -54,16 +53,14 @@ export function StatusPill({ label, tone: forceTone }: { label: string; tone?: s
   )
 }
 
-export function RoleKpiCard({ Icon, label, value, sub, hl, tone }: {
-  Icon: LucideIcon; label: string; value: string; sub: string; hl?: boolean; tone: string
+export function RoleKpiCard({ label, value, sub, accent }: {
+  label: string; value: string; sub: string; accent?: string
 }) {
   return (
-    <div className={hl ? 'rounded-xl py-4.5 px-5' : 'bg-paper border border-line rounded-xl py-4.5 px-5'}
-      style={hl ? { background: `linear-gradient(135deg, ${tone} 0%, ${tone}cc 100%)` } : undefined}>
-      <Icon size={20} className={`mb-2 ${hl ? 'text-white/70' : 'text-dim'}`} />
-      <div className={`font-sans text-2xl font-bold leading-none ${hl ? 'text-white' : 'text-ink'}`}>{value}</div>
-      <div className={`text-[12.5px] font-semibold mt-1.25 ${hl ? 'text-white/80' : 'text-ink2'}`}>{label}</div>
-      <div className={`text-[11px] mt-0.75 ${hl ? 'text-white/55' : 'text-dim'}`}>{sub}</div>
+    <div className="bg-paper border border-line rounded-xl px-4 py-4">
+      <div className="text-[11px] font-bold uppercase tracking-[.07em] text-dim mb-2">{label}</div>
+      <div className="text-[28px] font-bold leading-none" style={{ color: accent ?? 'var(--ink, #1a1e2e)' }}>{value}</div>
+      <div className="text-[11px] text-dim mt-1.5 truncate">{sub}</div>
     </div>
   )
 }

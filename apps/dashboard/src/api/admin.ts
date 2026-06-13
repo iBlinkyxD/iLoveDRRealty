@@ -9,6 +9,8 @@ export interface AdminUpgradeRequest {
   status: 'pending' | 'approved' | 'rejected'
   rejection_reason: string | null
   created_at: string
+  reviewed_by_name: string | null
+  reviewed_at: string | null
 }
 
 export async function getAdminUpgradeRequests(status?: string): Promise<AdminUpgradeRequest[]> {
@@ -109,4 +111,101 @@ export async function approveListingEdit(id: string): Promise<void> {
 
 export async function rejectListingEdit(id: string, reason: string): Promise<void> {
   await client.post(`/admin/listing-edits/${id}/reject`, { reason })
+}
+
+export interface AdminStats {
+  active_listings: number
+  pending_listings: number
+  total_users: number
+}
+
+export async function getAdminStats(): Promise<AdminStats> {
+  const res = await client.get<AdminStats>('/admin/stats')
+  return res.data
+}
+
+export interface ActivityEntry {
+  id: string
+  event_type: string
+  description: string
+  created_at: string
+}
+
+export async function getAdminActivityLog(limit = 20): Promise<ActivityEntry[]> {
+  const res = await client.get<ActivityEntry[]>('/admin/activity-log', { params: { limit } })
+  return res.data
+}
+
+export interface AdminUser {
+  id: string
+  user_code: number | null
+  email: string
+  role: string
+  status: string
+  display_name: string | null
+  phone: string | null
+  created_at: string
+  avatar_url: string | null
+}
+
+export async function getAdminUsers(role?: string, status?: string): Promise<AdminUser[]> {
+  const res = await client.get<AdminUser[]>('/admin/users', {
+    params: { ...(role ? { role } : {}), ...(status ? { status } : {}) },
+  })
+  return res.data
+}
+
+export async function suspendUser(id: string): Promise<void> {
+  await client.put(`/admin/users/${id}/suspend`)
+}
+
+export async function unsuspendUser(id: string): Promise<void> {
+  await client.put(`/admin/users/${id}/unsuspend`)
+}
+
+export async function createAdminUser(data: {
+  display_name: string
+  email: string
+  password: string
+  role: string
+}): Promise<AdminUser> {
+  const res = await client.post<AdminUser>('/admin/users', data)
+  return res.data
+}
+
+export interface DealRequest {
+  id: string
+  listing_id: string
+  listing_title: string
+  listing_location: string
+  listing_thumbnail: string | null
+  requested_by_name: string | null
+  requested_by_email: string
+  discount_value: number
+  discount_type: string
+  message: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  rejection_reason: string | null
+  reviewed_by_name: string | null
+  reviewed_at: string | null
+  created_at: string
+}
+
+export async function getAdminDealRequests(status?: string): Promise<DealRequest[]> {
+  const res = await client.get<DealRequest[]>('/admin/deal-requests', {
+    params: status ? { status } : undefined,
+  })
+  return res.data
+}
+
+export async function approveDealRequest(id: string): Promise<void> {
+  await client.post(`/admin/deal-requests/${id}/approve`)
+}
+
+export async function rejectDealRequest(id: string, reason: string): Promise<void> {
+  await client.post(`/admin/deal-requests/${id}/reject`, { reason })
+}
+
+export async function clearListingDeal(id: string): Promise<void> {
+  await client.post(`/admin/listings/${id}/clear-deal`)
 }

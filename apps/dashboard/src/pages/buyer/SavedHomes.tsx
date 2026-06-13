@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Heart, MapPin, Trash2 } from 'lucide-react'
+import { Heart, MapPin, Search, Trash2 } from 'lucide-react'
 import { Card, CardLink, StatusPill, fmtPrice } from '../../components/dashboard/shared'
 import { getMySavedHomes, unsaveHome, type SavedHome } from '../../api/savedHomes'
+
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
 
 export function SavedHomes() {
   const [homes, setHomes] = useState<SavedHome[]>([])
@@ -36,10 +38,23 @@ export function SavedHomes() {
       {loading ? (
         <div className="px-5 py-8 text-[13px] text-dim text-center">Loading…</div>
       ) : homes.length === 0 ? (
-        <div className="px-5 py-10 text-center">
-          <Heart size={28} className="text-dim mx-auto mb-2" />
-          <p className="text-[13px] text-dim">No saved homes yet.</p>
-          <p className="text-[12px] text-dim mt-0.5">Heart a property on the search page to save it here.</p>
+        <div className="py-10 flex flex-col items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#e10f1f18' }}>
+            <Heart size={20} style={{ color: '#e10f1f' }} />
+          </div>
+          <div className="text-center">
+            <div className="text-[13.5px] font-semibold text-ink mb-0.5">No saved homes yet</div>
+            <div className="text-[11.5px] text-dim">Browse listings and heart the ones you love.</div>
+          </div>
+          <a
+            href={`${LANDING_URL}/search`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
+            style={{ background: '#e10f1f' }}
+          >
+            <Search size={13} strokeWidth={2.5} /> Browse listings
+          </a>
         </div>
       ) : (
         <div className="px-3 sm:px-5">

@@ -1,40 +1,30 @@
+import { useState, useEffect } from 'react'
 import {
-  Heart, MessageCircle, CalendarDays, Star, MapPin, Search,
-  BookOpen, Scale, Globe, Banknote, type LucideIcon,
+  Heart, MessageCircle, CalendarDays, MapPin,
+  BookOpen, Scale, Globe, Banknote, Search, type LucideIcon,
 } from 'lucide-react'
-import { Card, CardLink, StatusPill, SceneThumb, fmtPrice } from './shared'
 
-function KpiCard({ Icon, label, value, delta, color, spark }: {
-  Icon: LucideIcon; label: string; value: string; delta: string; color: string; spark: string
-}) {
-  return (
-    <div className="bg-paper rounded-2xl border border-line p-5 relative overflow-hidden">
-      <div className="mb-2.5" style={{ color }}><Icon size={20} /></div>
-      <div className="text-[11px] font-bold uppercase tracking-[.08em] text-dim mb-1">{label}</div>
-      <div className="font-sans text-[28px] font-bold text-ink leading-none">{value}</div>
-      <div className="text-xs font-semibold mt-1.5 text-green-600">{delta}</div>
-      <svg viewBox="0 0 80 40" className="absolute right-0 bottom-0 w-25 h-12.5 opacity-[.18]">
-        <polyline points={spark} stroke={color} strokeWidth="2" fill="none" />
-      </svg>
-    </div>
-  )
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
+import { Card, CardLink, StatusPill, SceneThumb, RoleKpiCard, fmtPrice } from './shared'
+import { getMySavedHomes, type SavedHome } from '../../api/savedHomes'
+import { getMyInquiries, type Inquiry } from '../../api/inquiries'
+import { getMyBookings, type Booking } from '../../api/bookings'
+
+function fmtRelative(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1)  return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24)  return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
 }
 
-export const BUYER_KPIS: { Icon: LucideIcon; label: string; value: string; delta: string; color: string; spark: string }[] = [
-  { Icon: Heart,         label: 'Saved Homes',    value: '6',  delta: '↑ 2 this week',    color: '#e10f1f', spark: '0,38 15,32 25,34 35,24 50,20 60,12 80,8'  },
-  { Icon: MessageCircle, label: 'Inquiries Sent', value: '3',  delta: '2 awaiting reply',  color: '#0b63ab', spark: '0,30 15,32 25,18 35,22 50,12 60,16 80,8'  },
-  { Icon: CalendarDays,  label: 'Upcoming Trips', value: '1',  delta: 'Jun 12 · Cap Cana', color: '#f0a800', spark: '0,38 15,35 25,28 35,30 50,18 60,14 80,10' },
-  { Icon: Star,          label: 'Wishlist Match',  value: '12', delta: '↑ new today',       color: '#1f7a3d', spark: '0,38 15,28 25,32 35,18 50,16 60,8 80,6'  },
-]
-
-export const BUYER_LISTINGS = [
-  { id: 1, title: 'Oceanfront Villa with Infinity Pool', region: 'Cap Cana, La Altagracia',  price: 2450000, bd: 6, ba: 7, v: 0 },
-  { id: 2, title: 'Penthouse Condo — Piantini',          region: 'Piantini, Santo Domingo',   price: 389000,  bd: 3, ba: 3, v: 1 },
-  { id: 3, title: 'Tropical Golf Community Villa',        region: 'Punta Cana, La Altagracia', price: 875000,  bd: 5, ba: 5, v: 2 },
-  { id: 4, title: 'Modern Beachfront Residence',          region: 'Las Terrenas, Samaná',      price: 1200000, bd: 4, ba: 4, v: 3 },
-  { id: 7, title: 'Cliffside Designer Villa',             region: 'Sosúa, Puerto Plata',       price: 1650000, bd: 5, ba: 6, v: 0 },
-  { id: 8, title: 'Garden Condo near Marina',             region: 'Cabarete, Puerto Plata',    price: 245000,  bd: 2, ba: 2, v: 3 },
-]
+function nightsBetween(a: string, b: string): number {
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000)
+}
 
 export const BUYER_RESOURCES: { Icon: LucideIcon; title: string; time: string }[] = [
   { Icon: BookOpen, title: 'The Complete DR Buying Guide',  time: '12 min read' },
@@ -44,77 +34,189 @@ export const BUYER_RESOURCES: { Icon: LucideIcon; title: string; time: string }[
 ]
 
 export function BuyerHome({ go }: { go: (v: string) => void }) {
+  const [savedHomes,   setSavedHomes]   = useState<SavedHome[]>([])
+  const [inquiries,    setInquiries]    = useState<Inquiry[]>([])
+  const [bookings,     setBookings]     = useState<Booking[]>([])
+  const [loadingSaved,     setLoadingSaved]     = useState(true)
+  const [loadingInquiries, setLoadingInquiries] = useState(true)
+  const [loadingBookings,  setLoadingBookings]  = useState(true)
+
+  useEffect(() => {
+    getMySavedHomes().then(setSavedHomes).catch(() => {}).finally(() => setLoadingSaved(false))
+    getMyInquiries().then(setInquiries).catch(() => {}).finally(() => setLoadingInquiries(false))
+    getMyBookings().then(setBookings).catch(() => {}).finally(() => setLoadingBookings(false))
+  }, [])
+
+  const today = new Date().toISOString().slice(0, 10)
+  const upcomingBookings = bookings
+    .filter(b => b.check_in >= today && b.status !== 'cancelled')
+    .sort((a, b) => a.check_in.localeCompare(b.check_in))
+  const nextTrip = upcomingBookings[0] ?? null
+
+  const kpis = [
+    {
+      label: 'Saved Homes',
+      value: loadingSaved ? '…' : String(savedHomes.length),
+      sub: savedHomes.length === 1 ? '1 saved property' : `${savedHomes.length} saved properties`,
+    },
+    {
+      label: 'Inquiries Sent',
+      value: loadingInquiries ? '…' : String(inquiries.length),
+      sub: inquiries.length ? `${inquiries.length} sent` : 'None sent yet',
+    },
+    {
+      label: 'Upcoming Trips',
+      value: loadingBookings ? '…' : String(upcomingBookings.length),
+      sub: nextTrip ? `Next: ${nextTrip.check_in}` : 'None scheduled',
+    },
+    {
+      label: 'Wishlist Match',
+      value: '—',
+      sub: 'Coming soon',
+    },
+  ]
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-        {BUYER_KPIS.map((k, i) => <KpiCard key={i} {...k} />)}
+        {kpis.map((k, i) => <RoleKpiCard key={i} {...k} />)}
       </div>
 
       <div className="grid grid-cols-1 gap-5 mt-5 xl:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-5">
-          <Card title={<><Heart size={14} />Saved Homes</>} action={<CardLink onClick={() => go('saved')}>View all →</CardLink>} padded={false}>
-            <div className="px-3 sm:px-5">
-              {BUYER_LISTINGS.slice(0, 5).map((l, i) => (
-                <div key={l.id} className={`flex items-center gap-3 py-3 ${i < 4 ? 'border-b border-line' : ''}`}>
-                  <SceneThumb v={l.v} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-ink truncate">{l.title}</div>
-                    <div className="text-[11px] text-dim mt-0.5 flex items-center gap-1"><MapPin size={10} className="shrink-0" />{l.region}</div>
+          <Card title={<><Heart size={14} />Saved Homes</>} action={<CardLink onClick={() => go('saved')} color="#e10f1f">View all →</CardLink>} padded={false}>
+            {loadingSaved ? (
+              <div className="px-3 sm:px-5">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className={`flex items-center gap-3 py-3 animate-pulse ${i < 3 ? 'border-b border-line' : ''}`}>
+                    <div className="w-13 h-10 rounded-lg bg-line-soft shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-line-soft rounded w-3/4" />
+                      <div className="h-3 bg-line-soft rounded w-2/5" />
+                    </div>
+                    <div className="h-5 w-16 bg-line-soft rounded-full" />
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <div className="text-[13px] font-bold text-ink">{fmtPrice(l.price)}</div>
-                    <StatusPill label="Saved" />
-                  </div>
+                ))}
+              </div>
+            ) : savedHomes.length === 0 ? (
+              <div className="py-10 flex flex-col items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#e10f1f18' }}>
+                  <Heart size={20} style={{ color: '#e10f1f' }} />
                 </div>
-              ))}
-            </div>
+                <div className="text-center">
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No saved homes yet</div>
+                  <div className="text-[11.5px] text-dim">Browse listings and heart the ones you love.</div>
+                </div>
+                <a
+                  href={`${LANDING_URL}/search`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
+                  style={{ background: '#e10f1f' }}
+                >
+                  <Search size={13} strokeWidth={2.5} /> Browse listings
+                </a>
+              </div>
+            ) : (
+              <div className="px-3 sm:px-5">
+                {savedHomes.slice(0, 5).map((l, i) => (
+                  <div key={l.id} className={`flex items-center gap-3 py-3 ${i < Math.min(4, savedHomes.length - 1) ? 'border-b border-line' : ''}`}>
+                    {l.listing_images[0] ? (
+                      <div className="w-13 h-10 rounded-lg shrink-0 overflow-hidden">
+                        <img src={l.listing_images[0]} className="w-full h-full object-cover" alt="" />
+                      </div>
+                    ) : (
+                      <SceneThumb v={0} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-semibold text-ink truncate">{l.listing_title}</div>
+                      <div className="text-[11px] text-dim mt-0.5 flex items-center gap-1"><MapPin size={10} className="shrink-0" />{l.listing_location}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <div className="text-[13px] font-bold text-ink">{fmtPrice(l.listing_price)}</div>
+                      <StatusPill label="Saved" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
-          <Card title={<><Search size={14} />Saved Searches</>} action={<CardLink onClick={() => go('searches')}>+ New search</CardLink>}>
-            {[
-              ['Punta Cana · 2BR+ · under $300K', 'Daily', '3 new'],
-              ['Beachfront condos · Las Terrenas', 'Weekly', '1 new'],
-            ].map(([s, freq, n], i) => (
-              <div key={i} className={`flex items-center gap-3 py-3 ${i === 0 ? 'border-b border-line' : ''}`}>
-                <div className="w-9 h-9 rounded-full shrink-0 grid place-items-center text-white" style={{ background: 'linear-gradient(135deg,#e10f1f,#a50f28)' }}>
-                  <Search size={14} />
-                </div>
-                <div className="flex-1">
-                  <div className="text-[13px] font-semibold text-ink">{s}</div>
-                  <div className="text-[11px] text-dim">Alerts: {freq}</div>
-                </div>
-                <StatusPill label={n} tone="#0b63ab" />
+          <Card title={<><MessageCircle size={14} />My Inquiries</>} action={<CardLink onClick={() => go('inquiries')} color="#e10f1f">All →</CardLink>} padded={false}>
+            {loadingInquiries ? (
+              <div className="px-5">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className={`flex items-center gap-3 py-3 animate-pulse ${i < 2 ? 'border-b border-line' : ''}`}>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-line-soft rounded w-3/4" />
+                      <div className="h-3 bg-line-soft rounded w-2/5" />
+                    </div>
+                    <div className="h-5 w-12 bg-line-soft rounded-full" />
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : inquiries.length === 0 ? (
+              <div className="py-10 flex flex-col items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#e10f1f18' }}>
+                  <MessageCircle size={20} style={{ color: '#e10f1f' }} />
+                </div>
+                <div className="text-center">
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No inquiries yet</div>
+                  <div className="text-[11.5px] text-dim">Find a listing and reach out to get started.</div>
+                </div>
+                <a
+                  href={`${LANDING_URL}/search`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
+                  style={{ background: '#e10f1f' }}
+                >
+                  <Search size={13} strokeWidth={2.5} /> Browse listings
+                </a>
+              </div>
+            ) : (
+              <div className="px-5">
+                {inquiries.slice(0, 3).map((inq, i) => (
+                  <div key={inq.id} className={`flex items-center gap-3 py-3 ${i < Math.min(2, inquiries.length - 1) ? 'border-b border-line' : ''}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] font-semibold text-ink truncate">{inq.listing_title ?? 'General inquiry'}</div>
+                      <div className="text-[11px] text-dim">{fmtRelative(inq.created_at)}</div>
+                    </div>
+                    <StatusPill label="Sent" tone="#0b63ab" />
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
 
         <div className="flex flex-col gap-5">
-          <Card title={<><MessageCircle size={14} />My Inquiries</>} action={<CardLink onClick={() => go('inquiries')}>All →</CardLink>} padded={false}>
-            <div className="px-5">
-              {[['Oceanfront Villa', 'Awaiting reply 2d', 'Pending'], ['Penthouse — Piantini', 'Replied · Tour Jun 2', 'Replied'], ['Golf Community Villa', 'Replied · 5d', 'Replied']].map(([name, note, st], i) => (
-                <div key={i} className={`flex items-center gap-3 py-3 ${i < 2 ? 'border-b border-line' : ''}`}>
-                  <div className="flex-1">
-                    <div className="text-[13px] font-semibold text-ink">{name}</div>
-                    <div className="text-[11px] text-dim">{note}</div>
-                  </div>
-                  <StatusPill label={st} />
-                </div>
-              ))}
-            </div>
-          </Card>
-
           <Card title={<><CalendarDays size={14} />Upcoming Trip</>}>
-            <div className="flex flex-col gap-2">
-              <div className="font-sans text-xl font-bold text-ink">Villa Paraíso — Cap Cana</div>
-              <div className="text-xs text-dim">Jun 12–18, 2026 · 6 nights · 2 guests</div>
-              <div className="h-2 bg-line rounded-full overflow-hidden mt-2">
-                <div className="h-full w-full rounded-full" style={{ background: 'linear-gradient(90deg,#0b63ab,#f0a800)' }} />
+            {loadingBookings ? (
+              <div className="space-y-3 animate-pulse">
+                <div className="h-5 bg-line-soft rounded w-2/3" />
+                <div className="h-3.5 bg-line-soft rounded w-1/2" />
+                <div className="h-2 bg-line-soft rounded-full mt-4" />
               </div>
-              <div className="flex justify-between text-xs text-dim mt-1">
-                <span>Paid in full</span><span className="font-bold text-ink">$8,676</span>
+            ) : !nextTrip ? (
+              <div className="py-4 text-center text-dim text-sm">No upcoming trips</div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="font-sans text-xl font-bold text-ink">{nextTrip.listing_title ?? 'Booking'}</div>
+                <div className="text-xs text-dim">
+                  {nextTrip.check_in} – {nextTrip.check_out} · {nightsBetween(nextTrip.check_in, nextTrip.check_out)} nights · {nextTrip.guests} guest{nextTrip.guests !== 1 ? 's' : ''}
+                </div>
+                <div className="h-2 bg-line rounded-full overflow-hidden mt-2">
+                  <div className="h-full w-full rounded-full" style={{ background: 'linear-gradient(90deg,#0b63ab,#f0a800)' }} />
+                </div>
+                <div className="flex justify-between text-xs text-dim mt-1">
+                  <StatusPill label={nextTrip.status.charAt(0).toUpperCase() + nextTrip.status.slice(1)} />
+                  {nextTrip.total_price != null && (
+                    <span className="font-bold text-ink">${nextTrip.total_price.toLocaleString()}</span>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </Card>
         </div>
       </div>

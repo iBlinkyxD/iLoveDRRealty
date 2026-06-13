@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   Building2, Plus, Search, MoreHorizontal, Home, Pencil, Trash2, EyeOff,
-  ChevronLeft, ChevronRight, X, MapPin, Tag, Link2,
+  MapPin, Star, Clock,
 } from 'lucide-react'
-import DOMPurify from 'dompurify'
 import { getMyListings, type Listing } from '../../api/listings'
 import { EditListing } from './SubmitListing'
+import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -60,7 +60,7 @@ function StatusChip({ status }: { status: string }) {
 
 // ── ActionMenu (3-dots dropdown) ──────────────────────────────────────────────
 
-function ActionMenu({ onEdit }: { onEdit: () => void }) {
+function ActionMenu({ onEdit, onRequestDeal }: { onEdit: () => void; onRequestDeal?: () => void }) {
   const [open, setOpen] = useState(false)
   const [pos,  setPos]  = useState({ top: 0, left: 0 })
   const btnRef  = useRef<HTMLButtonElement>(null)
@@ -97,7 +97,7 @@ function ActionMenu({ onEdit }: { onEdit: () => void }) {
       {open && (
         <div
           ref={menuRef}
-          className="fixed w-36 bg-paper rounded-xl border border-line shadow-lg z-50 overflow-hidden"
+          className="fixed w-44 bg-paper rounded-xl border border-line shadow-lg z-50 overflow-hidden"
           style={{ top: pos.top, left: pos.left }}
         >
           <button
@@ -106,6 +106,15 @@ function ActionMenu({ onEdit }: { onEdit: () => void }) {
           >
             <Pencil size={12} /> Edit listing
           </button>
+          {onRequestDeal && (
+            <button
+              onClick={() => { onRequestDeal(); setOpen(false) }}
+              className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs hover:bg-amber-50 transition-colors cursor-pointer"
+              style={{ color: '#c07800' }}
+            >
+              <Star size={12} /> Deal of the Week
+            </button>
+          )}
           <button
             onClick={() => setOpen(false)}
             className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-ink hover:bg-line/40 transition-colors cursor-pointer"
@@ -125,216 +134,72 @@ function ActionMenu({ onEdit }: { onEdit: () => void }) {
   )
 }
 
-// ── DetailPanel (slide-over) ──────────────────────────────────────────────────
-
-function DetailPanel({
-  listing, tone, onClose, onEdit,
-}: {
-  listing: Listing; tone: string; onClose: () => void; onEdit: () => void
-}) {
-  const [imgIdx, setImgIdx] = useState(0)
-  const imgs = listing.images ?? []
-
-  const BOOLS: { key: keyof Listing; label: string }[] = [
-    { key: 'seller_financing', label: 'Seller Financing'     },
-    { key: 'hoa',              label: 'HOA Community'        },
-    { key: 'tax_exempt',       label: 'CONFOTUR Tax Exempt'  },
-    { key: 'gated_community',  label: 'Gated Community'      },
-  ]
-
-  const FIELDS: { key: keyof Listing; label: string; fmt?: (v: unknown) => string }[] = [
-    { key: 'price',               label: 'Price',              fmt: v => fmtPrice(Number(v))           },
-    { key: 'type',                label: 'Property Type',      fmt: v => fmtType(String(v))            },
-    { key: 'transaction',         label: 'Transaction',        fmt: v => fmtType(String(v))            },
-    { key: 'year_built',          label: 'Year Built'                                                  },
-    { key: 'bedrooms',            label: 'Bedrooms'                                                    },
-    { key: 'bathrooms',           label: 'Bathrooms'                                                   },
-    { key: 'area_sqft',           label: 'Living Area (ft²)'                                           },
-    { key: 'lot_size_sqft',       label: 'Lot Size (ft²)'                                              },
-    { key: 'roi',                 label: 'Est. ROI (%)'                                                },
-    { key: 'hoa_fee',             label: 'HOA Fee ($/mo)'                                              },
-    { key: 'construction_status', label: 'Construction', fmt: v => String(v).replace(/_/g, ' ')       },
-  ]
-
+function PendingReviewsCard({ items, tone, onSelect }: { items: Listing[]; tone: string; onSelect: (l: Listing) => void }) {
   return (
-    <>
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-
-      <div className="fixed right-0 top-0 h-full w-120 max-w-full bg-paper z-50 flex flex-col shadow-2xl">
-        {/* Image carousel */}
-        <div className="relative bg-black shrink-0" style={{ height: 220 }}>
-          {imgs.length > 0 ? (
-            <>
-              <img src={imgs[imgIdx]} alt="" className="w-full h-full object-cover opacity-90" />
-              {imgs.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setImgIdx(i => (i - 1 + imgs.length) % imgs.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={() => setImgIdx(i => (i + 1) % imgs.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {imgs.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setImgIdx(i)}
-                        className="w-1.5 h-1.5 rounded-full cursor-pointer transition-colors"
-                        style={{ background: i === imgIdx ? 'white' : 'rgba(255,255,255,0.45)' }}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center" style={{ background: `${tone}22` }}>
-              <Home size={48} style={{ color: tone }} className="opacity-60" />
-            </div>
-          )}
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
-          >
-            <X size={15} />
-          </button>
+    <div className="bg-paper border border-line rounded-2xl overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-line">
+        <div className="flex items-center gap-2 text-[14px] font-bold text-ink">
+          <Clock size={14} className="text-dim" />
+          Pending Reviews
         </div>
-
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          <div>
-            <div className="flex items-start gap-2 justify-between">
-              <h2 className="text-[16px] font-bold text-ink leading-snug flex-1">{titleCase(listing.title)}</h2>
-              <StatusChip status={listing.status} />
-            </div>
-            <div className="flex items-center gap-1.5 mt-1.5 text-[12px] text-dim">
-              <MapPin size={12} />
-              {listing.location}
-            </div>
-          </div>
-
-          {listing.status === 'rejected' && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-[12.5px] text-red-700">
-              <span className="font-semibold">Rejected: </span>
-              {listing.rejection_reason ?? 'No reason provided.'}
-              <div className="mt-1.5 text-[11.5px] text-red-500">
-                You can edit and resubmit this listing for review.
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {FIELDS.filter(({ key }) => {
-              const v = listing[key]
-              return v !== null && v !== undefined && v !== ''
-            }).map(({ key, label, fmt }) => (
-              <div key={key}>
-                <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide">{label}</div>
-                <div className="text-[13px] font-semibold text-ink mt-0.5">
-                  {fmt ? fmt(listing[key]) : String(listing[key])}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {BOOLS.some(b => listing[b.key] === true) && (
-            <div className="flex flex-wrap gap-2">
-              {BOOLS.filter(b => listing[b.key] === true).map(b => (
-                <span
-                  key={b.key}
-                  className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
-                >
-                  {b.label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {listing.features?.length > 0 && (
-            <div>
-              <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide mb-2">Features</div>
-              <div className="flex flex-wrap gap-1.5">
-                {listing.features.map(f => (
-                  <span key={f} className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-line text-ink">
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {listing.tag && (
-            <div className="flex items-center gap-2 text-[12.5px] text-dim">
-              <Tag size={13} />
-              <span className="font-semibold text-ink">{listing.tag}</span>
-            </div>
-          )}
-
-          {listing.maps_url && (
-            <div className="flex items-center gap-2 text-[12.5px]">
-              <Link2 size={13} className="text-dim shrink-0" />
-              <a
-                href={listing.maps_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline truncate"
-              >
-                View on Google Maps
-              </a>
-            </div>
-          )}
-
-          {listing.description && (
-            <div>
-              <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">Description</div>
-              {(() => {
-                const raw = listing.description
-                const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
-                const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
-                return <div className="detail-prose" dangerouslySetInnerHTML={{ __html: safe }} />
-              })()}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-line px-5 py-4 flex gap-3 shrink-0">
-          <button
-            onClick={onEdit}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
-            style={{ background: tone }}
-          >
-            <Pencil size={14} /> Edit Listing
-          </button>
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-ink border border-line bg-paper cursor-pointer"
-          >
-            Close
-          </button>
-        </div>
+        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: tone, background: `${tone}18` }}>
+          {items.length}
+        </span>
       </div>
-    </>
+      <div className="divide-y divide-line-soft">
+        {items.map(l => (
+          <button
+            key={l.id}
+            onClick={() => onSelect(l)}
+            className="w-full text-left px-4 py-3 hover:bg-line-soft/40 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 mb-1.5">
+              {l.images?.[0] ? (
+                <img src={l.images[0]} alt="" className="w-10 h-7 rounded-md object-cover shrink-0" />
+              ) : (
+                <div className="w-10 h-7 rounded-md flex items-center justify-center shrink-0" style={{ background: `${tone}18` }}>
+                  <Home size={12} style={{ color: tone }} />
+                </div>
+              )}
+              <div className="text-[12.5px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+            </div>
+            <div className="flex flex-col gap-1 pl-0.5">
+              {l.has_pending_deal_request && (
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#c07800' }}>
+                  <Star size={10} fill="#f0a800" style={{ color: '#f0a800' }} />
+                  Deal request pending
+                </div>
+              )}
+              {l.has_pending_edit && (
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#7c3aed' }}>
+                  <Pencil size={10} />
+                  Edit pending approval
+                </div>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
+
+// ── constants ─────────────────────────────────────────────────────────────────
+
+const COLS    = 'grid-cols-[2fr_0.8fr_1fr_1fr_0.7fr_0.7fr_1fr_40px]'
+const HEADERS = ['Property', 'Type', 'Price', 'Status', 'Views', 'Leads', 'Updated', ''] as const
+const FILTERS = ['All', 'Active', 'Review', 'Rejected', 'Archived'] as const
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function RealtorListings({ tone, go }: { tone: string; go: (v: string) => void }) {
   const [listings, setListings] = useState<Listing[]>([])
   const [loading,  setLoading]  = useState(true)
-  const [filter,   setFilter]   = useState<'All' | 'Active' | 'Review' | 'Rejected' | 'Archived'>('All')
+  const [filter,   setFilter]   = useState<typeof FILTERS[number]>('All')
   const [query,    setQuery]    = useState('')
-  const [selected, setSelected] = useState<Listing | null>(null)
-  const [editing,  setEditing]  = useState(false)
-
-  const filters = ['All', 'Active', 'Review', 'Rejected', 'Archived'] as const
+  const [selected,  setSelected]  = useState<Listing | null>(null)
+  const [editing,   setEditing]   = useState(false)
+  const [openDeal,  setOpenDeal]  = useState(false)
 
   function load() {
     getMyListings()
@@ -371,55 +236,77 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
     )
   }
 
+  const pendingReviews = listings.filter(l => l.has_pending_deal_request || l.has_pending_edit)
+
   return (
     <>
-      <div className="bg-paper rounded-2xl border border-line overflow-hidden">
-        {/* Header bar */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-line">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dim pointer-events-none" />
-              <input
-                type="text"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search listings…"
-                className="pl-7 pr-3 py-1.5 text-xs rounded-lg border border-line bg-transparent text-ink placeholder:text-dim outline-none focus:border-brand transition-colors w-56"
-              />
-            </div>
-            <button
-              onClick={() => go('submit-listing')}
-              className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold cursor-pointer transition-colors shrink-0"
-              style={{ background: tone, color: '#fff', border: `1.5px solid ${tone}` }}
-            >
-              <Plus size={13} strokeWidth={2.5} />
-              Add listing
-            </button>
+      <div className={pendingReviews.length > 0 ? 'flex flex-col gap-5 xl:flex-row xl:items-start' : ''}>
+      <div className={`bg-paper border border-line rounded-2xl overflow-hidden${pendingReviews.length > 0 ? ' flex-1 min-w-0' : ''}`}>
+
+        {/* Toolbar */}
+        <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
+          <div className="font-sans text-[17px] font-bold text-ink">
+            My Listings
+            {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({visible.length})</span>}
           </div>
-
-          <div className="flex-1" />
-
-          <div className="flex gap-1.5">
-            {filters.map(f => (
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line bg-white w-55">
+                <Search size={13} className="text-dim" />
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder="Search listings…"
+                  className="text-xs border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1"
+                />
+              </div>
               <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className="py-1 px-3 rounded-full text-xs font-semibold cursor-pointer transition-colors"
-                style={{
-                  border:     `1px solid ${filter === f ? tone : '#e4ddcf'}`,
-                  background: filter === f ? tone : 'transparent',
-                  color:      filter === f ? '#fff' : '#33425f',
-                }}
+                onClick={() => go('submit-listing')}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
+                style={{ background: tone }}
               >
-                {f}
+                <Plus size={13} /> Add Listing
               </button>
-            ))}
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {FILTERS.map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className="py-1 px-3 rounded-full text-[11.5px] font-semibold cursor-pointer transition-colors"
+                  style={{
+                    border:     `1px solid ${filter === f ? tone : '#e4ddcf'}`,
+                    background: filter === f ? tone : 'transparent',
+                    color:      filter === f ? '#fff' : '#33425f',
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Desktop table header */}
+        <div className={`hidden sm:grid ${COLS} px-5.5 py-2.5 border-b border-line bg-nav/5`}>
+          {HEADERS.map(h => (
+            <div key={h} className="text-[11px] font-bold uppercase tracking-[.07em] text-dim">{h}</div>
+          ))}
         </div>
 
         {/* Body */}
         {loading ? (
-          <div className="py-10 text-center text-sm text-dim">Loading…</div>
+          <div className="divide-y divide-line-soft">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="px-5.5 py-4 animate-pulse flex items-center gap-3">
+                <div className="w-14 h-9 rounded-lg bg-line-soft shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 bg-line-soft rounded w-1/3" />
+                  <div className="h-3 bg-line-soft rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : listings.length === 0 ? (
           <div className="py-14 flex flex-col items-center gap-4">
             <div
@@ -443,80 +330,102 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
               Add your first listing
             </button>
           </div>
+        ) : visible.length === 0 ? (
+          <div className="py-12 text-center text-sm text-dim">
+            {query.trim() ? `No results for "${query}"` : `No ${filter.toLowerCase()} listings.`}
+          </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-5 py-3">Property</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Type</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Price</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Views</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Leads</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Updated</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {visible.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-10 text-center text-sm text-dim">
-                    {query.trim()
-                      ? `No results for "${query}"`
-                      : `No ${filter.toLowerCase()} listings.`}
-                  </td>
-                </tr>
-              ) : (
-                visible.map((l, i) => (
-                  <tr
-                    key={l.id}
-                    onClick={() => { setSelected(l); setEditing(false) }}
-                    className={`hover:bg-line/20 transition-colors cursor-pointer ${i < visible.length - 1 ? 'border-b border-line' : ''}`}
-                  >
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        {l.images?.[0] ? (
-                          <img
-                            src={l.images[0]}
-                            alt={l.title}
-                            className="w-24 h-14 rounded-[10px] object-cover shrink-0"
-                          />
-                        ) : (
-                          <div
-                            className="w-24 h-14 rounded-[10px] flex items-center justify-center shrink-0"
-                            style={{ background: `${tone}18` }}
-                          >
-                            <Home size={22} style={{ color: tone }} />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <div className="text-[13px] font-semibold text-ink truncate max-w-50">{titleCase(l.title)}</div>
-                          <div className="text-[11px] text-dim truncate max-w-50">{l.location}</div>
-                        </div>
+          <div className="divide-y divide-line-soft">
+            {visible.map(l => (
+              <div key={l.id}>
+                {/* Desktop row */}
+                <div
+                  className={`hidden sm:grid ${COLS} items-center px-5.5 py-3.5 cursor-pointer hover:bg-line-soft/40 transition-colors`}
+                  onClick={() => { setSelected(l); setEditing(false) }}
+                >
+                  {/* Property */}
+                  <div className="flex items-center gap-3 min-w-0 pr-4">
+                    {l.images?.[0] ? (
+                      <img src={l.images[0]} alt={l.title} className="w-14 h-9 rounded-lg object-cover shrink-0" />
+                    ) : (
+                      <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${tone}18` }}>
+                        <Home size={16} style={{ color: tone }} />
                       </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px] text-ink">{fmtType(l.type)}</td>
-                    <td className="px-4 py-3.5 text-[13px] font-semibold text-ink">{fmtPrice(Number(l.price))}</td>
-                    <td className="px-4 py-3.5"><StatusChip status={l.status} /></td>
-                    <td className="px-4 py-3.5 text-[13px] text-ink">{l.view_count.toLocaleString()}</td>
-                    <td className="px-4 py-3.5 text-[13px] text-ink">{l.leads_count.toLocaleString()}</td>
-                    <td className="px-4 py-3.5 text-[13px] text-dim">{fmtRelative(l.updated_at)}</td>
-                    <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                      <ActionMenu onEdit={() => { setSelected(l); setEditing(true) }} />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                      <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
+                    </div>
+                  </div>
+                  {/* Type */}
+                  <div className="text-[12px] text-ink2">{fmtType(l.type)}</div>
+                  {/* Price */}
+                  <div className="text-[13px] font-semibold text-ink">{fmtPrice(Number(l.price))}</div>
+                  {/* Status */}
+                  <div><StatusChip status={l.status} /></div>
+                  {/* Views */}
+                  <div className="text-[12px] text-ink2">{l.view_count.toLocaleString()}</div>
+                  {/* Leads */}
+                  <div className="text-[12px] text-ink2">{l.leads_count.toLocaleString()}</div>
+                  {/* Updated */}
+                  <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at)}</div>
+                  {/* Actions */}
+                  <div onClick={e => e.stopPropagation()}>
+                    <ActionMenu
+                      onEdit={() => { setSelected(l); setEditing(true) }}
+                      onRequestDeal={l.status === 'active' && !l.is_deal ? () => { setSelected(l); setOpenDeal(true) } : undefined}
+                    />
+                  </div>
+                </div>
+
+                {/* Mobile card */}
+                <div
+                  className="sm:hidden px-4 py-3.5 cursor-pointer"
+                  onClick={() => { setSelected(l); setEditing(false) }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {l.images?.[0] ? (
+                        <img src={l.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${tone}18` }}>
+                          <Home size={14} style={{ color: tone }} />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-[13.5px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                        <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <StatusChip status={l.status} />
+                      <div className="text-[11px] text-dim">{fmtPrice(Number(l.price))}</div>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-dim mt-2">
+                    {fmtType(l.type)} · {l.view_count} views · {l.leads_count} leads · Updated {fmtRelative(l.updated_at)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
+      {pendingReviews.length > 0 && (
+        <div className="xl:w-64 shrink-0">
+          <PendingReviewsCard items={pendingReviews} tone={tone} onSelect={l => { setSelected(l); setEditing(false) }} />
+        </div>
+      )}
+      </div>
+
       {selected && !editing && (
-        <DetailPanel
+        <ListingDetailPanel
           listing={selected}
           tone={tone}
-          onClose={() => setSelected(null)}
+          role="realtor"
+          openDeal={openDeal}
+          onClose={() => { setSelected(null); setOpenDeal(false) }}
           onEdit={() => setEditing(true)}
         />
       )}

@@ -6,6 +6,7 @@ interface UseCurrentUserResult {
   data: UserInfo | null
   loading: boolean
   error: Error | null
+  updateUser: (updates: Partial<UserInfo>) => void
 }
 
 export function useCurrentUser(): UseCurrentUserResult {
@@ -20,5 +21,9 @@ export function useCurrentUser(): UseCurrentUserResult {
       .finally(() => setLoading(false))
   }, [])
 
-  return { data, loading, error }
+  function updateUser(updates: Partial<UserInfo>) {
+    setData(prev => prev ? { ...prev, ...updates } : prev)
+  }
+
+  return { data, loading, error, updateUser }
 }

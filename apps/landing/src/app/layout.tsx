@@ -3,6 +3,7 @@ import './globals.css'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toaster } from 'react-hot-toast'
+import GoogleAuthProvider from '../components/GoogleAuthProvider'
 
 export const metadata: Metadata = {
   title: {
@@ -30,16 +31,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        {children}
-        <Footer />
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            duration: 3500,
-            style: { fontFamily: 'inherit', fontSize: '14px', borderRadius: '12px' },
-          }}
-        />
+        <GoogleAuthProvider>
+          <Navbar />
+          {children}
+          <Footer />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 3500,
+              style: { fontFamily: 'inherit', fontSize: '14px', borderRadius: '12px' },
+            }}
+          />
+        </GoogleAuthProvider>
       </body>
     </html>
   )

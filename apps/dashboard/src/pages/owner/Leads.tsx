@@ -1,35 +1,107 @@
-import { MessageCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { MessageCircle, Home } from 'lucide-react'
 import { Card } from '../../components/dashboard/shared'
-import { OWNER_LEADS } from '../../components/dashboard/OwnerHome'
+import { getOwnerInquiries, type Inquiry } from '../../api/inquiries'
 
-export function OwnerLeads({ tone }: { tone: string }) {
+const TONE = '#f0a800'
+
+const AVATAR_TONES = ['#e10f1f', '#0b63ab', '#f0a800', '#7884a0', '#1f7a3d', '#9333ea']
+function avatarTone(name: string): string {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff
+  return AVATAR_TONES[h % AVATAR_TONES.length]
+}
+
+function fmtRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60_000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 30) return `${d}d ago`
+  return `${Math.floor(d / 30)}mo ago`
+}
+
+export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => void }) {
+  const [leads, setLeads] = useState<Inquiry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getOwnerInquiries()
+      .then(data => setLeads(data.sort((a, b) => b.created_at.localeCompare(a.created_at))))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <Card
-      title={<><MessageCircle size={14} /> All Leads ({OWNER_LEADS.length})</>}
-      action={<span className="text-[11.5px] font-bold text-coral px-2.5 py-0.75 rounded-full" style={{ background: '#e10f1f15' }}>4 new</span>}
+      title={<><MessageCircle size={14} /> All Leads{!loading && leads.length > 0 && ` (${leads.length})`}</>}
       padded={false}
     >
-      <div>
-        {OWNER_LEADS.map((l, i) => (
-          <div key={i} className={`flex items-start gap-3 py-3.5 px-5.5 ${i < OWNER_LEADS.length - 1 ? 'border-b border-line' : ''}`}>
-            <div className="w-9.5 h-9.5 rounded-full shrink-0 grid place-items-center font-bold text-sm text-white" style={{ background: l.tone }}>
-              {l.name[0]}
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="text-[13.5px] font-bold text-ink">{l.name}</div>
-                  <div className="text-[12.5px] text-ink2 leading-[1.35] my-0.75">{l.query}</div>
-                  <div className="text-[11.5px] text-dim">{l.property} · {l.time}</div>
-                </div>
-                <button className="text-xs font-bold py-1.5 px-3.5 rounded-lg border-none text-white cursor-pointer shrink-0 ml-3" style={{ background: tone }}>
-                  Reply
-                </button>
+      {loading ? (
+        <div className="divide-y divide-line">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3 py-3.5 px-5.5 animate-pulse">
+              <div className="w-9.5 h-9.5 rounded-full bg-line-soft shrink-0" />
+              <div className="flex-1 space-y-2 py-0.5">
+                <div className="h-3.5 bg-line-soft rounded w-1/3" />
+                <div className="h-3 bg-line-soft rounded w-3/4" />
+                <div className="h-3 bg-line-soft rounded w-1/4" />
               </div>
             </div>
+          ))}
+        </div>
+      ) : leads.length === 0 ? (
+        <div className="py-12 flex flex-col items-center gap-3 text-center px-6">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: `${TONE}18` }}>
+            <MessageCircle size={20} style={{ color: TONE }} />
           </div>
-        ))}
-      </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink mb-0.5">No leads yet</div>
+            <div className="text-[11.5px] text-dim">Add a listing so buyers can reach out and inquire about your properties.</div>
+          </div>
+          <button
+            onClick={() => go?.('listings')}
+            className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
+            style={{ background: TONE }}
+          >
+            <Home size={13} strokeWidth={2.5} /> Add a listing
+          </button>
+        </div>
+      ) : (
+        <div className="divide-y divide-line">
+          {leads.map((l) => (
+            <div key={l.id} className="flex items-start gap-3 py-3.5 px-5.5">
+              <div
+                className="w-9.5 h-9.5 rounded-full shrink-0 grid place-items-center font-bold text-sm text-white"
+                style={{ background: avatarTone(l.name) }}
+              >
+                {l.name[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[13.5px] font-bold text-ink">{l.name}</div>
+                    <div className="text-[12.5px] text-ink2 leading-[1.35] my-0.75 line-clamp-2">{l.message}</div>
+                    <div className="text-[11.5px] text-dim truncate">
+                      {l.listing_title ?? 'General inquiry'} · {fmtRelative(l.created_at)}
+                    </div>
+                  </div>
+                  <a
+                    href={`mailto:${l.email}`}
+                    className="text-xs font-bold py-1.5 px-3.5 rounded-lg border-none text-white cursor-pointer shrink-0 no-underline"
+                    style={{ background: tone }}
+                  >
+                    Reply
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   )
 }

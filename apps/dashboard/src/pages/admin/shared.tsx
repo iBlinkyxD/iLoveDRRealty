@@ -1,7 +1,7 @@
 import {
   Clock, Users, Home, DollarSign,
   CheckCircle2, UserPlus, XCircle, MessageCircle, Bell,
-  AlertTriangle, ToggleLeft, ToggleRight,
+  AlertTriangle, ToggleLeft, ToggleRight, ChevronRight,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -115,40 +115,38 @@ export function FilterPills({ options, value, onChange }: { options: string[]; v
   )
 }
 
-export function ApprovalRow({ item, last }: { item: typeof APPROVALS[0]; last?: boolean }) {
+export function ApprovalRow({
+  item, last, onClick,
+}: {
+  item: { type: 'Listing' | 'User'; title: string; submittedBy: string; time: string; flag?: string }
+  last?: boolean
+  onClick?: () => void
+}) {
   return (
-    <div className={`px-4 sm:px-5.5 py-3.5${last ? '' : ' border-b border-line-soft'}`}>
-      <div className="flex items-start gap-3">
-        <span
-          className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full shrink-0 mt-0.5"
-          style={{
-            color: item.type === 'Listing' ? '#0b63ab' : '#f0a800',
-            background: `${item.type === 'Listing' ? '#0b63ab' : '#f0a800'}18`,
-          }}
-        >
-          {item.type}
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="text-[13.5px] font-semibold text-ink leading-snug">{item.title}</div>
-          <div className="text-xs text-dim mt-0.5">{item.submittedBy} · {item.time}</div>
-          {item.flag && (
-            <div className="flex items-center gap-1 text-[11.5px] mt-1" style={{ color: '#f0a800' }}>
-              <AlertTriangle size={11} />
-              {item.flag}
-            </div>
-          )}
-          <div className="flex gap-2 mt-2.5 sm:hidden">
-            <button className="text-xs font-bold px-3 py-1.5 rounded-lg border-0 cursor-pointer" style={{ background: '#1f7a3d', color: '#fff' }}>Approve</button>
-            <button className="text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer bg-paper border border-line text-ink2">Review</button>
-            <button className="text-xs font-bold px-3 py-1.5 rounded-lg border-0 cursor-pointer" style={{ background: '#e10f1f18', color: '#e10f1f' }}>Reject</button>
+    <div
+      className={`px-4 sm:px-5.5 py-3.5 flex items-start gap-3${last ? '' : ' border-b border-line-soft'}${onClick ? ' cursor-pointer hover:bg-line-soft/40 transition-colors' : ''}`}
+      onClick={onClick}
+    >
+      <span
+        className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full shrink-0 mt-0.5"
+        style={{
+          color: item.type === 'Listing' ? '#0b63ab' : '#f0a800',
+          background: `${item.type === 'Listing' ? '#0b63ab' : '#f0a800'}18`,
+        }}
+      >
+        {item.type}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13.5px] font-semibold text-ink leading-snug">{item.title}</div>
+        <div className="text-xs text-dim mt-0.5">{item.submittedBy} · {item.time}</div>
+        {item.flag && (
+          <div className="flex items-center gap-1 text-[11.5px] mt-1" style={{ color: '#f0a800' }}>
+            <AlertTriangle size={11} />
+            {item.flag}
           </div>
-        </div>
-        <div className="hidden sm:flex gap-2 shrink-0">
-          <button className="text-xs font-bold px-3.5 py-1.5 rounded-lg border-0 cursor-pointer" style={{ background: '#1f7a3d', color: '#fff' }}>Approve</button>
-          <button className="text-xs font-bold px-3.5 py-1.5 rounded-lg cursor-pointer bg-paper border border-line text-ink2">Review</button>
-          <button className="text-xs font-bold px-3.5 py-1.5 rounded-lg border-0 cursor-pointer" style={{ background: '#e10f1f18', color: '#e10f1f' }}>Reject</button>
-        </div>
+        )}
       </div>
+      {onClick && <ChevronRight size={15} className="text-dim shrink-0 self-center" />}
     </div>
   )
 }

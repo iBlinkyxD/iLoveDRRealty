@@ -28,8 +28,13 @@ export interface Listing {
   images: string[]
   status: string
   rejection_reason: string | null
+  is_deal: boolean
+  deal_discount_value: number | null
+  deal_discount_type: string
   view_count: number
   leads_count: number
+  has_pending_deal_request: boolean
+  has_pending_edit: boolean
   updated_at: string | null
   submitted_by: string
   owner_id: string | null
@@ -111,4 +116,11 @@ export async function getMyListings(): Promise<Listing[]> {
 export async function updateListing(id: string, data: ListingUpdate): Promise<Listing> {
   const res = await client.put<Listing>(`/listings/${id}`, data)
   return res.data
+}
+
+export async function submitDealRequest(
+  listingId: string,
+  data: { discount_value: number; discount_type: string; message?: string },
+): Promise<void> {
+  await client.post(`/listings/${listingId}/deal-request`, data)
 }

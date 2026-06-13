@@ -723,19 +723,50 @@ function PropertyDetailInner() {
 
           {listing.transaction !== "rent" ? (
             <>
-              <div className="text-[32px] font-bold text-ink">
-                {currency === 'DOP'
-                  ? `RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")}`
-                  : fmt(listing.price)}{" "}
-                <span className="text-[13px] text-ink2 mt-1">
-                  {currency === 'DOP' ? 'DOP' : 'USD'}
-                </span>
-              </div>
-              <div className="text-[12.5px] text-ink2 mt-0.5">
-                {currency === 'DOP'
-                  ? `≈ ${fmt(listing.price)} USD`
-                  : `≈ RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")} DOP`}
-              </div>
+              {(() => {
+                const discounted = listing.is_deal && listing.deal_discount_value
+                  ? (listing.deal_discount_type === 'fixed'
+                      ? Math.round(Number(listing.price) - Number(listing.deal_discount_value))
+                      : Math.round(Number(listing.price) * (1 - Number(listing.deal_discount_value) / 100)))
+                  : null
+                const effectivePrice = discounted ?? Number(listing.price)
+                return (
+                  <>
+                    {discounted && (
+                      <div className="inline-flex items-center gap-1.5 bg-coral/10 border border-coral/20 text-coral text-[11px] font-bold px-2.5 py-1 rounded-full mb-2">
+                        ★ Deal of the Week &nbsp;·&nbsp;
+                        {listing.deal_discount_type === 'fixed'
+                          ? `−$${Number(listing.deal_discount_value).toLocaleString()} off`
+                          : `−${listing.deal_discount_value}% off`}
+                      </div>
+                    )}
+                    <div className="text-[32px] font-bold text-ink">
+                      {currency === 'DOP'
+                        ? `RD$${Math.round(effectivePrice * dopRate).toLocaleString("en-US")}`
+                        : fmt(effectivePrice)}{" "}
+                      <span className="text-[13px] text-ink2 mt-1">
+                        {currency === 'DOP' ? 'DOP' : 'USD'}
+                      </span>
+                    </div>
+                    {discounted ? (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[12.5px] text-dim line-through">
+                          {currency === 'DOP'
+                            ? `RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")}`
+                            : fmt(listing.price)}
+                        </span>
+                        <span className="text-[12px] text-ink2">original price</span>
+                      </div>
+                    ) : (
+                      <div className="text-[12.5px] text-ink2 mt-0.5">
+                        {currency === 'DOP'
+                          ? `≈ ${fmt(listing.price)} USD`
+                          : `≈ RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")} DOP`}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
 
               {[
                 listing.roi && ["Est. ROI", `${listing.roi}% / yr`],

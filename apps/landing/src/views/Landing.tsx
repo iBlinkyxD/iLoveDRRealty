@@ -3,17 +3,43 @@ import { useNav } from '../hooks/useNav'
 import { useState, useEffect } from 'react'
 import { Search, Check, ArrowRight, MapPin } from 'lucide-react'
 import { STATS, MISTAKES, ROLES } from '../data/landingData'
-import { fetchListings } from '../api/listings'
+import { fetchListings, fetchDealListing } from '../api/listings'
+import type { ApiDealListing } from '../api/listings'
 import type { Listing } from '../data/listings'
 
-type GoFn = (page: string) => void
+type GoFn = (page: string, slug?: string, params?: Record<string, string>) => void
 
-function PropertyCard({ prop, go }: { prop: Listing; go: GoFn }) {
-  const fmt = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`
+function CurrencyToggle({ currency, onChange }: { currency: 'USD' | 'DOP'; onChange: (c: 'USD' | 'DOP') => void }) {
+  return (
+    <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold shrink-0">
+      {(['DOP', 'USD'] as const).map(c => (
+        <button key={c} type="button" onClick={() => onChange(c)}
+          className="px-2.5 py-1 transition-colors cursor-pointer"
+          style={{ background: currency === c ? '#00102e' : 'white', color: currency === c ? 'white' : '#64748b' }}>
+          {c}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function PropertyCard({ prop, go, currency, dopRate }: { prop: Listing; go: GoFn; currency: 'USD' | 'DOP'; dopRate: number }) {
+  const fmtP = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`
+  const fmtDOP = (n: number) => n >= 1_000_000 ? `RD$${(n / 1_000_000).toFixed(1)}M` : `RD$${Math.round(n / 1_000)}K`
   const tag = prop.tags?.[0]?.[0] ?? ''
+  const discountedPrice = prop.is_deal && prop.deal_discount_value
+    ? (prop.deal_discount_type === 'fixed'
+        ? prop.price - prop.deal_discount_value
+        : Math.round(prop.price * (1 - prop.deal_discount_value / 100)))
+    : null
+  const effectivePrice = discountedPrice ?? prop.price
+  const displayPrice = currency === 'DOP' ? fmtDOP(Math.round(effectivePrice * dopRate)) : fmtP(effectivePrice)
+  const displayOrig = discountedPrice
+    ? (currency === 'DOP' ? fmtDOP(Math.round(prop.price * dopRate)) : fmtP(prop.price))
+    : null
   return (
     <div
-      onClick={() => go(`property/${prop.id}`)}
+      onClick={() => go('detail', undefined, { id: String(prop.id) })}
       className="bg-paper rounded-2xl border border-line-soft overflow-hidden cursor-pointer"
     >
       <div className="h-45 relative bg-ink" style={{ backgroundImage: `url(${prop.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -22,11 +48,19 @@ function PropertyCard({ prop, go }: { prop: Listing; go: GoFn }) {
             {tag}
           </span>
         )}
-        {prop.roi > 0 && (
+        {prop.is_deal && prop.deal_discount_value ? (
+          <span className="absolute top-3 right-3 text-2.75 font-bold bg-coral text-white px-2.25 py-0.75 rounded-md font-sans">
+            {prop.deal_discount_type === 'fixed'
+              ? currency === 'DOP'
+                ? `−${fmtDOP(Math.round(prop.deal_discount_value * dopRate))} off`
+                : `−$${Number(prop.deal_discount_value).toLocaleString()} off`
+              : `−${prop.deal_discount_value}% off`}
+          </span>
+        ) : prop.roi > 0 ? (
           <span className="absolute top-3 right-3 text-2.75 font-bold bg-amber-600 text-white px-2.25 py-0.75 rounded-md font-sans">
             {prop.roi}% ROI
           </span>
-        )}
+        ) : null}
       </div>
       <div className="pt-4 px-4.5 pb-4.5">
         <div className="font-sans text-2.75 text-dim mb-1 flex items-center gap-1"><MapPin size={11} /> {prop.region}</div>
@@ -38,7 +72,16 @@ function PropertyCard({ prop, go }: { prop: Listing; go: GoFn }) {
           {prop.ba > 0 && <span>{prop.ba} ba</span>}
           {prop.m2 > 0 && <span>{prop.m2} m²</span>}
         </div>
-        <div className="font-sans text-5.5 font-bold text-ink">{fmt(prop.price)}</div>
+        <div className="flex items-baseline gap-2">
+          <div className="font-sans text-5.5 font-bold text-ink">
+            {displayPrice}{currency === 'USD' && <span className="font-sans text-3 text-dim font-normal ml-1">USD</span>}
+          </div>
+          {displayOrig && (
+            <div className="font-sans text-3.5 text-dim line-through">
+              {displayOrig}{currency === 'USD' && <span className="font-normal ml-0.5">USD</span>}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -51,10 +94,31 @@ export default function Landing() {
   const [hLoc,    setHLoc]    = useState('')
   const [hType,   setHType]   = useState('All')
   const [hBudget, setHBudget] = useState('')
-  const [featured, setFeatured] = useState<Listing[]>([])
+  const [featured,  setFeatured]  = useState<Listing[]>([])
+  const [deal,      setDeal]      = useState<ApiDealListing | null>(null)
+  const [currency,  setCurrency]  = useState<'USD' | 'DOP'>('DOP')
+  const [dopRate,   setDopRate]   = useState(59.5)
 
   useEffect(() => {
-    fetchListings().then(all => setFeatured(all.slice(0, 4))).catch(() => {})
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(r => r.json())
+      .then(d => { if (d.rates?.DOP) setDopRate(d.rates.DOP) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetchListings().then(all => {
+      const shuffled = [...all]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      setFeatured(shuffled.slice(0, 4))
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetchDealListing().then(setDeal).catch(() => {})
   }, [])
 
   return (
@@ -84,7 +148,7 @@ export default function Landing() {
                   <div className="text-2.5 font-bold tracking-widest uppercase text-dim">Location</div>
                   <select value={hLoc} onChange={e => setHLoc(e.target.value)} className="border-none bg-transparent font-sans text-sm text-ink cursor-pointer w-full mt-0.5 outline-none">
                     <option value="">Anywhere</option>
-                    {['Punta Cana', 'Cap Cana', 'Santo Domingo', 'Las Terrenas', 'Puerto Plata'].map(r =>
+                    {['Cap Cana', 'Cabarete', 'Jarabacoa', 'Las Terrenas', 'Punta Cana', 'Puerto Plata', 'Samaná', 'Santo Domingo', 'Santiago', 'Sosúa'].map(r =>
                       <option key={r} value={r}>{r}</option>
                     )}
                   </select>
@@ -92,7 +156,7 @@ export default function Landing() {
                 <div className="flex-[1_1_130px] px-3 py-1.5 sm:border-r border-line">
                   <div className="text-2.5 font-bold tracking-widest uppercase text-dim">Type</div>
                   <select value={hType} onChange={e => setHType(e.target.value)} className="border-none bg-transparent font-sans text-sm text-ink cursor-pointer w-full mt-0.5 outline-none">
-                    {['All', 'Villa', 'Condo', 'Commercial'].map(t =>
+                    {['All', 'Villa', 'Apartment', 'Condo', 'Land', 'Commercial'].map(t =>
                       <option key={t} value={t}>{t === 'All' ? 'All properties' : t}</option>
                     )}
                   </select>
@@ -107,7 +171,13 @@ export default function Landing() {
                   </select>
                 </div>
                 <button
-                  onClick={() => go('search')}
+                  onClick={() => {
+                    const params: Record<string, string> = {}
+                    if (hLoc) params.location = hLoc
+                    if (hType && hType !== 'All') params.type = hType
+                    if (hBudget) params.budget = hBudget
+                    go('search', undefined, params)
+                  }}
                   className="font-sans text-sm font-semibold cursor-pointer px-6 py-3 sm:py-0 rounded-full w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 border border-coral bg-coral text-white"
                 >
                   <Search size={17} /> Search
@@ -174,68 +244,125 @@ export default function Landing() {
       </div>
 
       {/* ─────────────────────── Deal of the Week ─────────────────────── */}
-      {false && <div className="bg-paper pt-14 sm:pt-17.5 px-4 sm:px-6 pb-7.5">
-        <div className="max-w-310 mx-auto">
-          <div className="flex items-center gap-3 mb-5.5 flex-wrap">
-            <span className="inline-flex items-center gap-1.75 px-3.5 py-1.5 rounded-full bg-gold text-ink text-2.75 font-extrabold tracking-[0.14em] uppercase">
-              ★ Deal of the Week
-            </span>
-            <span className="font-sans text-3.25 text-dim">Updated every Monday by our team</span>
-          </div>
-
-          <div className="bg-paper border border-line-soft rounded-3xl overflow-hidden shadow-[rgba(0,16,46,0.3)_0px_30px_60px_-40px] grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
-            {/* Left — property photo */}
-            <div className="relative h-64 lg:h-115 overflow-hidden"
-              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=900&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-              <div className="absolute top-4.5 left-4.5 flex flex-col gap-2">
-                <span className="bg-coral text-white text-2.75 font-extrabold tracking-[0.08em] uppercase px-2.75 py-1.25 rounded-full font-sans">Save $22,000</span>
-                <span className="bg-ink/80 text-white text-[10.5px] font-bold px-2.75 py-1.25 rounded-full backdrop-blur-1.5 font-sans">📍 Sosúa · Puerto Plata</span>
-              </div>
-              <div className="absolute bottom-4.5 left-4.5 right-4.5 flex flex-wrap gap-1.5">
-                {['Seller financing', 'CONFOTUR-ready', 'Rooftop terrace'].map(tag => (
-                  <span key={tag} className="bg-white/95 text-ink text-2.75 font-bold px-2.5 py-1.25 rounded-full font-sans whitespace-nowrap">{tag}</span>
-                ))}
+      {deal && (
+        <div className="bg-paper pt-14 sm:pt-17.5 px-4 sm:px-6 pb-7.5">
+          <div className="max-w-310 mx-auto">
+            <div className="flex items-center gap-3 mb-5.5 flex-wrap">
+              <span className="inline-flex items-center gap-1.75 px-3.5 py-1.5 rounded-full bg-gold text-ink text-2.75 font-extrabold tracking-[0.14em] uppercase">
+                ★ Deal of the Week
+              </span>
+              <span className="font-sans text-3.25 text-dim">Handpicked by our team</span>
+              <div className="ml-auto">
+                <CurrencyToggle currency={currency} onChange={setCurrency} />
               </div>
             </div>
 
-            {/* Right — details */}
-            <div className="px-5 py-6 sm:px-9 sm:py-8 flex flex-col">
-              <div className="font-sans text-3 font-bold tracking-[0.12em] uppercase text-coral mb-2">This week's pick</div>
-              <h2 className="font-sans text-7 font-bold text-ink leading-[1.15] mb-2">Two condos, one rooftop, one fantastic price.</h2>
-              <p className="font-sans text-[14.5px] text-ink2 leading-[1.65] mb-4.5">
-                A 2BR + 1BR pair above one of Sosúa's most beloved restaurants — with a private rooftop terrace and a per-square-meter price that's hard to find on the north coast. The seller is offering{' '}
-                <strong className="text-ink">$77,000 in financing for 12 months</strong> to qualified buyers.
-              </p>
-              <div className="flex divide-x divide-line-soft py-4 border-t border-b border-line-soft mb-4.5">
-                {[['2+1', 'Bedrooms'], ['2+1', 'Bathrooms'], ['184 m²', 'Total area']].map(([val, lbl]) => (
-                  <div key={lbl} className="flex-1 pr-3 last:pr-0 first:pl-0 pl-3">
-                    <div className="font-sans text-5 sm:text-5.5 font-bold text-ink">{val}</div>
-                    <div className="font-sans text-[10px] sm:text-2.75 text-dim sm:tracking-[0.06em] uppercase mt-0.5 leading-tight">{lbl}</div>
+            <div className="bg-paper border border-line-soft rounded-3xl overflow-hidden shadow-[rgba(0,16,46,0.3)_0px_30px_60px_-40px] grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
+              {/* Left — property photo */}
+              <div
+                className="relative h-64 lg:h-115 overflow-hidden bg-ink"
+                style={deal.images?.[0] ? { backgroundImage: `url(${deal.images[0]})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+              >
+                <div className="absolute top-4.5 left-4.5 flex flex-col gap-2">
+                  {deal.deal_discount_value && (
+                    <span className="bg-coral text-white text-2.75 font-extrabold tracking-[0.08em] uppercase px-2.75 py-1.25 rounded-full font-sans">
+                      {deal.deal_discount_type === 'fixed'
+                        ? currency === 'DOP'
+                          ? `−RD$${Math.round(deal.deal_discount_value * dopRate).toLocaleString()} off`
+                          : `−$${Number(deal.deal_discount_value).toLocaleString()} USD off`
+                        : `−${deal.deal_discount_value}% off`}
+                    </span>
+                  )}
+                  <span className="bg-ink/80 text-white text-[10.5px] font-bold px-2.75 py-1.25 rounded-full backdrop-blur-1.5 font-sans inline-flex items-center gap-1">
+                    <MapPin size={10} /> {deal.location}
+                  </span>
+                </div>
+                {deal.features?.length > 0 && (
+                  <div className="absolute bottom-4.5 left-4.5 right-4.5 flex flex-wrap gap-1.5">
+                    {deal.features.slice(0, 3).map(f => (
+                      <span key={f} className="bg-white/95 text-ink text-2.75 font-bold px-2.5 py-1.25 rounded-full font-sans whitespace-nowrap">{f}</span>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-              <div className="flex items-baseline gap-3 mb-5">
-                <div className="font-sans text-9.5 font-bold text-ink leading-none">$177,000</div>
-                <div className="font-sans text-4 text-dim line-through">$199,000</div>
-                <div className="font-sans text-3 text-brand font-bold px-2 py-0.75 bg-brand/10 rounded-full">−11%</div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2.5 mt-auto">
-                <button onClick={() => go('search')} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center justify-center gap-2 border border-coral bg-coral text-white">
-                  View this property <ArrowRight size={16} />
-                </button>
-                <button onClick={() => go('calculator')} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center justify-center gap-2 border border-ink bg-transparent text-ink">
-                  Run ROI numbers
-                </button>
+
+              {/* Right — details */}
+              <div className="px-5 py-6 sm:px-9 sm:py-8 flex flex-col">
+                <div className="font-sans text-3 font-bold tracking-[0.12em] uppercase text-coral mb-2">This week's pick</div>
+                <h2 className="font-sans text-7 font-bold text-ink leading-[1.15] mb-2">{deal.title}</h2>
+                {deal.description && (
+                  <p className="font-sans text-[14.5px] text-ink2 leading-[1.65] mb-4.5 line-clamp-4">{deal.description}</p>
+                )}
+                <div className="flex divide-x divide-line-soft py-4 border-t border-b border-line-soft mb-4.5">
+                  {[
+                    deal.bedrooms != null && [String(deal.bedrooms), 'Bedrooms'],
+                    deal.bathrooms != null && [String(deal.bathrooms), 'Bathrooms'],
+                    deal.area_sqft != null && [`${Math.round(deal.area_sqft / 10.764)} m²`, 'Total area'],
+                  ].filter((x): x is [string, string] => Boolean(x)).map(([val, lbl]) => (
+                    <div key={lbl} className="flex-1 pr-3 last:pr-0 first:pl-0 pl-3">
+                      <div className="font-sans text-5 sm:text-5.5 font-bold text-ink">{val}</div>
+                      <div className="font-sans text-[10px] sm:text-2.75 text-dim sm:tracking-[0.06em] uppercase mt-0.5 leading-tight">{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+                {(() => {
+                  const fmtDOP = (n: number) => n >= 1_000_000 ? `RD$${(n / 1_000_000).toFixed(1)}M` : `RD$${Math.round(n / 1_000)}K`
+                  const fmtUSD = (n: number) => `$${Number(n).toLocaleString()}`
+                  const effectivePrice = deal.deal_discount_value
+                    ? (deal.deal_discount_type === 'fixed'
+                        ? Math.round(deal.price - deal.deal_discount_value)
+                        : Math.round(deal.price * (1 - deal.deal_discount_value / 100)))
+                    : deal.price
+                  const displayPrice = currency === 'DOP'
+                    ? fmtDOP(Math.round(effectivePrice * dopRate))
+                    : fmtUSD(effectivePrice)
+                  const displayOrig = deal.deal_discount_value
+                    ? (currency === 'DOP'
+                        ? fmtDOP(Math.round(deal.price * dopRate))
+                        : fmtUSD(deal.price))
+                    : null
+                  return (
+                    <div className="mb-5">
+                      <div className="flex items-baseline gap-3">
+                        <div className="font-sans text-9.5 font-bold text-ink leading-none">
+                          {displayPrice}{currency === 'USD' && <span className="font-sans text-4 text-dim font-normal ml-1.5">USD</span>}
+                        </div>
+                        {displayOrig && (
+                          <div className="font-sans text-4 text-dim line-through">
+                            {displayOrig}{currency === 'USD' && <span className="font-normal ml-1">USD</span>}
+                          </div>
+                        )}
+                        {deal.deal_discount_value && (
+                          <div className="font-sans text-3 text-brand font-bold px-2 py-0.75 bg-brand/10 rounded-full">
+                            {deal.deal_discount_type === 'fixed'
+                              ? currency === 'DOP'
+                                ? `−RD$${Math.round(deal.deal_discount_value * dopRate).toLocaleString()}`
+                                : `−$${Number(deal.deal_discount_value).toLocaleString()} USD`
+                              : `−${deal.deal_discount_value}%`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
+                <div className="flex flex-col sm:flex-row gap-2.5 mt-auto">
+                  <button onClick={() => go('detail', undefined, { id: String(deal!.id) })} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center justify-center gap-2 border border-coral bg-coral text-white">
+                    View this property <ArrowRight size={16} />
+                  </button>
+                  <button onClick={() => go('calculator')} className="font-sans text-3.5 font-semibold cursor-pointer px-5.5 py-2.75 rounded-full inline-flex items-center justify-center gap-2 border border-ink bg-transparent text-ink">
+                    Run ROI numbers
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="font-sans text-3 text-dim mt-3.5 text-center leading-[1.55]">
-            How we pick: each week our team selects one property where location, lifestyle, and price-per-m² genuinely stand out.{' '}
-            <strong className="text-ink2">Sellers can submit a property for consideration</strong> — our team reviews every submission for value and quality before featuring it.
+            <div className="font-sans text-3 text-dim mt-3.5 text-center leading-[1.55]">
+              How we pick: each week our team selects one property where location, lifestyle, and price-per-m² genuinely stand out.{' '}
+              <strong className="text-ink2">Owners and realtors can submit a property for consideration</strong> — our team reviews every submission for value and quality before featuring it.
+            </div>
           </div>
         </div>
-      </div>}
+      )}
 
       {/* ─────────────────────── Founder Story ─────────────────────── */}
       <div className="bg-paper2 py-14 sm:py-20 px-4 sm:px-6 relative overflow-hidden">
@@ -330,11 +457,6 @@ export default function Landing() {
               — The Founders, I♥DR Realty
             </div>
           </div>
-
-          {/* Editor's note */}
-          <div className="mt-9 px-4 py-3 rounded-lg bg-gold/8 border border-dashed border-gold font-sans text-[11.5px] text-dim text-center leading-[1.55]">
-            <strong className="text-ink2">Editor's note:</strong> the founder narrative above is illustrative placeholder content built to the brand brief. Real founder names, photos, the actual year of relocation, and the specific stories swap in here before launch.
-          </div>
         </div>
       </div>
 
@@ -384,15 +506,18 @@ export default function Landing() {
             <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea">Hand-picked</div>
             <h2 className="font-sans text-8.5 font-semibold text-ink mt-2">Featured properties</h2>
           </div>
-          <button
-            onClick={() => go('search')}
-            className="font-sans text-3.5 font-semibold cursor-pointer text-ink2 bg-transparent border border-line px-5 py-2.5 rounded-full inline-flex items-center gap-2"
-          >
-            View all 4,812 <ArrowRight size={16} />
-          </button>
+          <div className="flex items-center gap-3">
+            <CurrencyToggle currency={currency} onChange={setCurrency} />
+            <button
+              onClick={() => go('search')}
+              className="font-sans text-3.5 font-semibold cursor-pointer text-ink2 bg-transparent border border-line px-5 py-2.5 rounded-full inline-flex items-center gap-2"
+            >
+              View all <ArrowRight size={16} />
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-5">
-          {featured.map(p => <PropertyCard key={p.id} prop={p} go={go} />)}
+          {featured.map(p => <PropertyCard key={p.id} prop={p} go={go} currency={currency} dopRate={dopRate} />)}
         </div>
       </div>
 

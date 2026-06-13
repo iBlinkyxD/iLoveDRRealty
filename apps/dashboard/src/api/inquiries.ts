@@ -28,3 +28,13 @@ export async function getMyInquiries(): Promise<Inquiry[]> {
   const res = await client.get<Inquiry[]>('/inquiries/mine')
   return res.data
 }
+
+export async function getOwnerInquiries(): Promise<Inquiry[]> {
+  const res = await client.get<Inquiry[]>('/inquiries/for-owner')
+  return res.data
+}
+
+export async function getRealtorInquiries(): Promise<Inquiry[]> {
+  const res = await client.get<Inquiry[]>('/inquiries/for-realtor')
+  return res.data
+}

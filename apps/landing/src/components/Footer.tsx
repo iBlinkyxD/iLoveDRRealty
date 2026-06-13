@@ -81,7 +81,7 @@ export default function Footer() {
           <div className="flex flex-col gap-2.5 text-3.5 text-paper2/65">
             <span>📍 Sosúa, Puerto Plata, DR</span>
             <span>📞 +1 (829) 800-1234</span>
-            <span>✉️ hello@ilovedrrealty.com</span>
+            <span>✉️ ilovedrrealty@gmail.com</span>
           </div>
           <button
             onClick={() => go('contact')}

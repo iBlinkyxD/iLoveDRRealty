@@ -1,6 +1,23 @@
 import client from './axios'
 import type { Listing } from '../data/listings'
 
+export interface ApiDealListing {
+  id: string
+  title: string
+  description: string | null
+  location: string
+  price: number
+  bedrooms: number | null
+  bathrooms: number | null
+  area_sqft: number | null
+  features: string[]
+  images: string[]
+  is_deal: boolean
+  deal_discount_value: number | null
+  deal_discount_type: string
+  roi: number | null
+}
+
 interface ApiListing {
   id: string
   title: string
@@ -13,9 +30,14 @@ interface ApiListing {
   area_sqft: number | null
   roi: number | null
   tag: string | null
+  features: string[]
   images: string[]
   latitude: number | null
   longitude: number | null
+  is_deal: boolean
+  deal_discount_value: number | null
+  deal_discount_type: string
+  created_at: string | null
 }
 
 export interface ApiListingDetail {
@@ -47,6 +69,9 @@ export interface ApiListingDetail {
   status: string
   submitted_by_name: string | null
   submitted_by_email: string | null
+  is_deal: boolean
+  deal_discount_value: number | null
+  deal_discount_type: string
 }
 
 const TAG_TONES: Record<string, [string, string]> = {
@@ -60,6 +85,15 @@ const TAG_TONES: Record<string, [string, string]> = {
 function toTags(tag: string | null): [string, string][] {
   if (!tag) return []
   return [TAG_TONES[tag] ?? [tag, 'sand']]
+}
+
+export async function fetchDealListing(): Promise<ApiDealListing | null> {
+  try {
+    const res = await client.get<ApiDealListing>('/listings/deal')
+    return res.data
+  } catch {
+    return null
+  }
 }
 
 export async function fetchListingById(id: string): Promise<ApiListingDetail> {
@@ -85,9 +119,14 @@ export async function fetchListings(): Promise<Listing[]> {
     tags: toTags(l.tag),
     type: l.type.charAt(0).toUpperCase() + l.type.slice(1),
     purpose: l.transaction === 'rent' ? 'rent' : 'sale',
+    features: l.features ?? [],
     v: 0,
     img: l.images?.[0] ?? '',
     latitude: l.latitude,
     longitude: l.longitude,
+    is_deal: l.is_deal,
+    deal_discount_value: l.deal_discount_value,
+    deal_discount_type: l.deal_discount_type,
+    created_at: l.created_at,
   }))
 }

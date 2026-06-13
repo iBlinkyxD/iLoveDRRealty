@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import {
   LayoutDashboard, Heart, Search, MessageCircle, CalendarDays, Calculator,
-  BookOpen, User, ClipboardList, Home, Bell, DollarSign,
-  Building2, GitBranch, CircleCheck, Users, Settings,
+  BookOpen, ClipboardList, Home, Bell, DollarSign,
+  Building2, GitBranch, Users, Settings,
   Key, Shield, LogOut, Menu, X, Lock, ChevronRight, type LucideIcon,
 } from 'lucide-react'
 import type { Role } from '../App'
@@ -28,25 +28,23 @@ const ROLE_ICON: Record<Role, LucideIcon> = {
 
 const GENERAL_NAV: { Icon: LucideIcon; label: string; view: string }[] = [
   { Icon: LayoutDashboard, label: 'Dashboard', view: 'home'     },
-  { Icon: User,            label: 'Profile',   view: 'profile'  },
   { Icon: Settings,        label: 'Settings',  view: 'settings' },
 ]
 
 const NAV: Record<Exclude<Role, 'Admin'>, { Icon: LucideIcon; label: string; view: string }[]> = {
   Buyer: [
     { Icon: Heart,         label: 'Saved Homes',    view: 'saved'      },
-    { Icon: Search,        label: 'Saved Searches', view: 'searches'   },
     { Icon: MessageCircle, label: 'Inquiries',      view: 'inquiries'  },
     { Icon: CalendarDays,  label: 'Bookings',       view: 'bookings'   },
     { Icon: Calculator,    label: 'ROI Calculator', view: 'calculator' },
     { Icon: BookOpen,      label: 'Resources',      view: 'resources'  },
   ],
   Owner: [
-    { Icon: Home,          label: 'Listings',  view: 'listings' },
-    { Icon: CalendarDays,  label: 'Calendar',  view: 'calendar' },
-    { Icon: Bell,          label: 'Bookings',  view: 'bookings' },
-    { Icon: MessageCircle, label: 'Leads',     view: 'leads'    },
-    { Icon: DollarSign,    label: 'Earnings',  view: 'earnings' },
+    { Icon: Home,          label: 'Listings',        view: 'listings'        },
+    { Icon: CalendarDays,  label: 'Calendar',        view: 'calendar'        },
+    { Icon: Bell,          label: 'Bookings',        view: 'owner-bookings'  },
+    { Icon: MessageCircle, label: 'Leads',           view: 'leads'           },
+    { Icon: DollarSign,    label: 'Earnings',        view: 'earnings'        },
   ],
   Realtor: [
     { Icon: Building2,     label: 'Listings',  view: 'listings' },
@@ -57,18 +55,16 @@ const NAV: Record<Exclude<Role, 'Admin'>, { Icon: LucideIcon; label: string; vie
 }
 
 const ADMIN_NAV: { Icon: LucideIcon; label: string; view: string }[] = [
-  { Icon: LayoutDashboard, label: 'Dashboard',        view: 'home'             },
-  { Icon: Users,           label: 'Users',            view: 'users'            },
-  { Icon: CircleCheck,     label: 'Upgrade Requests', view: 'upgrade-requests' },
-  { Icon: Building2,       label: 'Listings',         view: 'listings'         },
-  { Icon: ClipboardList,   label: 'Add Listing',      view: 'submit-listing'   },
-  { Icon: Settings,        label: 'Settings',         view: 'settings'         },
+  { Icon: LayoutDashboard, label: 'Dashboard', view: 'home'     },
+  { Icon: Users,           label: 'Users',     view: 'users'    },
+  { Icon: Building2,       label: 'Listings',  view: 'listings' },
+  { Icon: Settings,        label: 'Settings',  view: 'settings' },
 ]
 
 interface Props {
   role: Role
   view: string
-  go: (v: string) => void
+  go: (v: string, openId?: string) => void
   onLogout: () => void
   user: UserInfo
   children: React.ReactNode
@@ -179,8 +175,8 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
                   onClick={() => { if (sectionLocked) { go('home'); closeNav() } else { go(item.view); closeNav() } }}
                   className="flex items-center gap-2.5 w-full px-3 py-1.75 rounded-lg border-0 cursor-pointer text-[13px] text-left transition-all duration-120"
                   style={{
-                    background: active ? `${tone}22` : 'transparent',
-                    color: active ? tone : sectionLocked ? 'rgba(255,255,255,.38)' : 'rgba(255,255,255,.82)',
+                    background: active ? `${sectionTone}22` : 'transparent',
+                    color: active ? sectionTone : sectionLocked ? 'rgba(255,255,255,.38)' : 'rgba(255,255,255,.82)',
                     fontWeight: active ? 700 : 500,
                   }}
                 >
@@ -188,7 +184,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
                   <span className="flex-1">{item.label}</span>
                   {sectionLocked
                     ? <Lock size={9} style={{ color: 'rgba(255,255,255,.32)' }} />
-                    : active && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: tone }} />
+                    : active && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sectionTone }} />
                   }
                 </button>
               )
@@ -234,16 +230,20 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
         {/* Bottom — user + logout */}
         <div className="px-3 pb-5 pt-3 border-t border-white/8 shrink-0">
           <div className="flex items-center gap-2.5 px-2 py-2 mb-2">
-            <div
-              className="w-8 h-8 rounded-full grid place-items-center text-white text-[13px] font-bold shrink-0"
-              style={{ background: tone }}
-            >
-              {user.email[0].toUpperCase()}
-            </div>
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full grid place-items-center text-white text-[13px] font-bold shrink-0"
+                style={{ background: tone }}
+              >
+                {user.email[0].toUpperCase()}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
-              <div className="text-[12.5px] font-semibold text-white truncate">{user.email.split('@')[0]}</div>
+              <div className="text-[12.5px] font-semibold text-white truncate">{user.display_name || user.email.split('@')[0]}</div>
               <div className="text-[10.5px] font-mono truncate" style={{ color: 'rgba(255,255,255,.4)' }}>
-                {user.email}
+                {user.user_code != null ? `#${String(user.user_code).padStart(7, '0')}` : user.email}
               </div>
             </div>
           </div>
@@ -280,12 +280,16 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
               <RoleIcon size={12} />
               {role}
             </div>
-            <div
-              className="w-8 h-8 rounded-full grid place-items-center text-white text-[13px] font-bold"
-              style={{ background: tone }}
-            >
-              {user.email[0].toUpperCase()}
-            </div>
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full grid place-items-center text-white text-[13px] font-bold"
+                style={{ background: tone }}
+              >
+                {user.email[0].toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,17 +1,21 @@
 import { useEffect, useState, useRef } from 'react'
-import DOMPurify from 'dompurify'
+import { useSearchParams } from 'react-router-dom'
 import {
   Check, X, Home, Search, MoreHorizontal, Archive,
-  ChevronLeft, ChevronRight, MapPin, Tag, Link2, Pencil, GitCompare,
+  MapPin, Pencil, GitCompare, Eye, Plus, CheckCircle2, XCircle, Star,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
   getAdminListings, approveAdminListing, rejectAdminListing, archiveAdminListing,
   getAdminListingEdits, approveListingEdit, rejectListingEdit,
+  getAdminDealRequests, approveDealRequest, rejectDealRequest,
+  getAdminActivityLog,
 } from '../../api/admin'
-import type { AdminListing, AdminListingEdit } from '../../api/admin'
-import { AdminEditListing } from './SubmitListing'
-import { TONE } from './shared'
+import type { AdminListing, AdminListingEdit, ActivityEntry, DealRequest } from '../../api/admin'
+import { AdminEditListing, AdminSubmitListing } from './SubmitListing'
+import { TONE, FilterPills } from './shared'
+import { ListingDetailPanel } from '../../components/admin/ListingDetailPanel'
+import { ListingEditDiffPanel } from '../../components/admin/ListingEditDiffPanel'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -49,23 +53,26 @@ function fmtRelative(dateStr: string | null | undefined): string {
 function StatusChip({ status }: { status: string }) {
   const s = STATUS_STYLE[status] ?? { color: '#6b7280', bg: '#f3f4f6', label: status }
   return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style={{ background: s.bg, color: s.color }}>
+    <span
+      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-bold"
+      style={{ background: s.bg, color: s.color }}
+    >
       {s.label}
     </span>
   )
 }
 
-function ActionMenu({ onEdit, onArchive }: { onEdit: () => void; onArchive: () => void }) {
+function ActionMenu({ onView, onEdit, onArchive }: { onView: () => void; onEdit: () => void; onArchive: () => void }) {
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
-  const btnRef = useRef<HTMLButtonElement>(null)
+  const [pos, setPos]   = useState({ top: 0, left: 0 })
+  const btnRef  = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
         menuRef.current && !menuRef.current.contains(e.target as Node) &&
-        btnRef.current && !btnRef.current.contains(e.target as Node)
+        btnRef.current  && !btnRef.current.contains(e.target as Node)
       ) setOpen(false)
     }
     if (open) document.addEventListener('mousedown', handleClick)
@@ -75,23 +82,43 @@ function ActionMenu({ onEdit, onArchive }: { onEdit: () => void; onArchive: () =
   function toggle() {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect()
-      setPos({ top: r.bottom + 6, left: r.right - 152 })
+      setPos({ top: r.bottom + 6, left: r.right - 176 })
     }
     setOpen(v => !v)
   }
 
   return (
     <>
-      <button ref={btnRef} onClick={toggle} className="w-7 h-7 flex items-center justify-center rounded-lg text-dim hover:text-ink hover:bg-line/50 transition-colors cursor-pointer">
-        <MoreHorizontal size={15} />
+      <button
+        ref={btnRef}
+        onClick={toggle}
+        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-line-soft cursor-pointer border-0 bg-transparent"
+      >
+        <MoreHorizontal size={15} className="text-dim" />
       </button>
       {open && (
-        <div ref={menuRef} className="fixed w-38 bg-paper rounded-xl border border-line shadow-lg z-50 overflow-hidden" style={{ top: pos.top, left: pos.left }}>
-          <button onClick={() => { onEdit(); setOpen(false) }} className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-ink hover:bg-line/40 transition-colors cursor-pointer">
+        <div
+          ref={menuRef}
+          className="fixed w-44 bg-white border border-line rounded-xl shadow-lg z-50 py-1 overflow-hidden"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          <button
+            onClick={() => { onView(); setOpen(false) }}
+            className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
+          >
+            <Eye size={12} /> View details
+          </button>
+          <button
+            onClick={() => { onEdit(); setOpen(false) }}
+            className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
+          >
             <Pencil size={12} /> Edit listing
           </button>
-          <div className="border-t border-line" />
-          <button onClick={() => { onArchive(); setOpen(false) }} className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-red-500 hover:bg-red-50 transition-colors cursor-pointer">
+          <div className="border-t border-line mx-2" />
+          <button
+            onClick={() => { onArchive(); setOpen(false) }}
+            className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-red-500 hover:bg-red-50 cursor-pointer"
+          >
             <Archive size={12} /> Archive
           </button>
         </div>
@@ -100,496 +127,76 @@ function ActionMenu({ onEdit, onArchive }: { onEdit: () => void; onArchive: () =
   )
 }
 
-function DetailPanel({
-  listing,
-  onClose,
-  onEdit,
-  onApprove,
-  onReject,
-  onArchive,
-  working,
-}: {
-  listing: AdminListing
-  onClose: () => void
-  onEdit: () => void
-  onApprove: () => void
-  onReject: (reason: string) => void
-  onArchive: () => void
-  working: boolean
-}) {
-  const [imgIdx, setImgIdx] = useState(0)
-  const [rejectOpen, setRejectOpen] = useState(false)
-  const [reason, setReason] = useState('')
-  const isPending = listing.status === 'pending_approval'
-  const imgs = listing.images ?? []
+// ── Activity sidebar helpers ────────────────────────────────────────────────
 
-  const FIELDS: { label: string; value: string | number | null | undefined }[] = [
-    { label: 'Price',        value: fmtPrice(listing.price)                                          },
-    { label: 'Property Type', value: fmtType(listing.type)                                           },
-    { label: 'Transaction',  value: fmtType(listing.transaction)                                     },
-    { label: 'Year Built',   value: listing.year_built                                               },
-    { label: 'Bedrooms',     value: listing.bedrooms                                                 },
-    { label: 'Bathrooms',    value: listing.bathrooms                                                },
-    { label: 'Living Area (ft²)', value: listing.area_sqft                                          },
-    { label: 'Lot Size (ft²)',    value: listing.lot_size_sqft                                      },
-    { label: 'Est. ROI (%)', value: listing.roi                                                      },
-    { label: 'HOA Fee ($/mo)', value: listing.hoa_fee                                               },
-    { label: 'Construction', value: listing.construction_status?.replace(/_/g, ' ')                 },
-  ].filter(f => f.value != null && f.value !== '')
-
-  const boolBadges = [
-    { label: 'Seller Financing', on: listing.seller_financing },
-    { label: 'HOA Community',    on: listing.hoa              },
-    { label: 'CONFOTUR Tax Exempt', on: listing.tax_exempt    },
-    { label: 'Gated Community',  on: listing.gated_community  },
-  ].filter(b => b.on)
-
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-
-      <div className="fixed right-0 top-0 h-full w-140 max-w-full bg-paper z-50 flex flex-col shadow-2xl">
-        {/* Image carousel */}
-        <div className="relative bg-black shrink-0" style={{ height: 220 }}>
-          {imgs.length > 0 ? (
-            <>
-              <img src={imgs[imgIdx]} alt="" className="w-full h-full object-cover opacity-90" />
-              {imgs.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setImgIdx(i => (i - 1 + imgs.length) % imgs.length)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={() => setImgIdx(i => (i + 1) % imgs.length)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {imgs.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setImgIdx(i)}
-                        className="w-1.5 h-1.5 rounded-full cursor-pointer transition-colors"
-                        style={{ background: i === imgIdx ? 'white' : 'rgba(255,255,255,0.45)' }}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center" style={{ background: `${TONE}22` }}>
-              <Home size={48} style={{ color: TONE }} className="opacity-60" />
-            </div>
-          )}
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
-          >
-            <X size={15} />
-          </button>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Title + status */}
-          <div>
-            <div className="flex items-start gap-2 justify-between">
-              <h2 className="text-[16px] font-bold text-ink leading-snug flex-1">{titleCase(listing.title)}</h2>
-              <StatusChip status={listing.status} />
-            </div>
-            <div className="flex items-center gap-1.5 mt-1.5 text-[12px] text-dim">
-              <MapPin size={12} />
-              {listing.location}
-            </div>
-          </div>
-
-          {/* Submitted by */}
-          <div className="bg-line/30 rounded-xl px-4 py-3">
-            <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">Submitted by</div>
-            <div className="text-[13px] font-semibold text-ink">{listing.submitted_by_name ?? '—'}</div>
-            <div className="text-[11px] text-dim">{listing.submitted_by_email ?? ''}</div>
-          </div>
-
-          {/* Views */}
-          <div className="flex items-center gap-4">
-            <div>
-              <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide">Views</div>
-              <div className="text-[20px] font-bold text-ink leading-tight mt-0.5">{(listing.view_count ?? 0).toLocaleString()}</div>
-            </div>
-          </div>
-
-          {/* Reviewed by */}
-          {listing.reviewed_by_name && (
-            <div className="bg-line/30 rounded-xl px-4 py-3">
-              <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">
-                {listing.status === 'active'   ? 'Approved by'  :
-                 listing.status === 'rejected' ? 'Rejected by'  :
-                 listing.status === 'archived' ? 'Archived by'  : 'Reviewed by'}
-              </div>
-              <div className="text-[13px] font-semibold text-ink">{listing.reviewed_by_name}</div>
-              <div className="text-[11px] text-dim">{listing.reviewed_by_email ?? ''}</div>
-              {listing.reviewed_at && (
-                <div className="text-[11px] text-dim mt-0.5">
-                  {new Date(listing.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Fields grid */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {FIELDS.map(({ label, value }) => (
-              <div key={label}>
-                <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide">{label}</div>
-                <div className="text-[13px] font-semibold text-ink mt-0.5">{String(value)}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Boolean badges */}
-          {boolBadges.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {boolBadges.map(b => (
-                <span
-                  key={b.label}
-                  className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
-                >
-                  {b.label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Features */}
-          {listing.features && listing.features.length > 0 && (
-            <div>
-              <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide mb-2">Features</div>
-              <div className="flex flex-wrap gap-1.5">
-                {listing.features.map(f => (
-                  <span key={f} className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-line text-ink">
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tag */}
-          {listing.tag && (
-            <div className="flex items-center gap-2 text-[12.5px] text-dim">
-              <Tag size={13} />
-              <span className="font-semibold text-ink">{listing.tag}</span>
-            </div>
-          )}
-
-          {/* Maps URL */}
-          {listing.maps_url && (
-            <div className="flex items-center gap-2 text-[12.5px]">
-              <Link2 size={13} className="text-dim shrink-0" />
-              <a href={listing.maps_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate">
-                View on Google Maps
-              </a>
-            </div>
-          )}
-
-          {/* Description */}
-          {listing.description && (
-            <div>
-              <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">Description</div>
-              {(() => {
-                const raw = listing.description
-                const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
-                const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
-                return (
-                  <div
-                    className="detail-prose"
-                    dangerouslySetInnerHTML={{ __html: safe }}
-                  />
-                )
-              })()}
-            </div>
-          )}
-
-          {/* Reject input */}
-          {rejectOpen && (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && reason.trim() && onReject(reason.trim())}
-                placeholder="Reason for rejection…"
-                className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-red-400"
-                autoFocus
-              />
-              <button
-                onClick={() => { if (reason.trim()) onReject(reason.trim()) }}
-                disabled={!reason.trim() || working}
-                className="px-4 py-2 rounded-lg text-[12px] font-bold text-white disabled:opacity-50 cursor-pointer shrink-0"
-                style={{ background: '#e10f1f' }}
-              >
-                Confirm
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Footer actions */}
-        <div className="border-t border-line px-5 py-4 flex gap-3 shrink-0 flex-wrap">
-          {isPending ? (
-            <>
-              <button
-                onClick={onApprove}
-                disabled={working}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer disabled:opacity-50"
-                style={{ background: '#1f7a3d' }}
-              >
-                <Check size={14} strokeWidth={2.5} /> Approve
-              </button>
-              <button
-                onClick={() => setRejectOpen(v => !v)}
-                disabled={working}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold border border-line bg-paper text-ink cursor-pointer disabled:opacity-50"
-              >
-                <X size={14} strokeWidth={2.5} /> Reject
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={onArchive}
-              disabled={working}
-              className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-[13px] font-semibold border border-line text-red-500 hover:bg-red-50 cursor-pointer disabled:opacity-50 transition-colors"
-            >
-              <Archive size={14} /> Archive listing
-            </button>
-          )}
-          <button
-            onClick={onEdit}
-            className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-[13px] font-bold text-white cursor-pointer"
-            style={{ background: TONE }}
-          >
-            <Pencil size={14} /> Edit
-          </button>
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-ink border border-line bg-paper cursor-pointer"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </>
-  )
+type EventMeta = { Icon: typeof CheckCircle2; color: string }
+const EVENT_META: Record<string, EventMeta> = {
+  listing_approved: { Icon: CheckCircle2, color: '#16a34a' },
+  listing_rejected: { Icon: XCircle,      color: '#dc2626' },
+  listing_archived: { Icon: Archive,      color: '#7884a0' },
+  edit_approved:    { Icon: CheckCircle2, color: '#16a34a' },
+  edit_rejected:    { Icon: XCircle,      color: '#dc2626' },
 }
-
-// ── Diff helpers ──────────────────────────────────────────────────────────────
-
-const DIFF_LABELS: Record<string, string> = {
-  title: 'Title', type: 'Type', transaction: 'Transaction', price: 'Price',
-  location: 'Region', description: 'Description', bedrooms: 'Bedrooms',
-  bathrooms: 'Bathrooms', area_sqft: 'Living Area (ft²)', lot_size_sqft: 'Lot Size (ft²)',
-  roi: 'Est. ROI (%)', seller_financing: 'Seller Financing', hoa: 'HOA Community',
-  hoa_fee: 'HOA Fee ($/mo)', tax_exempt: 'CONFOTUR Tax Exempt',
-  gated_community: 'Gated Community', construction_status: 'Construction Status',
-  year_built: 'Year Built', features: 'Features', maps_url: 'Google Maps URL',
-  latitude: 'Latitude', longitude: 'Longitude', tag: 'Tag', images: 'Photos',
-}
-
-function formatVal(key: string, val: unknown): string {
-  if (val == null) return '—'
-  if (key === 'price') return `$${Number(val).toLocaleString()}`
-  if (key === 'features' || key === 'images') return Array.isArray(val) ? (val as unknown[]).length + ' items' : '—'
-  if (typeof val === 'boolean') return val ? 'Yes' : 'No'
-  return String(val)
-}
-
-function EditDiffPanel({
-  edit, working, onApprove, onReject, onClose,
-}: {
-  edit: AdminListingEdit
-  working: boolean
-  onApprove: () => void
-  onReject: (reason: string) => void
-  onClose: () => void
-}) {
-  const [rejectOpen, setRejectOpen] = useState(false)
-  const [reason, setReason] = useState('')
-
-  const changed = Object.keys(DIFF_LABELS).filter(key => {
-    const cur = edit.current_data[key]
-    const prop = edit.proposed_data[key]
-    if (key === 'features' || key === 'images') {
-      return JSON.stringify(cur) !== JSON.stringify(prop)
-    }
-    return String(cur ?? '') !== String(prop ?? '')
-  })
-
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      <div className="fixed right-0 top-0 h-full w-150 max-w-full bg-paper z-50 flex flex-col shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-line shrink-0">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${TONE}18` }}>
-            <GitCompare size={15} style={{ color: TONE }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[14px] font-bold text-ink truncate">{edit.listing_title}</div>
-            <div className="flex items-center gap-1 text-[11px] text-dim"><MapPin size={10} />{edit.listing_location}</div>
-          </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-dim hover:text-ink hover:bg-line/50 transition-colors cursor-pointer">
-            <X size={14} />
-          </button>
-        </div>
-
-        {/* Submitter */}
-        <div className="px-5 py-3 bg-line/20 border-b border-line shrink-0 flex items-center justify-between">
-          <div>
-            <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide">Submitted by</div>
-            <div className="text-[13px] font-semibold text-ink">{edit.submitted_by_name ?? '—'}</div>
-            <div className="text-[11px] text-dim">{edit.submitted_by_email ?? ''}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide">Submitted</div>
-            <div className="text-[12px] text-ink">{fmtRelative(edit.submitted_at)}</div>
-          </div>
-        </div>
-
-        {/* Diff body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {changed.length === 0 ? (
-            <div className="text-center py-10 text-sm text-dim">No field changes detected.</div>
-          ) : (
-            <div className="space-y-3">
-              <div className="grid grid-cols-[1fr_1fr_1fr] gap-2 text-[10px] font-semibold text-dim uppercase tracking-wide pb-1 border-b border-line">
-                <div>Field</div>
-                <div>Current (live)</div>
-                <div style={{ color: TONE }}>Proposed</div>
-              </div>
-              {changed.map(key => {
-                const cur  = formatVal(key, edit.current_data[key])
-                const prop = formatVal(key, edit.proposed_data[key])
-                return (
-                  <div key={key} className="grid grid-cols-[1fr_1fr_1fr] gap-2 py-2 border-b border-line/50 items-start">
-                    <div className="text-[12px] font-semibold text-ink">{DIFF_LABELS[key]}</div>
-                    <div className="text-[12px] text-dim line-clamp-3 wrap-break-word">{cur}</div>
-                    <div className="text-[12px] font-medium wrap-break-word line-clamp-3" style={{ color: TONE }}>{prop}</div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Photos diff */}
-          {(() => {
-            const curImgs  = (edit.current_data.images  as string[] | null) ?? []
-            const propImgs = (edit.proposed_data.images as string[] | null) ?? []
-            if (JSON.stringify(curImgs) === JSON.stringify(propImgs)) return null
-            return (
-              <div className="mt-4">
-                <div className="text-[10.5px] font-semibold text-dim uppercase tracking-wide mb-2">Photos comparison</div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-[11px] text-dim mb-1.5">Current ({curImgs.length})</div>
-                    <div className="grid grid-cols-3 gap-1">
-                      {curImgs.slice(0, 6).map((u, i) => <img key={i} src={u} alt="" className="w-full h-14 object-cover rounded-lg" />)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] mb-1.5 font-medium" style={{ color: TONE }}>Proposed ({propImgs.length})</div>
-                    <div className="grid grid-cols-3 gap-1">
-                      {propImgs.slice(0, 6).map((u, i) => <img key={i} src={u} alt="" className="w-full h-14 object-cover rounded-lg" />)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
-
-          {/* Reject input */}
-          {rejectOpen && (
-            <div className="mt-4 flex gap-2">
-              <input
-                type="text"
-                value={reason}
-                onChange={e => setReason(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && reason.trim() && onReject(reason.trim())}
-                placeholder="Reason for rejection…"
-                className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-red-400"
-                autoFocus
-              />
-              <button
-                onClick={() => { if (reason.trim()) onReject(reason.trim()) }}
-                disabled={!reason.trim() || working}
-                className="px-4 py-2 rounded-lg text-[12px] font-bold text-white disabled:opacity-50 cursor-pointer shrink-0"
-                style={{ background: '#e10f1f' }}
-              >
-                Confirm
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-line px-5 py-4 flex gap-3 shrink-0">
-          <button
-            onClick={onApprove}
-            disabled={working}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer disabled:opacity-50"
-            style={{ background: '#1f7a3d' }}
-          >
-            <Check size={14} strokeWidth={2.5} /> Approve & Go Live
-          </button>
-          <button
-            onClick={() => setRejectOpen(v => !v)}
-            disabled={working}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold border border-line bg-paper text-ink cursor-pointer disabled:opacity-50"
-          >
-            <X size={14} strokeWidth={2.5} /> Reject Edit
-          </button>
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-ink border border-line bg-paper cursor-pointer">
-            Close
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
+const DEFAULT_META: EventMeta = { Icon: CheckCircle2, color: '#7884a0' }
+const LISTING_EVENTS = new Set(['listing_approved', 'listing_rejected', 'listing_archived', 'edit_approved', 'edit_rejected'])
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
+const STATUS_FILTERS = ['All', 'Active', 'Rejected', 'Archived'] as const
+const COLS    = 'grid-cols-[2fr_0.9fr_1fr_1fr_1.6fr_1fr_40px]'
+const HEADERS = ['Property', 'Type', 'Price', 'Status', 'Submitted by', 'Updated', ''] as const
+
 export function AdminListings() {
-  const [all, setAll]                   = useState<AdminListing[]>([])
-  const [edits, setEdits]               = useState<AdminListingEdit[]>([])
-  const [filter, setFilter]             = useState('All')
-  const [query, setQuery]               = useState('')
-  const [loading, setLoading]           = useState(true)
-  const [rejectingId, setRejectingId]   = useState<string | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
-  const [working, setWorking]           = useState(false)
-  const [selected, setSelected]         = useState<AdminListing | null>(null)
+  const [all,          setAll]          = useState<AdminListing[]>([])
+  const [edits,        setEdits]        = useState<AdminListingEdit[]>([])
+  const [dealRequests, setDealRequests] = useState<DealRequest[]>([])
+  const [filter,       setFilter]       = useState<string>('All')
+  const [query,        setQuery]        = useState('')
+  const [loading,      setLoading]      = useState(true)
+  const [working,      setWorking]      = useState(false)
+  const [rejectingDealId, setRejectingDealId] = useState<string | null>(null)
+  const [dealRejectReason, setDealRejectReason] = useState('')
+  const [selected,     setSelected]     = useState<AdminListing | null>(null)
   const [selectedEdit, setSelectedEdit] = useState<AdminListingEdit | null>(null)
-  const [editing,  setEditing]          = useState(false)
+  const [editing,      setEditing]      = useState(false)
+  const [showAdd,      setShowAdd]      = useState(false)
+  const [activity,     setActivity]     = useState<ActivityEntry[]>([])
+  const [actLoading,   setActLoading]   = useState(true)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   async function load() {
     setLoading(true)
-    const [data, editData] = await Promise.all([getAdminListings(), getAdminListingEdits()])
+    setActLoading(true)
+    const [data, editData, dealData, act] = await Promise.all([
+      getAdminListings(),
+      getAdminListingEdits(),
+      getAdminDealRequests('pending'),
+      getAdminActivityLog(25),
+    ])
     setAll(data)
     setEdits(editData)
+    setDealRequests(dealData)
+    setActivity(act)
     setLoading(false)
+    setActLoading(false)
   }
 
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filters = ['All', 'Pending', 'Active', 'Rejected', 'Archived', 'Edits'] as const
+  useEffect(() => {
+    const openId = searchParams.get('openId')
+    if (!openId || all.length === 0) return
+    const listing = all.find(l => l.id === openId)
+    if (listing) {
+      setSelected(listing)
+      setSearchParams({}, { replace: true })
+    }
+  }, [all]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const afterFilter = filter === 'All' ? all : all.filter(l => {
-    if (filter === 'Pending')  return l.status === 'pending_approval'
+  const pending  = all.filter(l => l.status === 'pending_approval')
+  const nonPending = all.filter(l => l.status !== 'pending_approval')
+
+  const afterFilter = filter === 'All' ? nonPending : nonPending.filter(l => {
     if (filter === 'Active')   return l.status === 'active'
     if (filter === 'Rejected') return l.status === 'rejected'
     if (filter === 'Archived') return l.status === 'archived'
@@ -604,7 +211,8 @@ export function AdminListings() {
     : afterFilter
 
   const counts = {
-    pending:  all.filter(l => l.status === 'pending_approval').length,
+    total:    all.length,
+    pending:  pending.length,
     active:   all.filter(l => l.status === 'active').length,
     rejected: all.filter(l => l.status === 'rejected').length,
     archived: all.filter(l => l.status === 'archived').length,
@@ -623,8 +231,6 @@ export function AdminListings() {
   async function handleReject(id: string, reason: string) {
     setWorking(true)
     await rejectAdminListing(id, reason)
-    setRejectingId(null)
-    setRejectReason('')
     setSelected(null)
     await load()
     setWorking(false)
@@ -658,13 +264,61 @@ export function AdminListings() {
     toast.success('Listing archived.')
   }
 
-  const statCards: { key: keyof typeof counts; label: string; accent: string }[] = [
-    { key: 'pending',  label: 'Pending',      accent: '#f0a800' },
-    { key: 'active',   label: 'Active',        accent: '#1f7a3d' },
-    { key: 'edits',    label: 'Pending Edits', accent: '#7c3aed' },
-    { key: 'rejected', label: 'Rejected',      accent: '#e10f1f' },
-    { key: 'archived', label: 'Archived',      accent: '#9ca3af' },
+  async function handleApproveDeal(id: string) {
+    setWorking(true)
+    try {
+      await approveDealRequest(id)
+      await load()
+      toast.success('Deal of the Week set!')
+    } finally { setWorking(false) }
+  }
+
+  async function handleRejectDeal(id: string, reason: string) {
+    setWorking(true)
+    try {
+      await rejectDealRequest(id, reason)
+      setRejectingDealId(null)
+      setDealRejectReason('')
+      await load()
+      toast.success('Deal request rejected.')
+    } finally { setWorking(false) }
+  }
+
+  const kpis = [
+    {
+      label: 'Total Listings',
+      value: counts.total,
+      sub: `${counts.active} active · ${counts.archived} archived`,
+      accent: undefined as string | undefined,
+    },
+    {
+      label: 'Active',
+      value: counts.active,
+      sub: 'live on site',
+      accent: undefined,
+    },
+    {
+      label: 'Pending Approval',
+      value: counts.pending,
+      sub: 'awaiting review',
+      accent: counts.pending > 0 ? '#d97706' : undefined,
+    },
+    {
+      label: 'Pending Edits',
+      value: counts.edits,
+      sub: 'awaiting review',
+      accent: counts.edits > 0 ? '#7c3aed' : undefined,
+    },
   ]
+
+  if (showAdd) {
+    return (
+      <AdminSubmitListing
+        go={() => { setShowAdd(false); load() }}
+        tone="#0d9488"
+      />
+    )
+  }
 
   if (editing && selected) {
     return (
@@ -682,250 +336,401 @@ export function AdminListings() {
   }
 
   return (
-    <div>
-      {/* Stats */}
-      <div className="grid grid-cols-5 gap-3 mb-5">
-        {statCards.map(({ key, label, accent }) => (
-          <div key={key} className="bg-paper border border-line rounded-xl px-4 py-3.5 flex items-center gap-3" style={{ borderLeft: `3px solid ${accent}` }}>
-            <div>
-              <div className="font-sans text-2xl font-bold text-ink leading-none">{counts[key]}</div>
-              <div className="text-[11.5px] text-dim mt-1">{label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="flex gap-5 items-start">
 
-      {/* Table card */}
-      <div className="bg-paper rounded-2xl border border-line overflow-hidden">
-        {/* Header bar */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-line">
-          <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-dim pointer-events-none" />
-            <input
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search listings…"
-              className="pl-7 pr-3 py-1.5 text-xs rounded-lg border border-line bg-transparent text-ink placeholder:text-dim outline-none focus:border-brand transition-colors w-56"
-            />
-          </div>
-          <div className="flex-1" />
-          <div className="flex gap-1.5">
-            {filters.map(f => (
-              <button key={f} onClick={() => setFilter(f)} className="py-1 px-3 rounded-full text-xs font-semibold cursor-pointer transition-colors" style={{ border: `1px solid ${filter === f ? TONE : '#e4ddcf'}`, background: filter === f ? TONE : 'transparent', color: filter === f ? '#fff' : '#33425f' }}>
-                {f}
-              </button>
-            ))}
-          </div>
+      {/* ── Left column ───────────────────────────────────────────────────── */}
+      <div className="flex-1 min-w-0 flex flex-col gap-4">
+
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-paper border border-line rounded-xl px-4 py-4 animate-pulse space-y-2">
+                  <div className="h-2.5 bg-line-soft rounded w-2/3" />
+                  <div className="h-7 bg-line-soft rounded w-1/2" />
+                  <div className="h-2.5 bg-line-soft rounded w-3/4" />
+                </div>
+              ))
+            : kpis.map(k => (
+                <div key={k.label} className="bg-paper border border-line rounded-xl px-4 py-4">
+                  <div className="text-[11px] font-bold uppercase tracking-[.07em] text-dim mb-2">{k.label}</div>
+                  <div
+                    className="text-[28px] font-bold leading-none"
+                    style={{ color: k.accent ?? 'var(--ink, #1a1e2e)' }}
+                  >
+                    {k.value}
+                  </div>
+                  <div className="text-[11px] text-dim mt-1.5 truncate">{k.sub}</div>
+                </div>
+              ))
+          }
         </div>
 
-        {/* Pending Edits table */}
-        {filter === 'Edits' && (loading ? (
-          <div className="py-12 text-center text-sm text-dim">Loading…</div>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-5 py-3">Property</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Submitted by</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Submitted</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {edits.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-12 text-center text-sm text-dim">No pending edits.</td>
-                </tr>
-              ) : (
-                edits.map((edit, i) => (
-                  <tr
-                    key={edit.id}
-                    onClick={() => setSelectedEdit(edit)}
-                    className={`hover:bg-line/20 transition-colors cursor-pointer ${i < edits.length - 1 ? 'border-b border-line' : ''}`}
-                  >
-                    <td className="px-5 py-3.5">
+        {/* ── Main card ─────────────────────────────────────────────────── */}
+        <div className="bg-paper border border-line rounded-2xl overflow-hidden">
+
+          {/* Toolbar */}
+          <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
+            <div className="font-sans text-[17px] font-bold text-ink">
+              All listings
+              {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({visible.length})</span>}
+            </div>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line bg-white w-55">
+                  <Search size={13} className="text-dim" />
+                  <input
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Search listings…"
+                    className="text-xs border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowAdd(true)}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
+                  style={{ background: TONE }}
+                >
+                  <Plus size={13} /> Add Listing
+                </button>
+              </div>
+              <FilterPills options={[...STATUS_FILTERS]} value={filter} onChange={setFilter} />
+            </div>
+          </div>
+
+          {/* ── Pending Approval section ─────────────────────────────── */}
+          {!loading && pending.length > 0 && (
+            <div className="border-b border-line">
+              <div className="px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
+                  Pending Approval ({pending.length})
+                </span>
+              </div>
+              <div className="divide-y divide-line-soft">
+                {pending.map(l => (
+                  <div key={l.id} className="px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/70 transition-colors cursor-pointer" onClick={() => setSelected(l)}>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {l.images?.[0] ? (
+                        <img src={l.images[0]} alt="" className="w-14 h-9 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TONE}18` }}>
+                          <Home size={14} style={{ color: TONE }} />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                        <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
+                      </div>
+                    </div>
+                    <div className="text-[12px] text-dim shrink-0 hidden sm:block">
+                      {l.submitted_by_name ?? '—'} · {fmtRelative(l.updated_at)}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleApprove(l.id)}
+                        disabled={working}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0"
+                        style={{ background: '#1f7a3d' }}
+                      >
+                        <Check size={11} /> Approve
+                      </button>
+                      <button
+                        onClick={() => setSelected(l)}
+                        disabled={working}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50"
+                      >
+                        <X size={11} /> Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Pending Edits section ────────────────────────────────── */}
+          {!loading && edits.length > 0 && (
+            <div className="border-b border-line">
+              <div className="px-5.5 py-2.5 bg-violet-50 border-b border-violet-100 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+                <span className="text-[11px] font-bold uppercase tracking-[.07em] text-violet-700">
+                  Pending Edits ({edits.length})
+                </span>
+              </div>
+              <div className="divide-y divide-line-soft">
+                {edits.map(edit => (
+                  <div key={edit.id} className="px-5.5 py-3 flex items-center gap-3 hover:bg-violet-50/70 transition-colors cursor-pointer" onClick={() => setSelectedEdit(edit)}>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {edit.listing_thumbnail ? (
+                        <img src={edit.listing_thumbnail} alt="" className="w-14 h-9 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#7c3aed18' }}>
+                          <GitCompare size={14} style={{ color: '#7c3aed' }} />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(edit.listing_title)}</div>
+                        <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{edit.listing_location}</div>
+                      </div>
+                    </div>
+                    <div className="text-[12px] text-dim shrink-0 hidden sm:block">
+                      {edit.submitted_by_name ?? '—'} · {fmtRelative(edit.submitted_at)}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => handleApproveEdit(edit.id)}
+                        disabled={working}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0"
+                        style={{ background: '#1f7a3d' }}
+                      >
+                        <Check size={11} /> Approve
+                      </button>
+                      <button
+                        onClick={() => setSelectedEdit(edit)}
+                        disabled={working}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50"
+                      >
+                        <GitCompare size={11} /> Review
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Deal Requests section ────────────────────────────────── */}
+          {!loading && dealRequests.length > 0 && (
+            <div className="border-b border-line">
+              <div className="px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                <Star size={11} fill="#f59e0b" style={{ color: '#f59e0b' }} />
+                <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
+                  Deal Requests ({dealRequests.length})
+                </span>
+              </div>
+              <div className="divide-y divide-line-soft">
+                {dealRequests.map(req => {
+                  const isRejectOpen = rejectingDealId === req.id
+                  return (
+                    <div key={req.id} className="px-5.5 py-3 hover:bg-amber-50/50 transition-colors">
                       <div className="flex items-center gap-3">
-                        {edit.listing_thumbnail ? (
-                          <img src={edit.listing_thumbnail} alt="" className="w-24 h-14 rounded-[10px] object-cover shrink-0" />
+                        <div className="shrink-0">
+                          {req.listing_thumbnail ? (
+                            <img src={req.listing_thumbnail} alt="" className="w-14 h-9 rounded-lg object-cover" />
+                          ) : (
+                            <div className="w-14 h-9 rounded-lg flex items-center justify-center" style={{ background: '#f0a80018' }}>
+                              <Star size={14} style={{ color: '#f0a800' }} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] font-semibold text-ink truncate">{titleCase(req.listing_title)}</div>
+                          <div className="text-[11px] text-dim flex items-center gap-1 truncate">
+                            <MapPin size={9} />{req.listing_location}
+                            <span className="mx-1">·</span>
+                            <span className="font-semibold" style={{ color: '#c07800' }}>
+                              {req.discount_type === 'fixed'
+                                ? `−$${Number(req.discount_value).toLocaleString()} off`
+                                : `−${req.discount_value}% off`}
+                            </span>
+                            {req.message && <span className="hidden sm:inline"> · "{req.message}"</span>}
+                          </div>
+                        </div>
+                        <div className="text-[11px] text-dim shrink-0 hidden sm:block">
+                          {req.requested_by_name ?? req.requested_by_email} · {fmtRelative(req.created_at)}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => handleApproveDeal(req.id)}
+                            disabled={working}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0"
+                            style={{ background: '#f0a800' }}
+                          >
+                            <Check size={11} /> Approve
+                          </button>
+                          <button
+                            onClick={() => { setRejectingDealId(isRejectOpen ? null : req.id); setDealRejectReason('') }}
+                            disabled={working}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50"
+                          >
+                            <X size={11} /> Reject
+                          </button>
+                        </div>
+                      </div>
+                      {isRejectOpen && (
+                        <div className="mt-2.5 flex gap-2 pl-17">
+                          <input
+                            type="text"
+                            value={dealRejectReason}
+                            onChange={e => setDealRejectReason(e.target.value)}
+                            placeholder="Reason for rejection…"
+                            className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[12.5px] text-ink outline-none focus:border-amber-400"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleRejectDeal(req.id, dealRejectReason)}
+                            disabled={!dealRejectReason.trim() || working}
+                            className="px-4 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 border-0"
+                            style={{ background: '#e10f1f' }}
+                          >
+                            Confirm
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Desktop table header */}
+          <div className={`hidden sm:grid ${COLS} px-5.5 py-2.5 border-b border-line bg-nav/5`}>
+            {HEADERS.map(h => (
+              <div key={h} className="text-[11px] font-bold uppercase tracking-[.07em] text-dim">{h}</div>
+            ))}
+          </div>
+
+          {/* Rows */}
+          {loading ? (
+            <div className="divide-y divide-line-soft">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="px-5.5 py-4 animate-pulse flex items-center gap-3">
+                  <div className="w-14 h-9 rounded-lg bg-line-soft shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-line-soft rounded w-1/3" />
+                    <div className="h-3 bg-line-soft rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="py-12 text-center text-sm text-dim">
+              {query.trim() ? `No results for "${query}"` : 'No listings found.'}
+            </div>
+          ) : (
+            <div className="divide-y divide-line-soft">
+              {visible.map(l => (
+                <div key={l.id}>
+                  {/* Desktop row */}
+                  <div
+                    className={`hidden sm:grid ${COLS} items-center px-5.5 py-3.5 cursor-pointer hover:bg-line-soft/40 transition-colors`}
+                    onClick={() => setSelected(l)}
+                  >
+                    {/* Property */}
+                    <div className="flex items-center gap-3 min-w-0 pr-4">
+                      {l.images?.[0] ? (
+                        <img src={l.images[0]} alt={l.title} className="w-14 h-9 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TONE}18` }}>
+                          <Home size={16} style={{ color: TONE }} />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                        <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
+                      </div>
+                    </div>
+                    {/* Type */}
+                    <div className="text-[12px] text-ink2">{fmtType(l.type)}</div>
+                    {/* Price */}
+                    <div className="text-[13px] font-semibold text-ink">{fmtPrice(l.price)}</div>
+                    {/* Status */}
+                    <div><StatusChip status={l.status} /></div>
+                    {/* Submitted by */}
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-ink truncate">{l.submitted_by_name ?? '—'}</div>
+                      <div className="text-[11px] text-dim truncate">{l.submitted_by_email ?? ''}</div>
+                    </div>
+                    {/* Updated */}
+                    <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at)}</div>
+                    {/* Actions */}
+                    <div onClick={e => e.stopPropagation()}>
+                      <ActionMenu
+                        onView={() => setSelected(l)}
+                        onEdit={() => { setSelected(l); setEditing(true) }}
+                        onArchive={() => handleArchive(l.id)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mobile card */}
+                  <div
+                    className="sm:hidden px-4 py-3.5 cursor-pointer"
+                    onClick={() => setSelected(l)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {l.images?.[0] ? (
+                          <img src={l.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
                         ) : (
-                          <div className="w-24 h-14 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: '#7c3aed18' }}>
-                            <GitCompare size={20} style={{ color: '#7c3aed' }} />
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TONE}18` }}>
+                            <Home size={14} style={{ color: TONE }} />
                           </div>
                         )}
                         <div className="min-w-0">
-                          <div className="text-[13px] font-semibold text-ink truncate max-w-55">{titleCase(edit.listing_title)}</div>
-                          <div className="flex items-center gap-1 text-[11px] text-dim truncate max-w-55">
-                            <MapPin size={10} />{edit.listing_location}
-                          </div>
+                          <div className="text-[13.5px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                          <div className="text-[11px] text-dim truncate flex items-center gap-1"><MapPin size={9} />{l.location}</div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="text-[13px] font-semibold text-ink">{edit.submitted_by_name ?? '—'}</div>
-                      <div className="text-[11px] text-dim">{edit.submitted_by_email ?? ''}</div>
-                    </td>
-                    <td className="px-4 py-3.5 text-[13px] text-dim">{fmtRelative(edit.submitted_at)}</td>
-                    <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleApproveEdit(edit.id)}
-                          disabled={working}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 shrink-0"
-                          style={{ background: '#1f7a3d' }}
-                        >
-                          <Check size={12} strokeWidth={2.5} /> Approve
-                        </button>
-                        <button
-                          onClick={() => setSelectedEdit(edit)}
-                          disabled={working}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-ink border border-line bg-paper cursor-pointer disabled:opacity-50 shrink-0"
-                        >
-                          <GitCompare size={12} /> Review
-                        </button>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <StatusChip status={l.status} />
+                        <div className="text-[11px] text-dim">{fmtPrice(l.price)}</div>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        ))}
+                    </div>
+                    <div className="text-[11px] text-dim mt-2">{fmtType(l.type)} · Updated {fmtRelative(l.updated_at)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>{/* end left column */}
 
-        {/* Listings table */}
-        {filter !== 'Edits' && loading && (
-          <div className="py-12 text-center text-sm text-dim">Loading…</div>
-        )}
-        {filter !== 'Edits' && !loading && (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-line">
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-5 py-3">Property</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Type</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Price</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Status</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Submitted by</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Reviewed by</th>
-                <th className="text-left text-[10px] font-semibold text-dim uppercase tracking-wide px-4 py-3">Updated</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {visible.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-dim">
-                    {query.trim() ? `No results for "${query}"` : 'No listings found.'}
-                  </td>
-                </tr>
-              ) : (
-                visible.map((l, i) => {
-                  const isPending = l.status === 'pending_approval'
-                  const isRejectOpen = rejectingId === l.id
-                  const isLast = i === visible.length - 1
-
-                  return (
-                    <>
-                      <tr key={l.id} onClick={() => setSelected(l)} className={`hover:bg-line/20 transition-colors cursor-pointer ${!isLast || isRejectOpen ? 'border-b border-line' : ''}`}>
-                        {/* Property */}
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-3">
-                            {l.images?.[0] ? (
-                              <img src={l.images[0]} alt={l.title} className="w-24 h-14 rounded-[10px] object-cover shrink-0" />
-                            ) : (
-                              <div className="w-24 h-14 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: `${TONE}18` }}>
-                                <Home size={20} style={{ color: TONE }} />
-                              </div>
-                            )}
-                            <div className="min-w-0">
-                              <div className="text-[13px] font-semibold text-ink truncate max-w-55 hover:underline">{titleCase(l.title)}</div>
-                              <div className="flex items-center gap-1 text-[11px] text-dim truncate max-w-55">
-                                <MapPin size={10} />{l.location}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        {/* Type */}
-                        <td className="px-4 py-3.5 text-[13px] text-ink">{fmtType(l.type)}</td>
-                        {/* Price */}
-                        <td className="px-4 py-3.5 text-[13px] font-semibold text-ink">{fmtPrice(l.price)}</td>
-                        {/* Status */}
-                        <td className="px-4 py-3.5"><StatusChip status={l.status} /></td>
-                        {/* Submitted by */}
-                        <td className="px-4 py-3.5">
-                          <div className="text-[13px] font-semibold text-ink leading-tight">{l.submitted_by_name ?? '—'}</div>
-                          <div className="text-[11px] text-dim mt-0.5">{l.submitted_by_email ?? ''}</div>
-                        </td>
-                        {/* Reviewed by */}
-                        <td className="px-4 py-3.5">
-                          {l.reviewed_by_name ? (
-                            <>
-                              <div className="text-[13px] font-semibold text-ink leading-tight">{l.reviewed_by_name}</div>
-                              <div className="text-[11px] text-dim mt-0.5 capitalize">
-                                {l.status === 'active' ? 'Approved' : l.status === 'rejected' ? 'Rejected' : 'Archived'}
-                                {l.reviewed_at && ` · ${new Date(l.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                              </div>
-                            </>
-                          ) : (
-                            <span className="text-[12px] text-dim">—</span>
-                          )}
-                        </td>
-                        {/* Updated */}
-                        <td className="px-4 py-3.5 text-[13px] text-dim">{fmtRelative(l.updated_at)}</td>
-                        {/* Actions */}
-                        <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                          <div className="flex items-center gap-2">
-                            {isPending ? (
-                              <>
-                                <button onClick={() => handleApprove(l.id)} disabled={working} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 shrink-0" style={{ background: '#1f7a3d' }}>
-                                  <Check size={12} strokeWidth={2.5} /> Approve
-                                </button>
-                                <button onClick={() => { setRejectingId(isRejectOpen ? null : l.id); setRejectReason('') }} disabled={working} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-ink border border-line bg-paper cursor-pointer disabled:opacity-50 shrink-0">
-                                  <X size={12} strokeWidth={2.5} /> Reject
-                                </button>
-                              </>
-                            ) : (
-                              <ActionMenu onEdit={() => { setSelected(l); setEditing(true) }} onArchive={() => handleArchive(l.id)} />
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-
-                      {/* Inline reject reason row */}
-                      {isRejectOpen && (
-                        <tr key={`${l.id}-reject`} className={!isLast ? 'border-b border-line' : ''}>
-                          <td colSpan={8} className="px-5 pb-4 pt-0">
-                            <div className="flex gap-2 ml-30">
-                              <input
-                                type="text"
-                                value={rejectReason}
-                                onChange={e => setRejectReason(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleReject(l.id, rejectReason.trim())}
-                                placeholder="Reason for rejection…"
-                                className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-red-400"
-                                autoFocus
-                              />
-                              <button onClick={() => handleReject(l.id, rejectReason.trim())} disabled={!rejectReason.trim() || working} className="px-4 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 shrink-0" style={{ background: '#e10f1f' }}>
-                                Confirm
-                              </button>
-                              <button onClick={() => { setRejectingId(null); setRejectReason('') }} className="px-3 py-2 rounded-lg text-[12px] text-dim border border-line bg-paper cursor-pointer shrink-0">
-                                Cancel
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+      {/* ── Activity Sidebar ─────────────────────────────────────────────── */}
+      <div className="w-72 shrink-0 hidden xl:block bg-paper border border-line rounded-2xl overflow-hidden sticky top-4">
+        <div className="px-4 py-3.5 border-b border-line">
+          <div className="font-semibold text-[14px] text-ink">Recent Activity</div>
+        </div>
+        {actLoading ? (
+          <div className="divide-y divide-line-soft">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="px-4 py-3 animate-pulse flex gap-2.5">
+                <div className="w-6 h-6 rounded-full bg-line-soft shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 bg-line-soft rounded w-3/4" />
+                  <div className="h-2.5 bg-line-soft rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : activity.filter(e => LISTING_EVENTS.has(e.event_type)).length === 0 ? (
+          <div className="py-8 text-center text-[12px] text-dim">No listing activity yet.</div>
+        ) : (
+          <div className="divide-y divide-line-soft max-h-150 overflow-y-auto">
+            {activity.filter(e => LISTING_EVENTS.has(e.event_type)).map(entry => {
+              const meta = EVENT_META[entry.event_type] ?? DEFAULT_META
+              const { Icon } = meta
+              return (
+                <div key={entry.id} className="px-4 py-3 flex gap-2.5">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: `${meta.color}18` }}>
+                    <Icon size={11} style={{ color: meta.color }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] text-ink leading-snug">{entry.description}</div>
+                    <div className="text-[10.5px] text-dim mt-0.5">{fmtRelative(entry.created_at)}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
 
       {/* Detail slide-over */}
       {selected && (
-        <DetailPanel
+        <ListingDetailPanel
           listing={selected}
           onClose={() => setSelected(null)}
           onEdit={() => setEditing(true)}
@@ -938,7 +743,7 @@ export function AdminListings() {
 
       {/* Edit diff slide-over */}
       {selectedEdit && (
-        <EditDiffPanel
+        <ListingEditDiffPanel
           edit={selectedEdit}
           working={working}
           onApprove={() => handleApproveEdit(selectedEdit.id)}

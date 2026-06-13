@@ -38,3 +38,7 @@ export async function resendCode(body: { email: string }): Promise<void> {
 export async function getMe(): Promise<{ id: string; email: string; role: string; display_name: string }> {
   return client.get('/auth/me').then(r => r.data).catch(errorMessage)
 }
+
+export async function googleAuth(accessToken: string): Promise<{ expires_in: number }> {
+  return client.post('/auth/google', { access_token: accessToken }).then(r => r.data).catch(errorMessage)
+}

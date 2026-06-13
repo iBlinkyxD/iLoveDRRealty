@@ -20,7 +20,7 @@ const ROLE_MAP: Record<string, Role> = {
 function DashboardPage() {
   const { view = 'home' } = useParams<{ view?: string }>()
   const navigate = useNavigate()
-  const { data: user, loading, error } = useCurrentUser()
+  const { data: user, loading, error, updateUser } = useCurrentUser()
 
   useEffect(() => {
     if (!loading && (error || !user)) {
@@ -31,7 +31,10 @@ function DashboardPage() {
   if (loading || !user) return null
 
   const role: Role = ROLE_MAP[user.role] ?? 'Buyer'
-  const go = (v: string) => navigate(v === 'home' ? '/' : `/${v}`)
+  const go = (v: string, openId?: string) => {
+    const path = v === 'home' ? '/' : `/${v}`
+    navigate(openId ? `${path}?openId=${encodeURIComponent(openId)}` : path)
+  }
 
   const handleLogout = async () => {
     await logout()
@@ -41,8 +44,8 @@ function DashboardPage() {
   return (
     <DashLayout role={role} view={view} go={go} onLogout={handleLogout} user={user}>
       {role === 'Admin'
-        ? <AdminDash go={go} view={view} />
-        : <Dashboard go={go} view={view} role={role} user={user} />
+        ? <AdminDash go={go} view={view} user={user} onUserUpdate={updateUser} />
+        : <Dashboard go={go} view={view} role={role} user={user} onUserUpdate={updateUser} />
       }
     </DashLayout>
   )

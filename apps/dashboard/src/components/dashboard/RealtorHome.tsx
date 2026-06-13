@@ -1,14 +1,10 @@
+import { useState, useEffect } from 'react'
 import {
-  Building2, ClipboardList, Users, CheckCircle2, Shuffle, Home, Banknote, type LucideIcon,
+  Building2, ClipboardList, Users, CheckCircle2, Shuffle, Home, Banknote, MessageCircle, Plus, Clock, Star, Pencil, type LucideIcon,
 } from 'lucide-react'
-import { Card, StatusPill, RoleKpiCard } from './shared'
-
-export const REALTOR_KPIS: { Icon: LucideIcon; label: string; value: string; sub: string; hl?: boolean }[] = [
-  { Icon: Users,         label: 'Active Clients',   value: '18', sub: '+4 this month'       },
-  { Icon: Building2,     label: 'Active Listings',  value: '24', sub: '4 pending review',   hl: true },
-  { Icon: CheckCircle2,  label: 'Pending Closings', value: '3',  sub: 'Est. $4.1M total'    },
-  { Icon: ClipboardList, label: 'Leads This Month', value: '47', sub: '+22% vs prior month' },
-]
+import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
+import { getMyListings, type Listing } from '../../api/listings'
+import { getRealtorInquiries, type Inquiry } from '../../api/inquiries'
 
 export const REALTOR_LISTINGS = [
   { name: 'Oceanfront Villa — Cap Cana',   status: 'Active', leads: 8, views: 1420, price: '$2.45M' },
@@ -50,36 +46,115 @@ export const STAGES = ['Prospect', 'Showing', 'Offer'] as const
 export const LEAD_STATUS_TONE: Record<string, string> = { Hot: '#e10f1f', Warm: '#f0a800', Cold: '#7884a0' }
 export const REALTOR_EVENT_TONE: Record<string, string> = { Showing: '#0b63ab', Call: '#f0a800', Offer: '#e10f1f', Meeting: '#1f7a3d' }
 
+const STATUS_LABEL: Record<string, string> = {
+  active: 'Active', pending_approval: 'Review', rejected: 'Rejected', archived: 'Archived',
+}
+const STATUS_TONE_MAP: Record<string, string> = {
+  active: '#1f7a3d', pending_approval: '#f0a800', rejected: '#e10f1f', archived: '#9ca3af',
+}
+
+function fmtRelative(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1)   return 'just now'
+  if (mins < 60)  return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24)   return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days === 1) return 'Yesterday'
+  if (days < 7)   return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString()
+}
+
+function avatarTone(name: string): string {
+  const tones = ['#e10f1f', '#0b63ab', '#f0a800', '#7884a0', '#1f7a3d', '#9333ea']
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff
+  return tones[h % tones.length]
+}
+
 export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: string }) {
+  const [myListings,       setMyListings]       = useState<Listing[]>([])
+  const [inquiries,        setInquiries]        = useState<Inquiry[]>([])
+  const [loadingListings,  setLoadingListings]  = useState(true)
+  const [loadingInquiries, setLoadingInquiries] = useState(true)
+
+  useEffect(() => {
+    getMyListings().then(setMyListings).catch(() => {}).finally(() => setLoadingListings(false))
+    getRealtorInquiries().then(setInquiries).catch(() => {}).finally(() => setLoadingInquiries(false))
+  }, [])
+
+  const activeCount  = myListings.filter(l => l.status === 'active').length
+  const pendingCount = myListings.filter(l => l.status === 'pending_approval').length
+
+  const kpis = [
+    { label: 'Active Clients',   value: '18',  sub: '+4 this month' },
+    { label: 'Active Listings',  value: loadingListings   ? '…' : String(activeCount),   sub: `${pendingCount} pending review` },
+    { label: 'Pending Closings', value: '3',   sub: 'Est. $4.1M total' },
+    { label: 'Leads This Month', value: loadingInquiries  ? '…' : String(inquiries.length), sub: inquiries.length ? `${inquiries.length} total` : 'No leads yet', accent: inquiries.length > 0 ? '#1f7a3d' : undefined },
+  ]
+
   return (
     <>
       <div className="grid grid-cols-2 gap-3 mb-5 lg:grid-cols-4 lg:gap-4 lg:mb-6">
-        {REALTOR_KPIS.map((k, i) => <RoleKpiCard key={i} {...k} tone={tone} />)}
+        {kpis.map((k, i) => <RoleKpiCard key={i} {...k} />)}
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-5">
           <Card title={<><Building2 size={14} /> Active Listings</>} padded={false}
             action={<button onClick={() => go('listings')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">Manage →</button>}>
-            <div>
-              {REALTOR_LISTINGS.slice(0, 4).map((l, i) => (
-                <div key={i} className={`flex items-center gap-3 py-3 px-5.5 ${i < 3 ? 'border-b border-line' : ''}`}>
-                  <div className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center" style={{ background: `${tone}20` }}>
-                    <Home size={16} style={{ color: tone }} />
+            {loadingListings ? (
+              <div>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className={`flex items-center gap-3 py-3 px-5.5 animate-pulse ${i < 3 ? 'border-b border-line' : ''}`}>
+                    <div className="w-10 h-10 rounded-lg bg-line-soft shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-line-soft rounded w-3/4" />
+                      <div className="h-3 bg-line-soft rounded w-1/2" />
+                    </div>
+                    <div className="h-5 w-14 bg-line-soft rounded-full" />
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="text-[13px] font-semibold text-ink truncate">{l.name}</div>
-                    <div className="text-[11.5px] text-dim mt-0.5">{l.price} · {l.views.toLocaleString()} views · {l.leads} leads</div>
-                  </div>
-                  <StatusPill label={l.status} tone={l.status === 'Active' ? '#1f7a3d' : '#f0a800'} />
+                ))}
+              </div>
+            ) : myListings.length === 0 ? (
+              <div className="py-10 flex flex-col items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: `${tone}18` }}>
+                  <Building2 size={20} style={{ color: tone }} />
                 </div>
-              ))}
-              <div className="py-3 px-5.5">
-                <button onClick={() => go('listings')} className="text-[12.5px] font-semibold text-brand bg-transparent border-none cursor-pointer p-0">
-                  View all {REALTOR_LISTINGS.length} →
+                <div className="text-center">
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No listings yet</div>
+                  <div className="text-[11.5px] text-dim">Submit your first property to attract buyers.</div>
+                </div>
+                <button
+                  onClick={() => go('submit-listing')}
+                  className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
+                  style={{ background: tone }}
+                >
+                  <Plus size={13} strokeWidth={2.5} /> Add listing
                 </button>
               </div>
-            </div>
+            ) : (
+              <div>
+                {myListings.slice(0, 4).map((l, i) => (
+                  <div key={l.id} className={`flex items-center gap-3 py-3 px-5.5 ${i < Math.min(3, myListings.length - 1) ? 'border-b border-line' : ''}`}>
+                    <div className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center" style={{ background: `${tone}20` }}>
+                      <Home size={16} style={{ color: tone }} />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <div className="text-[13px] font-semibold text-ink truncate">{l.title}</div>
+                      <div className="text-[11.5px] text-dim mt-0.5">{fmtPrice(l.price)} · {l.view_count.toLocaleString()} views · {l.leads_count} leads</div>
+                    </div>
+                    <StatusPill label={STATUS_LABEL[l.status] ?? l.status} tone={STATUS_TONE_MAP[l.status]} />
+                  </div>
+                ))}
+                <div className="py-3 px-5.5">
+                  <button onClick={() => go('listings')} className="text-[12.5px] font-semibold text-brand bg-transparent border-none cursor-pointer p-0">
+                    View all {myListings.length} →
+                  </button>
+                </div>
+              </div>
+            )}
           </Card>
 
           <Card title={<><Shuffle size={14} /> Pipeline</>} sub="Active deals by stage"
@@ -113,19 +188,77 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
         </div>
 
         <div className="flex flex-col gap-5">
-          <Card title={<><ClipboardList size={14} /> Hot Leads</>}
-            action={<button onClick={() => go('leads')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">All →</button>}>
-            <div className="flex flex-col gap-2.5">
-              {REALTOR_LEADS.filter(l => l.status !== 'Cold').map((l, i) => (
-                <div key={i} className="py-2.5 px-3 rounded-[10px] bg-[#F8F9FC] border border-line">
-                  <div className="flex justify-between items-center mb-0.75">
-                    <div className="text-[13px] font-bold text-ink">{l.name}</div>
-                    <StatusPill label={l.status} tone={LEAD_STATUS_TONE[l.status]} />
+          {!loadingListings && myListings.some(l => l.has_pending_deal_request || l.has_pending_edit) && (
+            <Card title={<><Clock size={14} /> Pending Reviews</>} padded={false}
+              action={<button onClick={() => go('listings')} className="text-xs font-bold bg-transparent border-none cursor-pointer" style={{ color: tone }}>All listings →</button>}>
+              {myListings.filter(l => l.has_pending_deal_request || l.has_pending_edit).map((l, i, arr) => (
+                <div key={l.id} className={`flex items-center gap-3 py-3 px-5.5 ${i < arr.length - 1 ? 'border-b border-line' : ''}`}>
+                  <div className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center" style={{ background: `${tone}18` }}>
+                    <Home size={16} style={{ color: tone }} />
                   </div>
-                  <div className="text-[11.5px] text-dim">{l.region} · {l.type} · {l.budget}</div>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="text-[13px] font-semibold text-ink truncate">{l.title}</div>
+                    <div className="flex gap-1.5 mt-0.75 flex-wrap">
+                      {l.has_pending_deal_request && (
+                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.75 py-0.5 rounded-full" style={{ background: '#f0a80018', color: '#c07800' }}>
+                          <Star size={9} fill="#f0a800" style={{ color: '#f0a800' }} /> Deal request
+                        </span>
+                      )}
+                      {l.has_pending_edit && (
+                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.75 py-0.5 rounded-full" style={{ background: '#7c3aed18', color: '#7c3aed' }}>
+                          <Pencil size={9} /> Edit
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Clock size={13} className="text-dim shrink-0" />
                 </div>
               ))}
-            </div>
+            </Card>
+          )}
+
+          <Card title={<><ClipboardList size={14} /> Hot Leads</>}
+            action={<button onClick={() => go('leads')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">All →</button>}>
+            {loadingInquiries ? (
+              <div className="flex flex-col gap-2.5">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className={`flex items-start gap-2.5 pb-2.5 ${i < 2 ? 'border-b border-line' : ''} animate-pulse`}>
+                    <div className="w-8.5 h-8.5 rounded-full bg-line-soft shrink-0" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="h-3 bg-line-soft rounded w-1/2" />
+                      <div className="h-3 bg-line-soft rounded w-3/4" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : inquiries.length === 0 ? (
+              <div className="py-8 flex flex-col items-center gap-2 text-center">
+                <MessageCircle size={22} className="text-dim" />
+                <div className="text-[13px] font-semibold text-ink">No leads yet</div>
+                <div className="text-[11.5px] text-dim">Inquiries from buyers will appear here.</div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {inquiries.slice(0, 5).map((inq, i) => (
+                  <div key={inq.id} className={`flex items-start gap-2.5 pb-2.5 ${i < Math.min(inquiries.length, 5) - 1 ? 'border-b border-line' : ''}`}>
+                    <div className="w-8.5 h-8.5 rounded-full shrink-0 grid place-items-center font-bold text-[13px] text-white" style={{ background: avatarTone(inq.name) }}>
+                      {inq.name[0]}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <div className="flex justify-between items-center gap-2">
+                        <div className="text-[13px] font-bold text-ink truncate">{inq.name}</div>
+                        <div className="text-[11px] text-dim shrink-0">{fmtRelative(inq.created_at)}</div>
+                      </div>
+                      {inq.listing_title && <div className="text-[11px] text-dim truncate">{inq.listing_title}</div>}
+                      <div className="text-xs text-ink2 leading-[1.35] mt-0.5 line-clamp-2">{inq.message}</div>
+                    </div>
+                  </div>
+                ))}
+                <button onClick={() => go('leads')} className="text-[12.5px] font-semibold bg-transparent border-none cursor-pointer p-0 text-left" style={{ color: tone }}>
+                  View all {inquiries.length} leads →
+                </button>
+              </div>
+            )}
           </Card>
 
           <Card title={<><Banknote size={14} /> Commissions</>}>
@@ -137,17 +270,6 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
             ))}
           </Card>
 
-          <div className="rounded-2xl p-5.5" style={{ background: 'linear-gradient(135deg, #00102e 0%, #1a3a6e 100%)' }}>
-            <div className="font-sans text-[15px] font-bold text-white mb-3">Quick actions</div>
-            <div className="flex flex-col gap-2">
-              {['+ Add new listing', '+ Add client', 'Share social kit', 'Request co-listing'].map((label, i) => (
-                <button key={i} className="py-2.25 px-3.5 rounded-[9px] text-[12.5px] font-semibold cursor-pointer text-left text-white/80"
-                  style={{ border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.06)' }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </>

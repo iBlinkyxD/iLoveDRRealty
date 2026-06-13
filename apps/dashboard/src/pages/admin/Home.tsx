@@ -1,45 +1,246 @@
-import { useState } from 'react'
-import { TONE, APPROVALS, KPIS, ACTIVITY, BAR_DATA, MAX_BAR, FilterPills, ApprovalRow } from './shared'
+import { useState, useEffect } from 'react'
+import {
+  CheckCircle2, XCircle, UserPlus, Bell, Archive,
+  ClipboardList, Users,
+} from 'lucide-react'
+import { TONE, FilterPills, ApprovalRow } from './shared'
+import { getAdminListings, getAdminUpgradeRequests, getAdminStats, getAdminActivityLog, getAdminUsers, type AdminListing, type AdminUpgradeRequest, type ActivityEntry, type AdminStats, type AdminUser } from '../../api/admin'
 
-export function AdminHome({ go }: { go: (v: string) => void }) {
+type ApprovalItem = {
+  id: string
+  type: 'Listing' | 'User'
+  title: string
+  submittedBy: string
+  time: string
+  flag?: string
+}
+
+function fmtRelative(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1)  return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24)  return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days < 30) return `${days}d ago`
+  return `${Math.floor(days / 30)}mo ago`
+}
+
+function toApprovalItem(l: AdminListing): ApprovalItem {
+  return {
+    id: l.id,
+    type: 'Listing',
+    title: l.title,
+    submittedBy: l.submitted_by_name ?? l.submitted_by,
+    time: fmtRelative(l.updated_at),
+  }
+}
+
+function upgradeToApprovalItem(r: AdminUpgradeRequest): ApprovalItem {
+  const role = r.requested_role.charAt(0).toUpperCase() + r.requested_role.slice(1)
+  return {
+    id: r.user_id,
+    type: 'User',
+    title: `New ${role}: ${r.user_display_name}`,
+    submittedBy: r.user_email,
+    time: fmtRelative(r.created_at),
+  }
+}
+
+const EVENT_META: Record<string, { icon: typeof CheckCircle2; tone: string }> = {
+  listing_approved: { icon: CheckCircle2, tone: '#1f7a3d' },
+  listing_rejected: { icon: XCircle,      tone: '#e10f1f' },
+  listing_archived: { icon: Archive,      tone: '#7884a0' },
+  upgrade_approved: { icon: UserPlus,     tone: '#0b63ab' },
+  upgrade_rejected: { icon: XCircle,      tone: '#e10f1f' },
+  edit_approved:    { icon: CheckCircle2, tone: '#1f7a3d' },
+  edit_rejected:    { icon: XCircle,      tone: '#e10f1f' },
+}
+const DEFAULT_META = { icon: Bell, tone: '#7884a0' }
+
+function last6Months(): { key: string; label: string }[] {
+  const now = new Date()
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+    return {
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleDateString('en-US', { month: 'short' }),
+    }
+  })
+}
+
+export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) {
   const [filter, setFilter] = useState<'All' | 'Listing' | 'User'>('All')
-  const filtered = APPROVALS.filter(a => filter === 'All' || a.type === filter)
+  const [pendingListings,  setPendingListings]  = useState<AdminListing[]>([])
+  const [pendingUpgrades,  setPendingUpgrades]  = useState<AdminUpgradeRequest[]>([])
+  const [loadingQueue,     setLoadingQueue]      = useState(true)
+  const [stats,            setStats]             = useState<AdminStats | null>(null)
+  const [loadingStats,     setLoadingStats]      = useState(true)
+  const [activity,         setActivity]          = useState<ActivityEntry[]>([])
+  const [loadingActivity,  setLoadingActivity]   = useState(true)
+  const [allUsers,         setAllUsers]          = useState<AdminUser[]>([])
+  const [loadingUsers,     setLoadingUsers]      = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      getAdminListings('pending_approval'),
+      getAdminUpgradeRequests('pending'),
+    ])
+      .then(([listings, upgrades]) => {
+        setPendingListings(listings)
+        setPendingUpgrades(upgrades)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingQueue(false))
+  }, [])
+
+  useEffect(() => {
+    getAdminStats()
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setLoadingStats(false))
+  }, [])
+
+  useEffect(() => {
+    getAdminActivityLog(20)
+      .then(setActivity)
+      .catch(() => {})
+      .finally(() => setLoadingActivity(false))
+  }, [])
+
+  useEffect(() => {
+    getAdminUsers()
+      .then(setAllUsers)
+      .catch(() => {})
+      .finally(() => setLoadingUsers(false))
+  }, [])
+
+  const approvalQueue: ApprovalItem[] = [
+    ...pendingListings.map(toApprovalItem),
+    ...pendingUpgrades.map(upgradeToApprovalItem),
+  ]
+
+  const filtered = approvalQueue.filter(a => filter === 'All' || a.type === filter)
+
+  const pendingCount  = pendingListings.length + pendingUpgrades.length
+  const loadingKpis   = loadingQueue || loadingStats
+
+  const kpis = [
+    {
+      label: 'Pending Approvals',
+      value: pendingCount,
+      sub: `${pendingListings.length} listings · ${pendingUpgrades.length} requests`,
+      accent: pendingCount > 0 ? '#d97706' : undefined as string | undefined,
+    },
+    {
+      label: 'Total Users',
+      value: stats?.total_users ?? 0,
+      sub: 'registered accounts',
+      accent: undefined as string | undefined,
+    },
+    {
+      label: 'Active Listings',
+      value: stats?.active_listings ?? 0,
+      sub: 'live on platform',
+      accent: undefined as string | undefined,
+    },
+    {
+      label: 'Pending Listings',
+      value: stats?.pending_listings ?? 0,
+      sub: 'awaiting review',
+      accent: (stats?.pending_listings ?? 0) > 0 ? '#d97706' : undefined as string | undefined,
+    },
+  ]
+
+  const months  = last6Months()
+  const barData = months.map(m => ({
+    label: m.label,
+    count: allUsers.filter(u => u.created_at.startsWith(m.key)).length,
+  }))
+  const maxBar = Math.max(...barData.map(d => d.count), 1)
 
   return (
     <>
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3 mb-5 lg:grid-cols-4 lg:gap-4 lg:mb-7">
-        {KPIS.map(({ Icon, label, value, sub, hl }, i) => (
-          <div
-            key={i}
-            className={hl ? 'rounded-xl py-4.5 px-5' : 'bg-paper border border-line rounded-xl py-4.5 px-5'}
-            style={hl ? { background: 'linear-gradient(135deg, #e10f1f 0%, #b80a17 100%)' } : undefined}
-          >
-            <Icon size={20} className="mb-2" color={hl ? 'rgba(255,255,255,.7)' : '#7884a0'} />
-            <div className={`font-sans text-2xl font-bold leading-none ${hl ? 'text-white' : 'text-ink'}`}>{value}</div>
-            <div className={`text-[12.5px] font-semibold mt-1.5 ${hl ? 'text-white/80' : 'text-ink2'}`}>{label}</div>
-            <div className={`text-[11px] mt-0.5 ${hl ? 'text-white/55' : 'text-dim'}`}>{sub}</div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 lg:mb-7">
+        {loadingKpis
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-paper border border-line rounded-xl px-4 py-4 animate-pulse space-y-2">
+                <div className="h-2.5 bg-line-soft rounded w-2/3" />
+                <div className="h-7 bg-line-soft rounded w-1/2" />
+                <div className="h-2.5 bg-line-soft rounded w-3/4" />
+              </div>
+            ))
+          : kpis.map(k => (
+              <div key={k.label} className="bg-paper border border-line rounded-xl px-4 py-4">
+                <div className="text-[11px] font-bold uppercase tracking-[.07em] text-dim mb-2">{k.label}</div>
+                <div
+                  className="text-[28px] font-bold leading-none"
+                  style={{ color: k.accent ?? 'var(--ink, #1a1e2e)' }}
+                >
+                  {k.value.toLocaleString()}
+                </div>
+                <div className="text-[11px] text-dim mt-1.5 truncate">{k.sub}</div>
+              </div>
+            ))
+        }
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_1fr]">
 
-        {/* Approval queue preview */}
+        {/* Approval queue */}
         <div className="bg-paper border border-line rounded-2xl overflow-hidden">
           <div className="flex flex-wrap justify-between items-center gap-2 px-4 sm:px-5.5 py-4 border-b border-line">
             <div className="font-sans text-[17px] font-bold text-ink">Approval queue</div>
             <div className="flex items-center gap-3">
               <FilterPills options={['All', 'Listing', 'User']} value={filter} onChange={v => setFilter(v as typeof filter)} />
-              <button onClick={() => go('approvals')} className="text-xs font-semibold bg-transparent border-0 cursor-pointer" style={{ color: TONE }}>
-                View all →
-              </button>
             </div>
           </div>
           <div className="flex flex-col">
-            {filtered.slice(0, 5).map((item, i) => (
-              <ApprovalRow key={i} item={item} last={i === Math.min(4, filtered.length - 1)} />
-            ))}
+            {loadingQueue ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className={`px-5.5 py-4 animate-pulse ${i < 3 ? 'border-b border-line-soft' : ''}`}>
+                  <div className="flex gap-3">
+                    <div className="h-6 w-16 bg-line-soft rounded-full shrink-0" />
+                    <div className="flex-1 space-y-2 pt-0.5">
+                      <div className="h-3.5 bg-line-soft rounded w-3/4" />
+                      <div className="h-3 bg-line-soft rounded w-1/2" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : filtered.length === 0 ? (
+              <div className="py-10 flex flex-col items-center gap-4 text-center px-6">
+                <div className="text-dim text-sm">All caught up — no pending items</div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => go('listings')}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer border"
+                    style={{ color: TONE, borderColor: TONE, background: `${TONE}10` }}
+                  >
+                    <ClipboardList size={13} /> Review listings
+                  </button>
+                  <button
+                    onClick={() => go('users')}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer border"
+                    style={{ color: TONE, borderColor: TONE, background: `${TONE}10` }}
+                  >
+                    <Users size={13} /> Review users
+                  </button>
+                </div>
+              </div>
+            ) : (
+              filtered.slice(0, 5).map((item, i) => (
+                <ApprovalRow
+                  key={i}
+                  item={item}
+                  last={i === Math.min(4, filtered.length - 1)}
+                  onClick={() => go(item.type === 'Listing' ? 'listings' : 'users', item.id)}
+                />
+              ))
+            )}
           </div>
         </div>
 
@@ -50,36 +251,65 @@ export function AdminHome({ go }: { go: (v: string) => void }) {
           <div className="bg-paper border border-line rounded-2xl p-5.5">
             <div className="font-sans text-[17px] font-bold text-ink mb-1">User growth</div>
             <div className="text-xs text-dim mb-4">New registrations per month</div>
-            <div className="flex items-end gap-2 h-25">
-              {BAR_DATA.map((d, i) => {
-                const h = (d.users / MAX_BAR) * 80
-                const isLast = i === BAR_DATA.length - 1
-                return (
+            {loadingUsers ? (
+              <div className="flex items-end gap-2 h-25 animate-pulse">
+                {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                    <div className={`text-[10px] ${isLast ? 'font-bold text-ink' : 'text-dim'}`}>
-                      {d.users >= 1000 ? (d.users / 1000).toFixed(1) + 'K' : d.users}
-                    </div>
-                    <div className="w-full rounded-t-lg" style={{ height: h, background: isLast ? '#e10f1f' : '#0b63ab60' }} />
-                    <div className="text-[10px] text-dim">{d.month}</div>
+                    <div className="w-full rounded-t-lg bg-line-soft" style={{ height: 20 + i * 8 }} />
+                    <div className="h-2 bg-line-soft rounded w-4" />
                   </div>
-                )
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-end gap-2 h-25">
+                {barData.map((d, i) => {
+                  const h   = Math.max((d.count / maxBar) * 80, d.count > 0 ? 4 : 0)
+                  const isLast = i === barData.length - 1
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                      <div className={`text-[10px] ${isLast ? 'font-bold text-ink' : 'text-dim'}`}>
+                        {d.count > 0 ? (d.count >= 1000 ? (d.count / 1000).toFixed(1) + 'K' : d.count) : '—'}
+                      </div>
+                      <div className="w-full rounded-t-lg" style={{ height: h, background: isLast ? TONE : `${TONE}50` }} />
+                      <div className="text-[10px] text-dim">{d.label}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Activity feed */}
           <div className="bg-paper border border-line rounded-2xl p-5.5 flex-1">
             <div className="font-sans text-[17px] font-bold text-ink mb-4">Recent activity</div>
             <div className="flex flex-col gap-2.5">
-              {ACTIVITY.map(({ Icon, text, time, tone }, i) => (
-                <div key={i} className="flex items-start gap-2.5">
-                  <Icon size={15} className="shrink-0 mt-0.5" color={tone} />
-                  <div className="flex-1">
-                    <div className="text-[12.5px] text-ink leading-snug">{text}</div>
-                    <div className="text-[11px] text-dim mt-0.5">{time}</div>
+              {loadingActivity ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-start gap-2.5 animate-pulse">
+                    <div className="w-4 h-4 rounded-full bg-line-soft shrink-0 mt-0.5" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-line-soft rounded w-4/5" />
+                      <div className="h-2.5 bg-line-soft rounded w-1/3" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : activity.length === 0 ? (
+                <div className="py-4 text-center text-dim text-sm">No activity yet</div>
+              ) : (
+                activity.map((entry) => {
+                  const meta = EVENT_META[entry.event_type] ?? DEFAULT_META
+                  const { icon: Icon, tone } = meta
+                  return (
+                    <div key={entry.id} className="flex items-start gap-2.5">
+                      <Icon size={15} className="shrink-0 mt-0.5" color={tone} />
+                      <div className="flex-1">
+                        <div className="text-[12.5px] text-ink leading-snug">{entry.description}</div>
+                        <div className="text-[11px] text-dim mt-0.5">{fmtRelative(entry.created_at)}</div>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
 

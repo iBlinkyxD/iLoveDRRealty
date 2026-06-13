@@ -7,7 +7,6 @@ import { OwnerHome } from '../components/dashboard/OwnerHome'
 import { RealtorHome } from '../components/dashboard/RealtorHome'
 import { LockedView } from '../components/dashboard/LockedView'
 import { SavedHomes } from './buyer/SavedHomes'
-import { SavedSearches } from './buyer/SavedSearches'
 import { Inquiries } from './buyer/Inquiries'
 import { ROICalculator } from './buyer/ROICalculator'
 import { Resources } from './buyer/Resources'
@@ -19,10 +18,11 @@ import { OwnerLeads } from './owner/Leads'
 import { Earnings } from './owner/Earnings'
 import { RealtorListings } from './realtor/Listings'
 import { SubmitListing } from './realtor/SubmitListing'
+import { OwnerSubmitListing } from './owner/SubmitListing'
 import { RealtorCalendar } from './realtor/Calendar'
 import { RealtorLeads } from './realtor/Leads'
 import { Pipeline } from './realtor/Pipeline'
-import { Profile } from './Profile'
+import { UserSettings } from './Settings'
 
 const ROLE_ORDER: Role[] = ['Buyer', 'Owner', 'Realtor']
 const ROLE_ACCESS: Record<string, Role[]> = {
@@ -37,18 +37,19 @@ const ROLE_TONE: Record<Role, string> = {
 
 const PAGE_TITLES: Record<Role, Record<string, string>> = {
   Buyer: {
-    home: 'Your search dashboard', saved: 'Saved Homes', searches: 'Saved Searches',
+    home: 'Your search dashboard', saved: 'Saved Homes',
     inquiries: 'My Inquiries', bookings: 'Bookings', calculator: 'ROI Calculator',
-    resources: 'Resources', profile: 'Profile',
+    resources: 'Resources', settings: 'Settings',
   },
   Owner: {
     home: 'Overview', listings: 'My Listings', calendar: 'Booking Calendar',
-    bookings: 'Bookings', leads: 'Leads', earnings: 'Earnings', profile: 'Profile',
+    bookings: 'My Bookings', 'owner-bookings': 'Guest Bookings', leads: 'Leads',
+    earnings: 'Earnings', settings: 'Settings', 'submit-listing': 'Submit New Listing',
   },
   Realtor: {
     home: 'Overview', listings: 'My Listings', leads: 'Leads',
-    pipeline: 'Sales Pipeline', calendar: 'Calendar', profile: 'Profile',
-    'submit-listing': 'Submit New Listing',
+    pipeline: 'Sales Pipeline', calendar: 'Calendar',
+    settings: 'Settings', 'submit-listing': 'Submit New Listing',
   },
   Admin: {},
 }
@@ -58,9 +59,10 @@ interface Props {
   view?: string
   role: Role
   user: UserInfo
+  onUserUpdate: (updates: Partial<UserInfo>) => void
 }
 
-export default function Dashboard({ go, view = 'home', role, user }: Props) {
+export default function Dashboard({ go, view = 'home', role, user, onUserUpdate }: Props) {
   const [activeTab, setActiveTab] = useState<Role>(role)
 
   const isLocked = (tab: Role) => !ROLE_ACCESS[role]?.includes(tab)
@@ -102,21 +104,21 @@ export default function Dashboard({ go, view = 'home', role, user }: Props) {
     switch (view) {
       // Buyer
       case 'saved':      return <SavedHomes />
-      case 'searches':   return <SavedSearches />
       case 'inquiries':  return <Inquiries />
       case 'calculator': return <ROICalculator />
       case 'resources':  return <Resources />
       // Owner
-      case 'earnings':   return <Earnings tone={tone} />
+      case 'earnings':   return <Earnings tone={tone} go={go} />
       // Realtor
       case 'pipeline':   return <Pipeline />
       // Shared by role
-      case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} /> : <RealtorListings tone={tone} go={go} />
-      case 'submit-listing':  return <SubmitListing go={go} tone={tone} />
+      case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} go={go} /> : <RealtorListings tone={tone} go={go} />
+      case 'submit-listing':  return role === 'Owner' ? <OwnerSubmitListing go={go} tone={tone} /> : <SubmitListing go={go} tone={tone} />
       case 'calendar':   return role === 'Owner' ? <OwnerCalendar tone={tone} /> : <RealtorCalendar />
-      case 'bookings':   return role === 'Owner' ? <OwnerBookings /> : <BuyerBookings />
-      case 'leads':      return role === 'Owner' ? <OwnerLeads tone={tone} /> : <RealtorLeads />
-      case 'profile':    return <Profile user={user} role={role} tone={tone} />
+      case 'bookings':        return <BuyerBookings />
+      case 'owner-bookings':  return <OwnerBookings go={go} />
+      case 'leads':      return role === 'Owner' ? <OwnerLeads tone={tone} go={go} /> : <RealtorLeads go={go} />
+      case 'settings':   return <UserSettings user={user} role={role} tone={tone} onUserUpdate={onUserUpdate} />
       default:           return null
     }
   }

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, Search } from 'lucide-react'
 import { Card, StatusPill } from '../../components/dashboard/shared'
 import { getMyInquiries, type Inquiry } from '../../api/inquiries'
+
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
 
 function fmtRelative(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -31,10 +33,23 @@ export function Inquiries() {
       {loading ? (
         <div className="px-5 py-8 text-[13px] text-dim text-center">Loading…</div>
       ) : inquiries.length === 0 ? (
-        <div className="px-5 py-10 text-center">
-          <MessageCircle size={28} className="text-dim mx-auto mb-2" />
-          <p className="text-[13px] text-dim">No inquiries yet.</p>
-          <p className="text-[12px] text-dim mt-0.5">Message an agent from any property page to get started.</p>
+        <div className="py-10 flex flex-col items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#e10f1f18' }}>
+            <MessageCircle size={20} style={{ color: '#e10f1f' }} />
+          </div>
+          <div className="text-center">
+            <div className="text-[13.5px] font-semibold text-ink mb-0.5">No inquiries yet</div>
+            <div className="text-[11.5px] text-dim">Find a listing and reach out to get started.</div>
+          </div>
+          <a
+            href={`${LANDING_URL}/search`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
+            style={{ background: '#e10f1f' }}
+          >
+            <Search size={13} strokeWidth={2.5} /> Browse listings
+          </a>
         </div>
       ) : (
         <div className="overflow-x-auto">
