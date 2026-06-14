@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
-  Building2, ClipboardList, Users, CheckCircle2, Shuffle, Home, Banknote, MessageCircle, Plus, Clock, Star, Pencil, type LucideIcon,
+  Building2, ClipboardList, Shuffle, Home, MessageCircle, Plus, Clock, Star, Pencil, type LucideIcon,
 } from 'lucide-react'
 import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
 import { getMyListings, type Listing } from '../../api/listings'
@@ -157,31 +157,14 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
             )}
           </Card>
 
-          <Card title={<><Shuffle size={14} /> Pipeline</>} sub="Active deals by stage"
-            action={<button onClick={() => go('pipeline')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">Full view →</button>}>
-            <div className="overflow-x-auto -mx-5.5 px-5.5">
-              <div className="grid grid-cols-3 gap-3 min-w-80">
-                {STAGES.map(stage => {
-                  const items = REALTOR_PIPELINE.filter(p => p.stage === stage)
-                  const st = STAGE_TONE[stage]
-                  return (
-                    <div key={stage}>
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="text-[11px] font-bold uppercase tracking-widest" style={{ color: st }}>{stage}</div>
-                        <span className="text-[11px] font-bold py-0.5 px-1.75 rounded-full" style={{ color: st, background: `${st}18` }}>{items.length}</span>
-                      </div>
-                      <div className="flex flex-col gap-1.75">
-                        {items.map((item, j) => (
-                          <div key={j} className="bg-[#F8F9FC] border border-line rounded-lg py-2 px-2.5 border-l-[3px]" style={{ borderLeftColor: st }}>
-                            <div className="text-xs font-bold text-ink mb-0.75">{item.name}</div>
-                            <div className="text-[11px] text-dim leading-[1.3] mb-1">{item.property}</div>
-                            <div className="text-[11.5px] font-bold text-brand">{item.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
+          <Card title={<><Shuffle size={14} /> Pipeline</>} sub="Active deals by stage">
+            <div className="py-6 flex flex-col items-center gap-3 text-center">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: `${tone}18` }}>
+                <Shuffle size={20} style={{ color: tone }} />
+              </div>
+              <div>
+                <div className="text-[13.5px] font-semibold text-ink mb-0.5">Coming soon</div>
+                <div className="text-[11.5px] text-dim max-w-55">Deal pipeline tracking is in development and will be available shortly.</div>
               </div>
             </div>
           </Card>
@@ -259,15 +242,6 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                 </button>
               </div>
             )}
-          </Card>
-
-          <Card title={<><Banknote size={14} /> Commissions</>}>
-            {[{ label: 'Earned YTD', value: '$62,400', t: '#1f7a3d' }, { label: 'Pending', value: '$18,700', t: '#f0a800' }, { label: 'Referral share', value: '$4,200', t: '#0b63ab' }].map((row, i) => (
-              <div key={i} className={`flex justify-between items-center pb-3 mb-3 ${i < 2 ? 'border-b border-line' : ''}`}>
-                <span className="text-[13.5px] text-ink2">{row.label}</span>
-                <span className="font-sans text-base font-extrabold" style={{ color: row.t }}>{row.value}</span>
-              </div>
-            ))}
           </Card>
 
         </div>

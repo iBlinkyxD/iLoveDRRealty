@@ -82,6 +82,7 @@ export function AdminUsers() {
   const [rejectingId,  setRejectingId]  = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [menuOpenId,   setMenuOpenId]   = useState<string | null>(null)
+  const [menuPos,      setMenuPos]      = useState<{ top: number; right: number } | null>(null)
   const [showAdd,      setShowAdd]      = useState(false)
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -433,26 +434,31 @@ export function AdminUsers() {
                       </span>
                     </div>
                     {/* Actions */}
-                    <div className="relative flex justify-center" onClick={e => e.stopPropagation()}>
+                    <div className="flex justify-center" onClick={e => e.stopPropagation()}>
                       <button
-                        onClick={() => setMenuOpenId(menuOpenId === u.id ? null : u.id)}
+                        onClick={e => {
+                          if (menuOpenId === u.id) { setMenuOpenId(null); setMenuPos(null); return }
+                          const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect()
+                          setMenuOpenId(u.id)
+                          setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                        }}
                         className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-line-soft cursor-pointer border-0 bg-transparent"
                       >
                         <MoreHorizontal size={15} className="text-dim" />
                       </button>
-                      {menuOpenId === u.id && (
+                      {menuOpenId === u.id && menuPos && (
                         <>
-                          <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                          <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-line rounded-xl shadow-lg z-20 py-1 overflow-hidden">
+                          <div className="fixed inset-0 z-10" onClick={() => { setMenuOpenId(null); setMenuPos(null) }} />
+                          <div className="fixed w-44 bg-white border border-line rounded-xl shadow-lg z-20 py-1 overflow-hidden" style={{ top: menuPos.top, right: menuPos.right }}>
                             <button
-                              onClick={() => { setSelectedUser(u); setMenuOpenId(null) }}
+                              onClick={() => { setSelectedUser(u); setMenuOpenId(null); setMenuPos(null) }}
                               className="w-full text-left px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
                             >
                               View details
                             </button>
                             {u.role !== 'admin' && (
                               <button
-                                onClick={() => { u.status === 'suspended' ? handleUnsuspend(u) : handleSuspend(u); setMenuOpenId(null) }}
+                                onClick={() => { u.status === 'suspended' ? handleUnsuspend(u) : handleSuspend(u); setMenuOpenId(null); setMenuPos(null) }}
                                 disabled={working === u.id}
                                 className="w-full text-left px-3.5 py-2 text-[12.5px] cursor-pointer disabled:opacity-50 hover:bg-line-soft"
                                 style={{ color: u.status === 'suspended' ? '#1f7a3d' : '#dc2626' }}
