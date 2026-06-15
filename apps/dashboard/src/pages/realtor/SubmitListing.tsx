@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ArrowLeft, ImagePlus, X, Star } from 'lucide-react'
+import { ArrowLeft, ImagePlus, X, Star, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { submitListing, updateListing, uploadListingImages, type Listing } from '../../api/listings'
 import { RichTextEditor } from '../../components/RichTextEditor'
@@ -13,7 +13,14 @@ const FEATURES = [
   'Pool', 'Ocean View', 'Beachfront', 'Oceanfront', 'Furnished', 'Beach Access', 'Mountain View',
   'Parking', 'Gym', 'Smart Home', 'Backup Generator', 'Solar Panels',
 ]
-const TAGS = ['Luxury', 'New', 'Investment', 'For Rent', 'Commercial']
+const ALL_TAGS = ['Luxury', 'New', 'Investment', 'Commercial', 'Pet Friendly', 'Short Term', 'Long Term', 'Furnished', 'Ocean View', 'Mountain View']
+const INCLUDED_UTILITIES = ['Water', 'Electricity', 'Gas', 'WiFi', 'Cable TV', 'Trash Removal', 'Pool Maintenance', 'Gardening', 'Security', 'Parking', 'Laundry']
+const DEPOSIT_OPTIONS = [
+  { value: 'first', label: 'First month' },
+  { value: 'last', label: 'Last month' },
+  { value: 'first_last', label: 'First + Last' },
+  { value: 'none', label: 'None' },
+]
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#1f7a3d]'
 
@@ -180,9 +187,15 @@ function FormSections({
   setPriceCurrency: (c: 'USD' | 'DOP') => void
   dopRate: number
 }) {
-  const features = form.features as string[]
+  const features           = form.features as string[]
+  const tags               = form.tags as string[]
+  const videoLinks         = form.video_links as string[]
+  const includedUtilities  = form.included_utilities as string[]
   const construction_status = form.construction_status as string
-  const hoa = form.hoa as boolean
+  const hoa                = form.hoa as boolean
+  const association        = form.association as boolean
+  const isRent             = form.transaction === 'rent'
+
   const [customInput, setCustomInput] = useState('')
   const customFeatures = features.filter(f => !FEATURES.includes(f))
 
@@ -202,10 +215,39 @@ function FormSections({
     setCustomInput('')
   }
 
+  function toggleTag(t: string) {
+    set('tags', tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t])
+  }
+
+  function toggleIncluded(u: string) {
+    set('included_utilities', includedUtilities.includes(u)
+      ? includedUtilities.filter(x => x !== u)
+      : [...includedUtilities, u],
+    )
+  }
+
+  function addVideoLink() {
+    set('video_links', [...videoLinks, ''])
+  }
+
+  function updateVideoLink(i: number, val: string) {
+    const arr = [...videoLinks]
+    arr[i] = val
+    set('video_links', arr)
+  }
+
+  function removeVideoLink(i: number) {
+    set('video_links', videoLinks.filter((_, j) => j !== i))
+  }
+
+  // dynamic section counter so numbers stay sequential regardless of conditional sections
+  let sn = 0
+  const n = () => ++sn
+
   return (
     <>
       {/* 1 — Basic Info */}
-      <Sec n={1} title="Basic Info" tone={tone}>
+      <Sec n={n()} title="Basic Info" tone={tone}>
         <div className="space-y-4">
           <div>
             <Lbl>Property Title *</Lbl>
@@ -308,7 +350,7 @@ function FormSections({
       </Sec>
 
       {/* 2 — Property Details */}
-      <Sec n={2} title="Property Details" tone={tone}>
+      <Sec n={n()} title="Property Details" tone={tone}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { key: 'bedrooms',      label: 'Bedrooms',          ph: '3',    step: '1'   },
@@ -333,7 +375,7 @@ function FormSections({
       </Sec>
 
       {/* 3 — Construction */}
-      <Sec n={3} title="Construction" tone={tone}>
+      <Sec n={n()} title="Construction" tone={tone}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Lbl>Construction Status</Lbl>
@@ -365,47 +407,93 @@ function FormSections({
         </div>
       </Sec>
 
-      {/* 4 — Financials */}
-      <Sec n={4} title="Financials" tone={tone}>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Lbl>Est. Annual ROI (%)</Lbl>
-              <input
-                className={inp}
-                type="number"
-                step="0.1"
-                value={form.roi as string}
-                onChange={e => set('roi', e.target.value)}
-                placeholder="e.g. 8.5"
-                min="0"
-                max="100"
+      {/* 4 — Financials (dynamic: sale vs rent) */}
+      <Sec n={n()} title="Financials" tone={tone}>
+        {isRent ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Toggle
+                value={association}
+                onChange={v => { set('association', v); if (!v) set('association_fee', '') }}
+                label="Association Fee"
+                tone={tone}
               />
+              {association && (
+                <div>
+                  <Lbl>Monthly Association Fee (USD)</Lbl>
+                  <input
+                    className={inp}
+                    type="number"
+                    value={form.association_fee as string}
+                    onChange={e => set('association_fee', e.target.value)}
+                    placeholder="e.g. 200"
+                    min="0"
+                  />
+                </div>
+              )}
+            </div>
+            <div>
+              <Lbl>Security Deposit</Lbl>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+                {DEPOSIT_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => set('deposit_policy', form.deposit_policy === opt.value ? '' : opt.value)}
+                    className="py-2.5 rounded-lg text-[13px] font-semibold border cursor-pointer transition-all"
+                    style={{
+                      background:  form.deposit_policy === opt.value ? tone : 'white',
+                      color:       form.deposit_policy === opt.value ? 'white' : '#64748b',
+                      borderColor: form.deposit_policy === opt.value ? tone : '#e2e8f0',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Toggle value={form.seller_financing as boolean} onChange={v => set('seller_financing', v)} label="Seller Financing Available" tone={tone} />
-            <Toggle value={form.tax_exempt as boolean}       onChange={v => set('tax_exempt', v)}       label="CONFOTUR Tax Exempt"        tone={tone} />
-            <Toggle value={hoa} onChange={v => { set('hoa', v); if (!v) set('hoa_fee', '') }} label="HOA Community" tone={tone} />
-            {hoa && (
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Lbl>Monthly HOA Fee (USD)</Lbl>
+                <Lbl>Est. Annual ROI (%)</Lbl>
                 <input
                   className={inp}
                   type="number"
-                  value={form.hoa_fee as string}
-                  onChange={e => set('hoa_fee', e.target.value)}
-                  placeholder="e.g. 350"
+                  step="0.1"
+                  value={form.roi as string}
+                  onChange={e => set('roi', e.target.value)}
+                  placeholder="e.g. 8.5"
                   min="0"
+                  max="100"
                 />
               </div>
-            )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Toggle value={form.seller_financing as boolean} onChange={v => set('seller_financing', v)} label="Seller Financing Available" tone={tone} />
+              <Toggle value={form.tax_exempt as boolean}       onChange={v => set('tax_exempt', v)}       label="CONFOTUR Tax Exempt"        tone={tone} />
+              <Toggle value={hoa} onChange={v => { set('hoa', v); if (!v) set('hoa_fee', '') }} label="HOA Community" tone={tone} />
+              {hoa && (
+                <div>
+                  <Lbl>Monthly HOA Fee (USD)</Lbl>
+                  <input
+                    className={inp}
+                    type="number"
+                    value={form.hoa_fee as string}
+                    onChange={e => set('hoa_fee', e.target.value)}
+                    placeholder="e.g. 350"
+                    min="0"
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </Sec>
 
       {/* 5 — Community & Features */}
-      <Sec n={5} title="Community & Features" tone={tone}>
+      <Sec n={n()} title="Community & Features" tone={tone}>
         <div className="space-y-4">
           <Toggle value={form.gated_community as boolean} onChange={v => set('gated_community', v)} label="Gated Community" tone={tone} />
           <div>
@@ -478,8 +566,46 @@ function FormSections({
         </div>
       </Sec>
 
-      {/* 6 — Media & Location */}
-      <Sec n={6} title="Media & Location" tone={tone}>
+      {/* 6 — What is Included (rent only) */}
+      {isRent && (
+        <Sec n={n()} title="What is Included" tone={tone}>
+          <p className="text-[12.5px] text-dim mb-3">Select everything included in the monthly rent.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {INCLUDED_UTILITIES.map(u => {
+              const active = includedUtilities.includes(u)
+              return (
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => toggleIncluded(u)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border text-[13px] cursor-pointer transition-all text-left"
+                  style={{
+                    borderColor: active ? tone : '#e2e8f0',
+                    background:  active ? `${tone}0d` : 'white',
+                    color:       active ? tone : '#64748b',
+                    fontWeight:  active ? 600 : 400,
+                  }}
+                >
+                  <div
+                    className="w-3.5 h-3.5 rounded border shrink-0 grid place-items-center transition-colors"
+                    style={{ borderColor: active ? tone : '#cbd5e1', background: active ? tone : 'white' }}
+                  >
+                    {active && (
+                      <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                        <path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  {u}
+                </button>
+              )
+            })}
+          </div>
+        </Sec>
+      )}
+
+      {/* 7 — Media & Location */}
+      <Sec n={n()} title="Media & Location" tone={tone}>
         <div className="space-y-4">
           <PhotoSection
             tone={tone} uploadedUrls={uploadedUrls} thumbnail={thumbnail} uploading={uploading}
@@ -487,6 +613,51 @@ function FormSections({
             onRemove={removeImage} onSetThumbnail={setThumbnail}
             label={photoLabel}
           />
+
+          {/* Video links */}
+          <div>
+            <Lbl>Video Links</Lbl>
+            <div className="space-y-2">
+              {videoLinks.map((url, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    className={inp + ' flex-1'}
+                    type="url"
+                    value={url}
+                    onChange={e => updateVideoLink(i, e.target.value)}
+                    placeholder="https://youtube.com/watch?v=…"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeVideoLink(i)}
+                    className="px-3 py-2.5 rounded-lg border border-line bg-white text-dim cursor-pointer hover:text-red-500 hover:border-red-300 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={addVideoLink}
+              className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold cursor-pointer border-0 bg-transparent transition-opacity hover:opacity-70"
+              style={{ color: tone }}
+            >
+              <Plus size={14} /> Add video link
+            </button>
+          </div>
+
+          {/* 3D Tour */}
+          <div>
+            <Lbl>3D Tour Link</Lbl>
+            <input
+              className={inp}
+              type="url"
+              value={form.tour_3d_url as string}
+              onChange={e => set('tour_3d_url', e.target.value)}
+              placeholder="https://my.matterport.com/show/…"
+            />
+          </div>
 
           <div>
             <Lbl>Google Maps URL</Lbl>
@@ -537,25 +708,37 @@ function FormSections({
         </div>
       </Sec>
 
-      {/* 7 — Tag */}
-      <Sec n={7} title="Listing Tag" tone={tone}>
-        <Lbl>Tag (optional)</Lbl>
+      {/* 8 — Utilities */}
+      <Sec n={n()} title="Utilities" tone={tone}>
+        <Lbl>Utility Notes</Lbl>
+        <RichTextEditor value={form.utilities as string} onChange={v => set('utilities', v)} tone={tone} />
+        <p className="text-[11.5px] text-dim mt-1">
+          Describe utility availability, backup systems, or anything relevant to the property's services.
+        </p>
+      </Sec>
+
+      {/* 9 — Listing Tags */}
+      <Sec n={n()} title="Listing Tags" tone={tone}>
+        <Lbl>Tags (select all that apply)</Lbl>
         <div className="flex flex-wrap gap-2 mt-1">
-          {TAGS.map(t => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => set('tag', form.tag === t ? '' : t)}
-              className="px-4 py-2 rounded-full border text-[13px] font-semibold cursor-pointer transition-all"
-              style={{
-                borderColor: form.tag === t ? tone : '#e2e8f0',
-                background:  form.tag === t ? tone : 'white',
-                color:       form.tag === t ? 'white' : '#64748b',
-              }}
-            >
-              {t}
-            </button>
-          ))}
+          {ALL_TAGS.map(t => {
+            const active = tags.includes(t)
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => toggleTag(t)}
+                className="px-4 py-2 rounded-full border text-[13px] font-semibold cursor-pointer transition-all"
+                style={{
+                  borderColor: active ? tone : '#e2e8f0',
+                  background:  active ? tone : 'white',
+                  color:       active ? 'white' : '#64748b',
+                }}
+              >
+                {t}
+              </button>
+            )
+          })}
         </div>
       </Sec>
     </>
@@ -569,7 +752,15 @@ const EMPTY_FORM = {
   description: '', bedrooms: '', bathrooms: '', area_sqft: '', lot_size_sqft: '',
   construction_status: '', year_built: '', roi: '',
   seller_financing: false, hoa: false, hoa_fee: '', tax_exempt: false, gated_community: false,
-  features: [] as string[], maps_url: '', latitude: '', longitude: '', tag: '',
+  features: [] as string[], maps_url: '', latitude: '', longitude: '',
+  tags: [] as string[],
+  video_links: [] as string[],
+  tour_3d_url: '',
+  utilities: '',
+  included_utilities: [] as string[],
+  association: false,
+  association_fee: '',
+  deposit_policy: '',
 }
 
 export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: string }) {
@@ -643,6 +834,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
       const priceUSD = priceCurrency === 'DOP'
         ? Math.round(parseFloat(form.price) / dopRate)
         : parseFloat(form.price)
+      const isRent = form.transaction === 'rent'
       await submitListing({
         title:               form.title.trim(),
         description:         form.description || undefined,
@@ -656,17 +848,26 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         lot_size_sqft:       form.lot_size_sqft ? parseInt(form.lot_size_sqft)   : undefined,
         construction_status: form.construction_status || undefined,
         year_built:          form.year_built    ? parseInt(form.year_built)      : undefined,
-        roi:                 form.roi           ? parseFloat(form.roi)           : undefined,
-        seller_financing:    form.seller_financing,
-        hoa:                 form.hoa,
-        hoa_fee:             form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
-        tax_exempt:          form.tax_exempt,
+        ...(isRent ? {
+          association_fee:   form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
+          deposit_policy:    form.deposit_policy || undefined,
+          included_utilities: form.included_utilities.length ? form.included_utilities : undefined,
+        } : {
+          roi:               form.roi           ? parseFloat(form.roi)           : undefined,
+          seller_financing:  form.seller_financing,
+          hoa:               form.hoa,
+          hoa_fee:           form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
+          tax_exempt:        form.tax_exempt,
+        }),
         gated_community:     form.gated_community,
         features:            form.features.length ? form.features : undefined,
+        tags:                form.tags.length ? form.tags : undefined,
+        video_links:         form.video_links.filter(v => v.trim()).length ? form.video_links.filter(v => v.trim()) : undefined,
+        tour_3d_url:         form.tour_3d_url.trim() || undefined,
+        utilities:           form.utilities.trim() || undefined,
         maps_url:            form.maps_url.trim() || undefined,
         latitude:            form.latitude  ? parseFloat(form.latitude)          : undefined,
         longitude:           form.longitude ? parseFloat(form.longitude)         : undefined,
-        tag:                 form.tag || undefined,
         images:              orderedImages.length ? orderedImages : undefined,
       })
       toast.success('Listing submitted! Pending admin review.')
@@ -753,7 +954,14 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
     maps_url:            listing.maps_url ?? '',
     latitude:            listing.latitude  != null ? String(listing.latitude)  : '',
     longitude:           listing.longitude != null ? String(listing.longitude) : '',
-    tag:                 listing.tag ?? '',
+    tags:                listing.tags ?? [],
+    video_links:         listing.video_links ?? [],
+    tour_3d_url:         listing.tour_3d_url ?? '',
+    utilities:           listing.utilities ?? '',
+    included_utilities:  listing.included_utilities ?? [],
+    association:         listing.association_fee != null && listing.association_fee > 0,
+    association_fee:     listing.association_fee != null ? String(listing.association_fee) : '',
+    deposit_policy:      listing.deposit_policy ?? '',
   })
 
   const [uploadedUrls, setUploadedUrls] = useState<string[]>(listing.images ?? [])
@@ -825,6 +1033,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
       const priceUSD = priceCurrency === 'DOP'
         ? Math.round(parseFloat(form.price) / dopRate)
         : parseFloat(form.price)
+      const isRent = form.transaction === 'rent'
       const updated = await updateListing(listing.id, {
         title:               form.title.trim(),
         description:         form.description || undefined,
@@ -838,17 +1047,26 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         lot_size_sqft:       form.lot_size_sqft ? parseInt(form.lot_size_sqft)   : undefined,
         construction_status: form.construction_status || undefined,
         year_built:          form.year_built    ? parseInt(form.year_built)      : undefined,
-        roi:                 form.roi           ? parseFloat(form.roi)           : undefined,
-        seller_financing:    form.seller_financing,
-        hoa:                 form.hoa,
-        hoa_fee:             form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
-        tax_exempt:          form.tax_exempt,
+        ...(isRent ? {
+          association_fee:   form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
+          deposit_policy:    form.deposit_policy || undefined,
+          included_utilities: form.included_utilities,
+        } : {
+          roi:               form.roi           ? parseFloat(form.roi)           : undefined,
+          seller_financing:  form.seller_financing,
+          hoa:               form.hoa,
+          hoa_fee:           form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
+          tax_exempt:        form.tax_exempt,
+        }),
         gated_community:     form.gated_community,
-        features:            form.features.length ? form.features : undefined,
+        features:            form.features,
+        tags:                form.tags,
+        video_links:         form.video_links.filter(v => v.trim()),
+        tour_3d_url:         form.tour_3d_url.trim() || undefined,
+        utilities:           form.utilities.trim() || undefined,
         maps_url:            form.maps_url.trim() || undefined,
         latitude:            form.latitude  ? parseFloat(form.latitude)          : undefined,
         longitude:           form.longitude ? parseFloat(form.longitude)         : undefined,
-        tag:                 form.tag || undefined,
         images:              orderedImages,
       })
       const msg = listing.status === 'rejected'

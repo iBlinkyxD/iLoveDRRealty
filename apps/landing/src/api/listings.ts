@@ -65,6 +65,13 @@ export interface ApiListingDetail {
   latitude: number | null
   longitude: number | null
   tag: string | null
+  tags: string[]
+  video_links: string[]
+  tour_3d_url: string | null
+  utilities: string | null
+  included_utilities: string[]
+  association_fee: number | null
+  deposit_policy: string | null
   images: string[]
   status: string
   submitted_by_name: string | null

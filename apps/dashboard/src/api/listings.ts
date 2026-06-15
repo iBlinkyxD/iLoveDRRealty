@@ -25,6 +25,13 @@ export interface Listing {
   latitude: number | null
   longitude: number | null
   tag: string | null
+  tags: string[]
+  video_links: string[]
+  tour_3d_url: string | null
+  utilities: string | null
+  included_utilities: string[]
+  association_fee: number | null
+  deposit_policy: string | null
   images: string[]
   status: string
   rejection_reason: string | null
@@ -64,6 +71,13 @@ export interface ListingUpdate {
   latitude?: number
   longitude?: number
   tag?: string
+  tags?: string[]
+  video_links?: string[]
+  tour_3d_url?: string
+  utilities?: string
+  included_utilities?: string[]
+  association_fee?: number
+  deposit_policy?: string
   images?: string[]
 }
 
@@ -91,6 +105,13 @@ export interface ListingCreate {
   latitude?: number
   longitude?: number
   tag?: string
+  tags?: string[]
+  video_links?: string[]
+  tour_3d_url?: string
+  utilities?: string
+  included_utilities?: string[]
+  association_fee?: number
+  deposit_policy?: string
   images?: string[]
 }
 

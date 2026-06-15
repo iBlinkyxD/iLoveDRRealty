@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useMemo, useEffect, type FormEvent } from "react";
+import { Suspense, useState, useMemo, useEffect, useRef, type FormEvent } from "react";
 import DOMPurify from "dompurify";
 import { useSearchParams } from "next/navigation";
 import { GoogleMap, OverlayView, useJsApiLoader } from "@react-google-maps/api";
@@ -20,6 +20,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Link2,
+  Video,
+  Box,
 } from "lucide-react";
 import { useNav } from "../hooks/useNav";
 import { fmt } from "../data/listings";
@@ -226,6 +229,43 @@ const TAG_TONES: Record<string, string> = {
   New: "sea",
 };
 
+function safeUrl(u: string): string | null {
+  try {
+    const p = new URL(u);
+    return p.protocol === "https:" || p.protocol === "http:" ? p.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function youtubeEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    let vid: string | null = null;
+    if (u.hostname === "youtu.be") {
+      vid = u.pathname.slice(1).split("/")[0];
+    } else if (u.hostname === "www.youtube.com" || u.hostname === "youtube.com") {
+      if (u.pathname === "/watch") {
+        vid = u.searchParams.get("v");
+      } else if (u.pathname.startsWith("/embed/")) {
+        vid = u.pathname.slice(7).split("/")[0];
+      } else if (u.pathname.startsWith("/shorts/")) {
+        vid = u.pathname.slice(8).split("/")[0];
+      }
+    }
+    return vid ? `https://www.youtube.com/embed/${vid}` : null;
+  } catch {
+    return null;
+  }
+}
+
+const DEPOSIT_LABELS: Record<string, string> = {
+  first: "First month's rent",
+  last: "Last month's rent",
+  first_last: "First + Last month's rent",
+  none: "No deposit required",
+};
+
 function PropertyDetailInner() {
   const params = useSearchParams();
   const go = useNav();
@@ -252,6 +292,10 @@ function PropertyDetailInner() {
   const [bookingSent, setBookingSent] = useState(false);
   const [bookingError, setBookingError] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [galleryTab, setGalleryTab] = useState<'photos' | '3dtour'>('photos');
+  const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getMe().then(() => setIsLoggedIn(true)).catch(() => {})
@@ -334,6 +378,22 @@ function PropertyDetailInner() {
     return () => window.removeEventListener("keydown", handler);
   }, [lightboxIdx, imgs.length]);
 
+  useEffect(() => {
+    if (!shareOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) setShareOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [shareOpen]);
+
+  async function copyShareLink() {
+    const url = window.location.href;
+    try { await navigator.clipboard.writeText(url); } catch { /* ignore */ }
+    setCopied(true);
+    setTimeout(() => { setCopied(false); setShareOpen(false); }, 1500);
+  }
+
   if (loadError)
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-muted font-sans">
@@ -354,8 +414,6 @@ function PropertyDetailInner() {
       </div>
     );
 
-  const tagTone = TAG_TONES[listing.tag ?? ""] ?? "sand";
-
   return (
     <div className="max-w-310 mx-auto px-4 sm:px-6 py-5 pb-20">
       {/* Back */}
@@ -370,16 +428,71 @@ function PropertyDetailInner() {
       {/* Header */}
       <div className="mb-3.5">
         <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
-          {listing.tag && (
-            <span
-              className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${TONE_MAP[tagTone] ?? TONE_MAP.sand}`}
+          {(listing.tags?.length ? listing.tags : listing.tag ? [listing.tag] : []).map(t => {
+            const tone = TAG_TONES[t] ?? "sand";
+            return (
+              <span key={t} className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${TONE_MAP[tone] ?? TONE_MAP.sand}`}>
+                {t}
+              </span>
+            );
+          })}
+          <div className="relative ml-auto" ref={shareRef}>
+            <button
+              onClick={() => setShareOpen(s => !s)}
+              className="flex items-center gap-2 bg-transparent border border-line text-ink text-[13px] font-semibold px-4 py-2 rounded-full cursor-pointer font-sans hover:bg-paper2 transition-colors"
             >
-              {listing.tag}
-            </span>
-          )}
-          <button className="ml-auto flex items-center gap-2 bg-transparent border border-line text-ink text-[13px] font-semibold px-4 py-2 rounded-full cursor-pointer font-sans">
-            <Share2 size={14} /> Share
-          </button>
+              <Share2 size={14} /> Share
+            </button>
+            {shareOpen && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-line rounded-2xl shadow-[0_8px_30px_-8px_rgba(0,16,46,.2)] z-20 overflow-hidden">
+                {[
+                  {
+                    label: copied ? "Copied!" : "Copy Link",
+                    icon: <Link2 size={14} />,
+                    onClick: copyShareLink,
+                  },
+                  {
+                    label: "Twitter / X",
+                    icon: <ExternalLink size={14} />,
+                    href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}&text=${encodeURIComponent(listing.title)}`,
+                  },
+                  {
+                    label: "Facebook",
+                    icon: <ExternalLink size={14} />,
+                    href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`,
+                  },
+                  {
+                    label: "Instagram",
+                    icon: <ExternalLink size={14} />,
+                    href: "https://www.instagram.com/",
+                  },
+                ].map(item =>
+                  item.href ? (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-[13px] text-ink hover:bg-paper2 transition-colors font-sans"
+                    >
+                      <span className="text-ink2">{item.icon}</span>
+                      {item.label}
+                    </a>
+                  ) : (
+                    <button
+                      key={item.label}
+                      onClick={item.onClick}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-ink hover:bg-paper2 transition-colors cursor-pointer bg-transparent border-none font-sans text-left"
+                    >
+                      <span className="text-ink2">{item.icon}</span>
+                      {item.label}
+                    </button>
+                  )
+                )}
+              </div>
+            )}
+          </div>
         </div>
         <h1 className="font-sans text-[clamp(26px,4vw,40px)] font-bold text-ink leading-[1.07] tracking-tight">
           {listing.title.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -393,38 +506,69 @@ function PropertyDetailInner() {
       </div>
 
       {/* Gallery */}
-      <div className="mb-7 grid grid-cols-[2fr_1fr] sm:grid-cols-[2fr_1fr_1fr] grid-rows-[130px_130px] sm:grid-rows-[172px_172px] gap-2">
-        <div
-          className="rounded-2xl overflow-hidden row-span-2 bg-cover bg-center cursor-pointer"
-          style={{ backgroundImage: `url(${imgs[0]})` }}
-          onClick={() => setLightboxIdx(0)}
-        />
-        <div
-          className="rounded-xl overflow-hidden bg-cover bg-center cursor-pointer"
-          style={{ backgroundImage: `url(${imgs[1]})` }}
-          onClick={() => setLightboxIdx(1)}
-        />
-        <div
-          className="rounded-xl overflow-hidden bg-cover bg-center hidden sm:block cursor-pointer"
-          style={{ backgroundImage: `url(${imgs[2]})` }}
-          onClick={() => setLightboxIdx(2)}
-        />
-        <div
-          className="rounded-xl overflow-hidden bg-cover bg-center hidden sm:block cursor-pointer"
-          style={{ backgroundImage: `url(${imgs[3]})` }}
-          onClick={() => setLightboxIdx(3)}
-        />
-        <div
-          className="rounded-xl overflow-hidden bg-cover bg-center relative cursor-pointer"
-          style={{ backgroundImage: `url(${imgs[4] ?? imgs[1]})` }}
-          onClick={() => setLightboxIdx(4)}
-        >
-          {remainingCount > 0 && (
-            <div className="absolute inset-0 grid place-items-center text-white text-[13px] font-semibold font-sans bg-ink/52">
-              + {remainingCount} photo{remainingCount !== 1 ? "s" : ""}
+      <div className="mb-7">
+        {listing.tour_3d_url && safeUrl(listing.tour_3d_url) && (
+          <div className="flex gap-1 mb-3">
+            <button
+              onClick={() => setGalleryTab('photos')}
+              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${galleryTab === 'photos' ? 'bg-ink text-white' : 'bg-paper2 text-ink2 hover:bg-paper'}`}
+            >
+              Photos
+            </button>
+            <button
+              onClick={() => setGalleryTab('3dtour')}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${galleryTab === '3dtour' ? 'bg-ink text-white' : 'bg-paper2 text-ink2 hover:bg-paper'}`}
+            >
+              <Box size={13} />
+              3D Tour
+            </button>
+          </div>
+        )}
+        {galleryTab === '3dtour' && listing.tour_3d_url && safeUrl(listing.tour_3d_url) ? (
+          <div className="rounded-2xl overflow-hidden aspect-video">
+            <iframe
+              src={safeUrl(listing.tour_3d_url)!}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title="3D Tour"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-[2fr_1fr] sm:grid-cols-[2fr_1fr_1fr] grid-rows-[130px_130px] sm:grid-rows-[172px_172px] gap-2">
+            <div
+              className="rounded-2xl overflow-hidden row-span-2 bg-cover bg-center cursor-pointer"
+              style={{ backgroundImage: `url(${imgs[0]})` }}
+              onClick={() => setLightboxIdx(0)}
+            />
+            <div
+              className="rounded-xl overflow-hidden bg-cover bg-center cursor-pointer"
+              style={{ backgroundImage: `url(${imgs[1]})` }}
+              onClick={() => setLightboxIdx(1)}
+            />
+            <div
+              className="rounded-xl overflow-hidden bg-cover bg-center hidden sm:block cursor-pointer"
+              style={{ backgroundImage: `url(${imgs[2]})` }}
+              onClick={() => setLightboxIdx(2)}
+            />
+            <div
+              className="rounded-xl overflow-hidden bg-cover bg-center hidden sm:block cursor-pointer"
+              style={{ backgroundImage: `url(${imgs[3]})` }}
+              onClick={() => setLightboxIdx(3)}
+            />
+            <div
+              className="rounded-xl overflow-hidden bg-cover bg-center relative cursor-pointer"
+              style={{ backgroundImage: `url(${imgs[4] ?? imgs[1]})` }}
+              onClick={() => setLightboxIdx(4)}
+            >
+              {remainingCount > 0 && (
+                <div className="absolute inset-0 grid place-items-center text-white text-[13px] font-semibold font-sans bg-ink/52">
+                  + {remainingCount} photo{remainingCount !== 1 ? "s" : ""}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Main two-column layout */}
@@ -563,6 +707,85 @@ function PropertyDetailInner() {
                     <span className="text-[14px] text-ink2">{f}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Resources: video links */}
+          {(listing.video_links?.length ?? 0) > 0 && (
+            <div className="mt-7">
+              <h3 className="font-sans text-[22px] font-semibold text-ink mb-4">Resources</h3>
+              <div className="space-y-2.5">
+                {listing.video_links?.map((url, i) => {
+                  const safe = safeUrl(url);
+                  if (!safe) return null;
+                  const embedUrl = youtubeEmbedUrl(safe);
+                  if (embedUrl) {
+                    return (
+                      <div key={i} className="rounded-xl overflow-hidden aspect-video">
+                        <iframe
+                          src={embedUrl}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title={`Video ${i + 1}`}
+                        />
+                      </div>
+                    );
+                  }
+                  return (
+                    <a
+                      key={i}
+                      href={safe}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-line-soft bg-paper2 hover:bg-paper transition-colors text-[13.5px] font-semibold text-ink group"
+                    >
+                      <Video size={16} className="text-ink2 shrink-0 group-hover:text-ink transition-colors" />
+                      <span className="flex-1 truncate">{safe}</span>
+                      <ExternalLink size={13} className="text-ink2 shrink-0" />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Utilities */}
+          {listing.utilities && (
+            <div className="mt-7">
+              <h3 className="font-sans text-[22px] font-semibold text-ink mb-3">Utilities</h3>
+              {(() => {
+                const raw = listing.utilities!
+                const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
+                const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
+                return <div className="listing-prose font-sans" dangerouslySetInnerHTML={{ __html: safe }} />
+              })()}
+            </div>
+          )}
+
+          {/* What is Included (rent only) */}
+          {listing.transaction === "rent" && (listing.included_utilities?.length ?? 0) > 0 && (
+            <div className="mt-7">
+              <h3 className="font-sans text-[22px] font-semibold text-ink mb-4">What is Included</h3>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                {listing.included_utilities!.map(u => (
+                  <div key={u} className="flex items-center gap-2.5">
+                    <CheckCircle2 size={18} className="text-ink shrink-0" />
+                    <span className="text-[14px] text-ink2">{u}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Deposit (rent only) */}
+          {listing.transaction === "rent" && listing.deposit_policy && listing.deposit_policy !== "none" && (
+            <div className="mt-7 flex items-start gap-4 px-5 py-4 rounded-2xl border border-line-soft bg-paper2">
+              <Calendar size={18} className="text-ink2 mt-0.5 shrink-0" />
+              <div>
+                <div className="text-[11px] font-bold text-ink2 uppercase tracking-wide mb-0.5">Security Deposit</div>
+                <div className="text-[14px] font-semibold text-ink">{DEPOSIT_LABELS[listing.deposit_policy] ?? listing.deposit_policy}</div>
               </div>
             </div>
           )}
@@ -816,6 +1039,16 @@ function PropertyDetailInner() {
                   currency === 'DOP'
                     ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
                     : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
+                ],
+                listing.association_fee && [
+                  "Association Fee",
+                  currency === 'DOP'
+                    ? `RD$${Math.round(Number(listing.association_fee) * dopRate).toLocaleString('en-US')} / mo`
+                    : `$${Number(listing.association_fee).toLocaleString()} / mo`,
+                ],
+                listing.deposit_policy && listing.deposit_policy !== 'none' && [
+                  "Deposit",
+                  DEPOSIT_LABELS[listing.deposit_policy] ?? listing.deposit_policy,
                 ],
               ]
                 .filter(Boolean)
