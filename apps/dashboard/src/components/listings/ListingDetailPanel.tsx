@@ -3,7 +3,7 @@ import {
   X, MapPin, Tag, Link2, Eye, Users, Home, Pencil,
   ChevronLeft, ChevronRight, CircleDollarSign, ArrowLeftRight,
   Calendar, BedDouble, Bath, Ruler, Maximize2, TrendingUp,
-  Wallet, CheckCircle2, Star, Clock,
+  Wallet, CheckCircle2, Star, Clock, Building2, Video, Box,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import DOMPurify from 'dompurify'
@@ -23,6 +23,35 @@ const titleCase = (s: string) =>
 
 function fmtType(t: string) {
   return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()
+}
+
+function safeUrl(u: string): string | null {
+  try {
+    const p = new URL(u)
+    return p.protocol === 'https:' || p.protocol === 'http:' ? p.href : null
+  } catch { return null }
+}
+
+function youtubeEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url)
+    let vid: string | null = null
+    if (u.hostname === 'youtu.be') {
+      vid = u.pathname.slice(1).split('/')[0]
+    } else if (u.hostname === 'www.youtube.com' || u.hostname === 'youtube.com') {
+      if (u.pathname === '/watch') vid = u.searchParams.get('v')
+      else if (u.pathname.startsWith('/embed/')) vid = u.pathname.slice(7).split('/')[0]
+      else if (u.pathname.startsWith('/shorts/')) vid = u.pathname.slice(8).split('/')[0]
+    }
+    return vid ? `https://www.youtube.com/embed/${vid}` : null
+  } catch { return null }
+}
+
+const DEPOSIT_LABELS: Record<string, string> = {
+  first:      "First month's rent",
+  last:       "Last month's rent",
+  first_last: "First + Last month's rent",
+  none:       'No deposit required',
 }
 
 interface Props {
@@ -79,6 +108,7 @@ export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onE
     { Icon: Maximize2,        label: 'Lot Size (ft²)',    value: listing.lot_size_sqft != null ? Number(listing.lot_size_sqft).toLocaleString('en-US') : null },
     { Icon: TrendingUp,       label: 'Est. ROI (%)',      value: listing.roi },
     { Icon: Wallet,           label: 'HOA Fee ($/mo)',    value: listing.hoa_fee != null ? `$${Number(listing.hoa_fee).toLocaleString('en-US')}` : null },
+    { Icon: Building2,        label: 'Assoc. Fee ($/mo)', value: listing.association_fee != null ? `$${Number(listing.association_fee).toLocaleString('en-US')}` : null },
   ] as (PropField & { value: string | number | null | undefined })[]).filter(
     f => f.value != null && f.value !== ''
   ) as PropField[]
@@ -287,21 +317,126 @@ export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onE
             {listing.features?.length > 0 && (
               <div>
                 <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Features</div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {listing.features.map(f => (
-                    <span key={f} className="px-3 py-1 rounded-full text-[12px] font-medium bg-white border border-line text-ink">
-                      {f}
-                    </span>
+                    <div key={f} className="flex items-center gap-2">
+                      <CheckCircle2 size={14} style={{ color: tone }} className="shrink-0" />
+                      <span className="text-[13px] text-ink">{f}</span>
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Tag */}
-            {listing.tag && (
-              <div className="flex items-center gap-2 text-[12.5px] text-dim">
-                <Tag size={13} />
-                <span className="font-semibold text-ink">{listing.tag}</span>
+            {/* Tags */}
+            {(() => {
+              const tags = listing.tags?.length ? listing.tags : listing.tag ? [listing.tag] : []
+              if (!tags.length) return null
+              return (
+                <div>
+                  <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Tags</div>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map(t => (
+                      <span key={t} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold bg-white border border-line text-ink">
+                        <Tag size={11} className="text-dim" />
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* What is Included (rent only) */}
+            {listing.transaction === 'rent' && (listing.included_utilities?.length ?? 0) > 0 && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">What is Included</div>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                  {listing.included_utilities!.map(u => (
+                    <div key={u} className="flex items-center gap-2">
+                      <CheckCircle2 size={14} style={{ color: tone }} className="shrink-0" />
+                      <span className="text-[13px] text-ink">{u}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Deposit (rent only) */}
+            {listing.transaction === 'rent' && listing.deposit_policy && listing.deposit_policy !== 'none' && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-line-soft bg-paper2">
+                <Calendar size={15} className="text-dim shrink-0" />
+                <div>
+                  <div className="text-[10.5px] text-dim">Security Deposit</div>
+                  <div className="text-[13.5px] font-bold text-ink">
+                    {DEPOSIT_LABELS[listing.deposit_policy] ?? listing.deposit_policy}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Utilities */}
+            {listing.utilities && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">Utilities</div>
+                {(() => {
+                  const raw = listing.utilities!
+                  const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
+                  const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
+                  return <div className="detail-prose" dangerouslySetInnerHTML={{ __html: safe }} />
+                })()}
+              </div>
+            )}
+
+            {/* Video links */}
+            {(listing.video_links?.length ?? 0) > 0 && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Videos</div>
+                <div className="space-y-2.5">
+                  {listing.video_links!.map((url, i) => {
+                    const safe = safeUrl(url)
+                    if (!safe) return null
+                    const embed = youtubeEmbedUrl(safe)
+                    if (embed) {
+                      return (
+                        <div key={i} className="rounded-xl overflow-hidden aspect-video">
+                          <iframe
+                            src={embed}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={`Video ${i + 1}`}
+                          />
+                        </div>
+                      )
+                    }
+                    return (
+                      <a key={i} href={safe} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-line-soft bg-paper2 hover:bg-paper transition-colors text-[12.5px] font-semibold text-ink group">
+                        <Video size={14} className="text-dim shrink-0 group-hover:text-ink" />
+                        <span className="flex-1 truncate">{safe}</span>
+                        <Link2 size={12} className="text-dim shrink-0" />
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 3D Tour */}
+            {listing.tour_3d_url && safeUrl(listing.tour_3d_url) && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">3D Tour</div>
+                <a
+                  href={safeUrl(listing.tour_3d_url)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-line-soft bg-paper2 hover:bg-paper transition-colors text-[12.5px] font-semibold text-ink group"
+                >
+                  <Box size={14} className="text-dim shrink-0 group-hover:text-ink" />
+                  <span className="flex-1 truncate">{safeUrl(listing.tour_3d_url)}</span>
+                  <Link2 size={12} className="text-dim shrink-0" />
+                </a>
               </div>
             )}
 

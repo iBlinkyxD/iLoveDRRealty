@@ -116,7 +116,9 @@ function AdminFormBody({
   uploadedUrls, thumbnail, uploading, fileInputRef, handleFileChange, removeImage, setThumbnail,
   priceCurrency, setPriceCurrency, hoaFeeCurrency, setHoaFeeCurrency, dopRate,
   customInput, setCustomInput, customTagInput, setCustomTagInput, customTags,
+  customUtilityInput, setCustomUtilityInput, customUtilities,
   addCustomFeature, addCustomTag, removeCustomTag, toggleFeature,
+  addCustomUtility, removeCustomUtility,
 }: {
   form: Record<string, unknown>
   set: (f: string, v: unknown) => void
@@ -131,8 +133,11 @@ function AdminFormBody({
   customInput: string; setCustomInput: (v: string) => void
   customTagInput: string; setCustomTagInput: (v: string) => void
   customTags: string[]
+  customUtilityInput: string; setCustomUtilityInput: (v: string) => void
+  customUtilities: string[]
   addCustomFeature: () => void; addCustomTag: () => void; removeCustomTag: (t: string) => void
   toggleFeature: (f: string) => void
+  addCustomUtility: () => void; removeCustomUtility: (u: string) => void
 }) {
   const features          = form.features as string[]
   const tags              = form.tags as string[]
@@ -422,6 +427,28 @@ function AdminFormBody({
               )
             })}
           </div>
+          {customUtilities.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {customUtilities.map(u => (
+                <span key={u} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border"
+                  style={{ borderColor: tone, background: `${tone}0d`, color: tone }}>
+                  {u}
+                  <button type="button" onClick={() => removeCustomUtility(u)}
+                    className="ml-0.5 rounded-full w-3.5 h-3.5 grid place-items-center text-[10px] cursor-pointer border-0"
+                    style={{ background: tone, color: 'white' }}>×</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 mt-2">
+            <input className={inp + ' flex-1'} type="text" value={customUtilityInput}
+              onChange={e => setCustomUtilityInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomUtility() } }}
+              placeholder="e.g. Hot Water, Air Conditioning" />
+            <button type="button" onClick={addCustomUtility} disabled={!customUtilityInput.trim()}
+              className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
+              style={{ background: tone, color: 'white' }}>Add</button>
+          </div>
         </Sec>
       )}
 
@@ -554,6 +581,8 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
   const [customInput, setCustomInput] = useState('')
   const [customTagInput, setCustomTagInput] = useState('')
   const [customTags, setCustomTags] = useState<string[]>([])
+  const [customUtilityInput, setCustomUtilityInput] = useState('')
+  const [customUtilities, setCustomUtilities] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -586,6 +615,20 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
 
   function removeCustomTag(t: string) {
     setCustomTags(prev => prev.filter(x => x !== t))
+  }
+
+  function addCustomUtility() {
+    const toTitle = (s: string) => s.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    const entries = customUtilityInput.split(',').map(toTitle).filter(s => s && !INCLUDED_UTILITIES.includes(s) && !customUtilities.includes(s))
+    if (!entries.length) return
+    setCustomUtilities(prev => [...prev, ...entries])
+    set('included_utilities', [...form.included_utilities, ...entries])
+    setCustomUtilityInput('')
+  }
+
+  function removeCustomUtility(u: string) {
+    setCustomUtilities(prev => prev.filter(x => x !== u))
+    set('included_utilities', form.included_utilities.filter((x: string) => x !== u))
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -669,6 +712,8 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
           customTagInput={customTagInput} setCustomTagInput={setCustomTagInput}
           customTags={customTags} addCustomFeature={addCustomFeature}
           addCustomTag={addCustomTag} removeCustomTag={removeCustomTag} toggleFeature={toggleFeature}
+          customUtilityInput={customUtilityInput} setCustomUtilityInput={setCustomUtilityInput}
+          customUtilities={customUtilities} addCustomUtility={addCustomUtility} removeCustomUtility={removeCustomUtility}
         />
         <div className="flex gap-3 pt-2 pb-6">
           <button type="button" onClick={() => go('listings')} className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer">Cancel</button>
@@ -731,6 +776,10 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
   const [customTags, setCustomTags] = useState<string[]>(() =>
     (listing.tags ?? []).filter(t => !BASE_TAGS.includes(t))
   )
+  const [customUtilityInput, setCustomUtilityInput] = useState('')
+  const [customUtilities, setCustomUtilities] = useState<string[]>(() =>
+    (listing.included_utilities ?? []).filter(u => !INCLUDED_UTILITIES.includes(u))
+  )
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -763,6 +812,20 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
 
   function removeCustomTag(t: string) {
     setCustomTags(prev => prev.filter(x => x !== t))
+  }
+
+  function addCustomUtility() {
+    const toTitle = (s: string) => s.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    const entries = customUtilityInput.split(',').map(toTitle).filter(s => s && !INCLUDED_UTILITIES.includes(s) && !customUtilities.includes(s))
+    if (!entries.length) return
+    setCustomUtilities(prev => [...prev, ...entries])
+    set('included_utilities', [...(form.included_utilities as string[]), ...entries])
+    setCustomUtilityInput('')
+  }
+
+  function removeCustomUtility(u: string) {
+    setCustomUtilities(prev => prev.filter(x => x !== u))
+    set('included_utilities', (form.included_utilities as string[]).filter((x: string) => x !== u))
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -854,6 +917,8 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
           customTagInput={customTagInput} setCustomTagInput={setCustomTagInput}
           customTags={customTags} addCustomFeature={addCustomFeature}
           addCustomTag={addCustomTag} removeCustomTag={removeCustomTag} toggleFeature={toggleFeature}
+          customUtilityInput={customUtilityInput} setCustomUtilityInput={setCustomUtilityInput}
+          customUtilities={customUtilities} addCustomUtility={addCustomUtility} removeCustomUtility={removeCustomUtility}
         />
         <div className="flex gap-3 pt-2 pb-6">
           <button type="button" onClick={onBack} className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer">Cancel</button>

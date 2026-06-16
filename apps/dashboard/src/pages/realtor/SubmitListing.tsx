@@ -197,7 +197,9 @@ function FormSections({
   const isRent             = form.transaction === 'rent'
 
   const [customInput, setCustomInput] = useState('')
+  const [customUtilityInput, setCustomUtilityInput] = useState('')
   const customFeatures = features.filter(f => !FEATURES.includes(f))
+  const customUtilities = includedUtilities.filter(u => !INCLUDED_UTILITIES.includes(u))
 
   function handleCurrencyToggle(newCurrency: 'USD' | 'DOP') {
     const raw = parseFloat((form.price as string) || '0') || 0
@@ -224,6 +226,18 @@ function FormSections({
       ? includedUtilities.filter(x => x !== u)
       : [...includedUtilities, u],
     )
+  }
+
+  function addCustomUtility() {
+    const toTitle = (s: string) => s.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    const entries = customUtilityInput.split(',').map(toTitle).filter(s => s && !INCLUDED_UTILITIES.includes(s) && !includedUtilities.includes(s))
+    if (!entries.length) return
+    set('included_utilities', [...includedUtilities, ...entries])
+    setCustomUtilityInput('')
+  }
+
+  function removeCustomUtility(u: string) {
+    set('included_utilities', includedUtilities.filter(x => x !== u))
   }
 
   function addVideoLink() {
@@ -600,6 +614,28 @@ function FormSections({
                 </button>
               )
             })}
+          </div>
+          {customUtilities.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {customUtilities.map(u => (
+                <span key={u} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border"
+                  style={{ borderColor: tone, background: `${tone}0d`, color: tone }}>
+                  {u}
+                  <button type="button" onClick={() => removeCustomUtility(u)}
+                    className="ml-0.5 rounded-full w-3.5 h-3.5 grid place-items-center text-[10px] cursor-pointer border-0"
+                    style={{ background: tone, color: 'white' }}>×</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 mt-2">
+            <input className={inp + ' flex-1'} type="text" value={customUtilityInput}
+              onChange={e => setCustomUtilityInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomUtility() } }}
+              placeholder="e.g. Hot Water, Air Conditioning" />
+            <button type="button" onClick={addCustomUtility} disabled={!customUtilityInput.trim()}
+              className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
+              style={{ background: tone, color: 'white' }}>Add</button>
           </div>
         </Sec>
       )}
