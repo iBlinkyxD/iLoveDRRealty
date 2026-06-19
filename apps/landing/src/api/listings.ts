@@ -94,12 +94,12 @@ function toTags(tag: string | null): [string, string][] {
   return [TAG_TONES[tag] ?? [tag, 'sand']]
 }
 
-export async function fetchDealListing(): Promise<ApiDealListing | null> {
+export async function fetchDealListings(): Promise<ApiDealListing[]> {
   try {
-    const res = await client.get<ApiDealListing>('/listings/deal')
+    const res = await client.get<ApiDealListing[]>('/listings/deal')
     return res.data
   } catch {
-    return null
+    return []
   }
 }
 

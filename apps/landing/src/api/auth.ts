@@ -35,8 +35,12 @@ export async function resendCode(body: { email: string }): Promise<void> {
   return client.post('/auth/resend-code', body).then(r => r.data).catch(errorMessage)
 }
 
-export async function getMe(): Promise<{ id: string; email: string; role: string; display_name: string }> {
+export async function getMe(): Promise<{ id: string; email: string; role: string; display_name: string; phone: string | null; avatar_url: string | null }> {
   return client.get('/auth/me').then(r => r.data).catch(errorMessage)
+}
+
+export async function logout(): Promise<void> {
+  return client.post('/auth/logout').then(() => undefined).catch(errorMessage)
 }
 
 export async function googleAuth(accessToken: string): Promise<{ expires_in: number }> {

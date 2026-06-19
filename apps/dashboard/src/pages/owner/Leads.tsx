@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MessageCircle, Home } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { Card } from '../../components/dashboard/shared'
 import { getOwnerInquiries, type Inquiry } from '../../api/inquiries'
 
@@ -60,15 +60,8 @@ export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => voi
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink mb-0.5">No leads yet</div>
-            <div className="text-[11.5px] text-dim">Add a listing so buyers can reach out and inquire about your properties.</div>
+            <div className="text-[11.5px] text-dim">Buyer inquiries will show up here once your listing is live.</div>
           </div>
-          <button
-            onClick={() => go?.('listings')}
-            className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
-            style={{ background: TONE }}
-          >
-            <Home size={13} strokeWidth={2.5} /> Add a listing
-          </button>
         </div>
       ) : (
         <div className="divide-y divide-line">

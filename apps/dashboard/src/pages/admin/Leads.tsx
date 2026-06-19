@@ -1,55 +1,63 @@
 import { useEffect, useState } from 'react'
-import { ClipboardList, Plus, Search } from 'lucide-react'
-import { getRealtorLeads, updateRealtorLeadStatus, type Lead } from '../../api/leads'
-import { FilterPills } from '../admin/shared'
+import { useSearchParams } from 'react-router-dom'
+import { ClipboardList, Search } from 'lucide-react'
+import { getAdminLeads, type Lead } from '../../api/leads'
+import { getAdminUsers, type AdminUser } from '../../api/admin'
+import { TONE, FilterPills } from './shared'
 import { LeadDetailPanel } from '../../components/admin/LeadDetailPanel'
 import { parsePhone } from '../../utils/phone'
 
-const TONE = '#1f7a3d'
-
 const TYPE_LABEL: Record<string, string> = {
   property_inquiry: 'Inquiry',
-  booking:          'Booking',
-  buyer_interest:   'Buyer',
-  seller_interest:  'Seller',
+  booking: 'Booking',
+  buyer_interest: 'Buyer',
+  seller_interest: 'Seller',
+  owner_access: 'Owner Access',
 }
 
 const TYPE_COLOR: Record<string, string> = {
   property_inquiry: '#1f7a3d',
-  booking:          '#0d9488',
-  buyer_interest:   '#e10f1f',
-  seller_interest:  '#f0a800',
+  booking: '#0d9488',
+  buyer_interest: '#e10f1f',
+  seller_interest: '#f0a800',
+  owner_access: '#7c3aed',
+}
+
+function effectiveType(lead: Lead): string {
+  if (lead.type === 'seller_interest' && !lead.property_id) return 'owner_access'
+  return lead.type
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  new:       'New',
-  assigned:  'Assigned',
+  new: 'New',
+  assigned: 'Assigned',
   contacted: 'Contacted',
-  closed:    'Closed',
+  closed: 'Closed',
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  new:       '#64748b',
-  assigned:  '#0d9488',
+  new: '#64748b',
+  assigned: '#0d9488',
   contacted: '#1f7a3d',
-  closed:    '#94a3b8',
+  closed: '#94a3b8',
 }
 
-const TYPE_PILLS   = ['All', 'Inquiry', 'Booking', 'Buyer', 'Seller'] as const
+const TYPE_PILLS  = ['All', 'Inquiry', 'Booking', 'Buyer', 'Seller', 'Owner Access'] as const
 const STATUS_PILLS = ['All', 'New', 'Assigned', 'Contacted', 'Closed'] as const
 
 const TYPE_PILL_MAP: Record<string, string> = {
-  Inquiry: 'property_inquiry',
-  Booking: 'booking',
-  Buyer:   'buyer_interest',
-  Seller:  'seller_interest',
+  Inquiry:       'property_inquiry',
+  Booking:       'booking',
+  Buyer:         'buyer_interest',
+  Seller:        'seller_interest',
+  'Owner Access': 'owner_access',
 }
 const STATUS_PILL_MAP: Record<string, string> = {
   New: 'new', Assigned: 'assigned', Contacted: 'contacted', Closed: 'closed',
 }
 
-const COLS    = 'grid-cols-[100px_1fr_1fr_1.2fr_110px]'
-const HEADERS = ['Type', 'Contact', 'Property', 'Message', 'Status'] as const
+const COLS    = 'grid-cols-[100px_1fr_1fr_1.2fr_160px_110px]'
+const HEADERS = ['Type', 'Contact', 'Property', 'Message', 'Assign Realtor', 'Status'] as const
 
 function fmtUserCode(code: string | null): string {
   if (!code) return ''
@@ -88,14 +96,15 @@ function fmtRelative(iso: string): string {
   return `${Math.floor(d / 30)}mo ago`
 }
 
-function TypeBadge({ type }: { type: string }) {
-  const color = TYPE_COLOR[type] ?? '#64748b'
+function TypeBadge({ lead }: { lead: Lead }) {
+  const etype = effectiveType(lead)
+  const color = TYPE_COLOR[etype] ?? '#64748b'
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold"
       style={{ background: `${color}18`, color }}
     >
-      {TYPE_LABEL[type] ?? type}
+      {TYPE_LABEL[etype] ?? etype}
     </span>
   )
 }
@@ -112,23 +121,40 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-export function RealtorLeads({ go }: { go?: (v: string) => void }) {
+
+export function AdminLeads() {
   const [leads,        setLeads]        = useState<Lead[]>([])
+  const [realtors,     setRealtors]     = useState<AdminUser[]>([])
   const [loading,      setLoading]      = useState(true)
   const [typeFilter,   setTypeFilter]   = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [query,        setQuery]        = useState('')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   useEffect(() => {
-    getRealtorLeads()
-      .then(data => setLeads(data))
-      .catch(() => {})
+    Promise.all([
+      getAdminLeads(),
+      getAdminUsers('realtor'),
+    ]).then(([l, r]) => {
+      setLeads(l)
+      setRealtors(r)
+    }).catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    const openId = searchParams.get('openId')
+    if (!openId || leads.length === 0) return
+    const lead = leads.find(l => l.id === openId)
+    if (lead) {
+      setSelectedLead(lead)
+      setSearchParams({}, { replace: true })
+    }
+  }, [leads, searchParams])
+
   const filtered = leads.filter(l => {
-    if (typeFilter   !== 'All' && l.type   !== TYPE_PILL_MAP[typeFilter])     return false
+    if (typeFilter !== 'All' && effectiveType(l) !== TYPE_PILL_MAP[typeFilter]) return false
     if (statusFilter !== 'All' && l.status !== STATUS_PILL_MAP[statusFilter]) return false
     if (query.trim()) {
       const q = query.toLowerCase()
@@ -150,6 +176,20 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
     closed:    leads.filter(l => l.status === 'closed').length,
   }
 
+  function handleAssigned(leadId: string, realtorId: string, realtorName: string) {
+    const now = new Date().toISOString()
+    setLeads(prev => prev.map(l =>
+      l.id === leadId
+        ? { ...l, assigned_realtor_id: realtorId, assigned_realtor_name: realtorName, status: 'assigned' as const, assigned_at: l.assigned_at ?? now }
+        : l
+    ))
+    setSelectedLead(prev =>
+      prev?.id === leadId
+        ? { ...prev, assigned_realtor_id: realtorId, assigned_realtor_name: realtorName, status: 'assigned' as const, assigned_at: prev.assigned_at ?? now }
+        : prev
+    )
+  }
+
   function handleStatusUpdate(leadId: string, status: string) {
     const now = new Date().toISOString()
     setLeads(prev => prev.map(l => {
@@ -157,6 +197,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
       return {
         ...l,
         status: status as Lead['status'],
+        assigned_at:  status === 'assigned'  ? (l.assigned_at  ?? now) : l.assigned_at,
         contacted_at: status === 'contacted' ? (l.contacted_at ?? now) : l.contacted_at,
         closed_at:    status === 'closed'    ? (l.closed_at    ?? now) : l.closed_at,
       }
@@ -166,6 +207,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
       return {
         ...prev,
         status: status as Lead['status'],
+        assigned_at:  status === 'assigned'  ? (prev.assigned_at  ?? now) : prev.assigned_at,
         contacted_at: status === 'contacted' ? (prev.contacted_at ?? now) : prev.contacted_at,
         closed_at:    status === 'closed'    ? (prev.closed_at    ?? now) : prev.closed_at,
       }
@@ -213,7 +255,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
         {/* Toolbar */}
         <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
           <div className="font-sans text-[17px] font-bold text-ink">
-            My Assigned Leads
+            All leads
             {!loading && leads.length > 0 && (
               <span className="ml-2 text-[13px] font-normal text-dim">({filtered.length})</span>
             )}
@@ -247,6 +289,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
 
         {loading ? (
           <>
+            {/* Desktop skeleton */}
             <div className="hidden lg:block divide-y divide-line-soft">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className={`grid ${COLS} gap-3 py-3.5 px-5.5 animate-pulse items-center`}>
@@ -257,10 +300,12 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                   </div>
                   <div className="h-3 bg-line-soft rounded w-2/3" />
                   <div className="h-3 bg-line-soft rounded w-4/5" />
+                  <div className="h-7 bg-line-soft rounded-lg w-24" />
                   <div className="h-5 bg-line-soft rounded-full w-16" />
                 </div>
               ))}
             </div>
+            {/* Mobile skeleton */}
             <div className="lg:hidden divide-y divide-line-soft">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="px-4 py-4 flex flex-col gap-2 animate-pulse">
@@ -272,6 +317,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                     <div className="h-3.5 bg-line-soft rounded w-1/2" />
                     <div className="h-3 bg-line-soft rounded w-2/3" />
                   </div>
+                  <div className="h-8 bg-line-soft rounded-lg w-32" />
                 </div>
               ))}
             </div>
@@ -287,22 +333,10 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                   <div className="text-[13.5px] font-semibold text-ink mb-0.5">No results for "{query}"</div>
                   <div className="text-[11.5px] text-dim">Try a different name, email, or property.</div>
                 </>
-              ) : leads.length === 0 ? (
-                <>
-                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No leads assigned</div>
-                  <div className="text-[11.5px] text-dim">An admin will assign leads to you when buyers inquire or book.</div>
-                  <button
-                    onClick={() => go?.('submit-listing')}
-                    className="mt-3 flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
-                    style={{ background: TONE }}
-                  >
-                    <Plus size={13} strokeWidth={2.5} /> Add a listing
-                  </button>
-                </>
               ) : (
                 <>
-                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No leads match</div>
-                  <div className="text-[11.5px] text-dim">Try adjusting the filters.</div>
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No leads yet</div>
+                  <div className="text-[11.5px] text-dim">Leads appear here when buyers inquire, book, or sign up from the site.</div>
                 </>
               )}
             </div>
@@ -317,9 +351,9 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                   onClick={() => setSelectedLead(lead)}
                   className={`grid ${COLS} gap-3 py-3.5 px-5.5 items-center hover:bg-line-soft/40 transition-colors cursor-pointer`}
                 >
-                  <div><TypeBadge type={lead.type} /></div>
+                  <div><TypeBadge lead={lead} /></div>
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <LeadAvatar name={lead.name} avatarUrl={lead.from_user_avatar_url} color={TYPE_COLOR[lead.type] ?? '#64748b'} />
+                    <LeadAvatar name={lead.name} avatarUrl={lead.from_user_avatar_url} color={TYPE_COLOR[effectiveType(lead)] ?? '#64748b'} />
                     <div className="min-w-0">
                       <div className="text-[13px] font-semibold text-ink truncate">{lead.name}</div>
                       {lead.from_user_code && (
@@ -333,6 +367,9 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                     {lead.property_title ?? <span className="text-dim italic">No property</span>}
                   </div>
                   <div className="text-[12px] text-ink2 line-clamp-2">{lead.message ?? '—'}</div>
+                  <div className="text-[12.5px] truncate" style={{ color: lead.assigned_realtor_id ? TONE : '#94a3b8' }}>
+                    {lead.assigned_realtor_name ?? 'Unassigned'}
+                  </div>
                   <div className="flex flex-col gap-1">
                     <StatusBadge status={lead.status} />
                     <div className="text-[10.5px] text-dim">{fmtRelative(lead.created_at)}</div>
@@ -350,11 +387,11 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                   className="px-4 py-4 flex flex-col gap-2 cursor-pointer hover:bg-line-soft/40 transition-colors"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <TypeBadge type={lead.type} />
+                    <TypeBadge lead={lead} />
                     <div className="text-[11px] text-dim">{fmtRelative(lead.created_at)}</div>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <LeadAvatar name={lead.name} avatarUrl={lead.from_user_avatar_url} color={TYPE_COLOR[lead.type] ?? '#64748b'} />
+                    <LeadAvatar name={lead.name} avatarUrl={lead.from_user_avatar_url} color={TYPE_COLOR[effectiveType(lead)] ?? '#64748b'} />
                     <div className="min-w-0">
                       <div className="text-[13.5px] font-semibold text-ink truncate">{lead.name}</div>
                       {lead.from_user_code && (
@@ -369,7 +406,14 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                   {lead.message && (
                     <div className="text-[12px] text-ink2 line-clamp-2">{lead.message}</div>
                   )}
-                  <StatusBadge status={lead.status} />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <StatusBadge status={lead.status} />
+                    {lead.assigned_realtor_name && (
+                      <span className="text-[11.5px] font-medium" style={{ color: TONE }}>
+                        {lead.assigned_realtor_name}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -379,12 +423,10 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
 
       <LeadDetailPanel
         lead={selectedLead}
-        realtors={[]}
+        realtors={realtors}
         onClose={() => setSelectedLead(null)}
-        onAssigned={() => {}}
+        onAssigned={handleAssigned}
         onStatusUpdated={handleStatusUpdate}
-        allowedStatuses={['contacted', 'closed']}
-        updateStatusFn={updateRealtorLeadStatus}
       />
     </div>
   )

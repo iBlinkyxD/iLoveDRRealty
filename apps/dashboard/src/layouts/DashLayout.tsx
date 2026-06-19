@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   LayoutDashboard, Heart, Search, MessageCircle, CalendarDays, Calculator,
   BookOpen, ClipboardList, Home, Bell, DollarSign,
-  Building2, GitBranch, Users, Settings,
+  Building2, GitBranch, Users, Settings, Inbox,
   Key, Shield, LogOut, Menu, X, Lock, ChevronRight, type LucideIcon,
 } from 'lucide-react'
 import type { Role } from '../App'
@@ -58,6 +58,7 @@ const ADMIN_NAV: { Icon: LucideIcon; label: string; view: string }[] = [
   { Icon: LayoutDashboard, label: 'Dashboard', view: 'home'     },
   { Icon: Users,           label: 'Users',     view: 'users'    },
   { Icon: Building2,       label: 'Listings',  view: 'listings' },
+  { Icon: Inbox,           label: 'Leads',     view: 'leads'    },
   { Icon: Settings,        label: 'Settings',  view: 'settings' },
 ]
 

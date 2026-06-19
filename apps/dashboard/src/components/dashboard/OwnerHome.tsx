@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Home, Calendar, DollarSign, Bell, MessageCircle, Plus, Clock, Star, Pencil } from 'lucide-react'
+import { Home, Calendar, DollarSign, Bell, MessageCircle, Clock, Star, Pencil, UserCircle } from 'lucide-react'
 import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
 import { getMyListings, type Listing } from '../../api/listings'
 import { getOwnerBookings, type Booking } from '../../api/bookings'
 import { getOwnerInquiries, type Inquiry } from '../../api/inquiries'
+import { getMyAgent } from '../../api/auth'
 
 export const OWNER_KPIS: { label: string; value: string; sub: string; accent?: string }[] = [
   { label: 'Active Listings',    value: '—', sub: '' },
@@ -60,14 +61,19 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
   const [myListings, setMyListings]   = useState<Listing[]>([])
   const [bookings, setBookings]       = useState<Booking[]>([])
   const [inquiries, setInquiries]     = useState<Inquiry[]>([])
+  const [agent, setAgent] = useState<{ name: string; email: string; phone: string | null } | null>(null)
   const [loadingListings, setLoadingListings] = useState(true)
   const [loadingBookings, setLoadingBookings] = useState(true)
   const [loadingInquiries, setLoadingInquiries] = useState(true)
+  const [loadingAgent, setLoadingAgent] = useState(true)
 
   useEffect(() => {
     getMyListings().then(setMyListings).catch(() => {}).finally(() => setLoadingListings(false))
     getOwnerBookings().then(setBookings).catch(() => {}).finally(() => setLoadingBookings(false))
     getOwnerInquiries().then(setInquiries).catch(() => {}).finally(() => setLoadingInquiries(false))
+    getMyAgent().then(d => {
+      if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null })
+    }).catch(() => {}).finally(() => setLoadingAgent(false))
   }, [])
 
   const activeCount = myListings.filter(l => l.status === 'active').length
@@ -117,15 +123,8 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
                 </div>
                 <div className="text-center">
                   <div className="text-[13.5px] font-semibold text-ink mb-0.5">No listings yet</div>
-                  <div className="text-[11.5px] text-dim">Add your first property to get started.</div>
+                  <div className="text-[11.5px] text-dim">Your realtor will add listings on your behalf.</div>
                 </div>
-                <button
-                  onClick={() => go('submit-listing')}
-                  className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
-                  style={{ background: tone }}
-                >
-                  <Plus size={13} strokeWidth={2.5} /> Add listing
-                </button>
               </div>
             ) : (
               <div>
@@ -136,13 +135,16 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <div className="text-[13.5px] font-semibold text-ink truncate">{l.title}</div>
-                      <div className="text-[11.5px] text-dim mt-0.5">{fmtPrice(l.price)} · {l.view_count.toLocaleString()} views · {l.leads_count} leads</div>
+                      <div className="text-[11.5px] text-dim mt-0.5">
+                        {fmtPrice(l.price)} · {l.view_count.toLocaleString()} views · {l.leads_count} leads
+                        {l.submitted_by_name && <span className="ml-1" style={{ color: tone }}>· {l.submitted_by_name}</span>}
+                      </div>
                     </div>
                     <StatusPill label={STATUS_LABEL[l.status] ?? l.status} tone={STATUS_TONE_MAP[l.status]} />
                   </div>
                 ))}
                 <div className="py-3 px-5.5">
-                  <button onClick={() => go('listings')} className="text-[12.5px] font-bold bg-transparent border-none cursor-pointer p-0" style={{ color: tone }}>+ Add listing</button>
+                  <button onClick={() => go('listings')} className="text-[12.5px] font-bold bg-transparent border-none cursor-pointer p-0" style={{ color: tone }}>View all listings →</button>
                 </div>
               </div>
             )}
@@ -183,6 +185,38 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
         </div>
 
         <div className="flex flex-col gap-5">
+          <Card title={<><UserCircle size={14} /> Your Agent</>}>
+            {loadingAgent ? (
+              <div className="flex items-center gap-3 animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-line-soft shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 bg-line-soft rounded w-1/2" />
+                  <div className="h-3 bg-line-soft rounded w-1/3" />
+                </div>
+              </div>
+            ) : agent ? (
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-full shrink-0 grid place-items-center font-bold text-[15px] text-white"
+                  style={{ background: tone }}
+                >
+                  {agent.name[0].toUpperCase()}
+                </div>
+                <div>
+                  <div className="text-[13.5px] font-bold text-ink">{agent.name}</div>
+                  <div className="text-[11.5px] text-dim">{agent.email}</div>
+                  {agent.phone && <div className="text-[11.5px] text-dim">{agent.phone}</div>}
+                </div>
+              </div>
+            ) : (
+              <div className="py-2 text-center">
+                <UserCircle size={28} className="mx-auto mb-1.5 text-dim" />
+                <div className="text-[13px] font-semibold text-ink mb-0.5">No agent assigned yet</div>
+                <div className="text-[11.5px] text-dim">A realtor will be assigned to manage your listings.</div>
+              </div>
+            )}
+          </Card>
+
           {!loadingListings && myListings.some(l => l.has_pending_deal_request || l.has_pending_edit) && (
             <Card title={<><Clock size={14} /> Pending Reviews</>} padded={false}
               action={<button onClick={() => go('listings')} className="text-xs font-bold bg-transparent border-none cursor-pointer" style={{ color: tone }}>All listings →</button>}>

@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { Toaster } from 'react-hot-toast'
 import GoogleAuthProvider from '../components/GoogleAuthProvider'
+import LeadCaptureProvider from '../components/LeadCaptureProvider'
 
 export const metadata: Metadata = {
   title: {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <GoogleAuthProvider>
+          <LeadCaptureProvider>
           <Navbar />
           {children}
           <Footer />
@@ -42,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               style: { fontFamily: 'inherit', fontSize: '14px', borderRadius: '12px' },
             }}
           />
+          </LeadCaptureProvider>
         </GoogleAuthProvider>
       </body>
     </html>

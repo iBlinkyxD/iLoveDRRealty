@@ -30,6 +30,8 @@ import { TONE_MAP } from "../data/propertyDetailData";
 import { fetchListingById, recordListingView } from "../api/listings";
 import type { ApiListingDetail } from "../api/listings";
 import { submitInquiry } from "../api/inquiries";
+import { PhoneInput } from 'react-international-phone'
+import 'react-international-phone/style.css'
 import { createBooking } from "../api/bookings";
 import { getMe } from "../api/auth";
 
@@ -291,14 +293,14 @@ function PropertyDetailInner() {
   const [bookingSending, setBookingSending] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
   const [bookingError, setBookingError] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [me, setMe] = useState<{ display_name: string; email: string; phone: string | null; avatar_url: string | null } | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [galleryTab, setGalleryTab] = useState<'photos' | '3dtour'>('photos');
   const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getMe().then(() => setIsLoggedIn(true)).catch(() => {})
+    getMe().then(data => setMe(data)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -1103,7 +1105,7 @@ function PropertyDetailInner() {
                   </div>
                 </form>
               ) : (
-                <button onClick={() => isLoggedIn ? setBookingOpen(true) : go('login')}
+                <button onClick={() => setBookingOpen(true)}
                   className="w-full flex justify-center items-center py-3 mt-4 rounded-full border-none cursor-pointer text-white font-sans text-[13.5px] font-bold bg-coral">
                   Request to book
                 </button>
@@ -1152,9 +1154,14 @@ function PropertyDetailInner() {
                   <input required type="email" placeholder="Email" value={inquiryForm.email}
                     onChange={e => setInquiryForm(f => ({ ...f, email: e.target.value }))}
                     className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
-                  <input placeholder="Phone (optional)" value={inquiryForm.phone}
-                    onChange={e => setInquiryForm(f => ({ ...f, phone: e.target.value }))}
-                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
+                  <PhoneInput
+                    defaultCountry="us"
+                    placeholder="Phone (optional)"
+                    value={inquiryForm.phone}
+                    onChange={phone => setInquiryForm(f => ({ ...f, phone }))}
+                    inputStyle={{ flex: 1, width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #e4ddcf', borderLeft: 'none', borderRadius: '0 0.5rem 0.5rem 0', backgroundColor: '#ffffff', fontFamily: 'inherit', fontSize: '0.8125rem', color: '#00102e', outline: 'none' }}
+                    countrySelectorStyleProps={{ buttonStyle: { border: '1px solid #e4ddcf', borderRight: 'none', borderRadius: '0.5rem 0 0 0.5rem', backgroundColor: '#f3f1ea', padding: '0 0.5rem', cursor: 'pointer', height: '100%' } }}
+                  />
                   <textarea required rows={3} placeholder="Your message…" value={inquiryForm.message}
                     onChange={e => setInquiryForm(f => ({ ...f, message: e.target.value }))}
                     className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none resize-none" />
@@ -1170,7 +1177,16 @@ function PropertyDetailInner() {
                   </div>
                 </form>
               ) : (
-                <button onClick={() => isLoggedIn ? setInquiryOpen(true) : go('login')}
+                <button
+                  onClick={() => {
+                    setInquiryForm(f => ({
+                      ...f,
+                      name: me?.display_name || f.name,
+                      email: me?.email || f.email,
+                      phone: me?.phone || f.phone,
+                    }))
+                    setInquiryOpen(true)
+                  }}
                   className="w-full flex justify-center items-center gap-1.5 bg-transparent border border-line text-ink px-3 py-2.5 rounded-full text-[13px] font-semibold cursor-pointer font-sans hover:bg-paper2 transition-colors">
                   <MessageCircle size={14} /> Message Agent
                 </button>

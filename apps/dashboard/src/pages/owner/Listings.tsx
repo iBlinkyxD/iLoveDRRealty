@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  Building2, Plus, Search, MoreHorizontal, Home, Pencil, Trash2, EyeOff, MapPin, Star, Clock,
+  Building2, Search, MoreHorizontal, Home, Pencil, Trash2, EyeOff, MapPin, Star, Clock, MessageCircle, X, UserCircle,
 } from 'lucide-react'
 import { getMyListings, type Listing } from '../../api/listings'
-import { OwnerEditListing } from './SubmitListing'
 import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
+import { submitLead } from '../../api/leads'
+import { getMe, getMyAgent } from '../../api/auth'
+import toast from 'react-hot-toast'
 
 const STATUS_MAP: Record<string, { label: string; bg: string; color: string; filter: string }> = {
   active:           { label: 'Active',   bg: '#dcfce7', color: '#15803d', filter: 'Active'   },
@@ -53,7 +55,85 @@ function StatusChip({ status }: { status: string }) {
   )
 }
 
-function ActionMenu({ onEdit, onRequestDeal }: { onEdit: () => void; onRequestDeal?: () => void }) {
+function RequestChangeModal({ listing, onClose }: { listing: Listing; onClose: () => void }) {
+  const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    getMe().catch(() => {})
+  }, [])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!message.trim()) return
+    setSubmitting(true)
+    try {
+      const me = await getMe()
+      await submitLead({
+        type: 'seller_interest',
+        name: me.display_name,
+        email: me.email,
+        phone: me.phone,
+        property_id: listing.id,
+        message: message.trim(),
+      })
+      toast.success('Request sent to your realtor.')
+      onClose()
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-paper rounded-2xl shadow-2xl w-full max-w-sm">
+          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-line">
+            <div>
+              <div className="text-[15px] font-bold text-ink">Request Change</div>
+              <div className="text-[11.5px] text-dim truncate max-w-55">{listing.title}</div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-line-soft cursor-pointer border-0 bg-transparent shrink-0">
+              <X size={15} className="text-dim" />
+            </button>
+          </div>
+          <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              rows={4}
+              placeholder="Describe what you'd like changed…"
+              autoFocus
+              className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none resize-none placeholder:text-dim"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !message.trim()}
+                className="flex-1 py-2.5 rounded-xl border-0 text-[13px] font-bold text-white cursor-pointer disabled:opacity-60"
+                style={{ background: '#f0a800' }}
+              >
+                {submitting ? 'Sending…' : 'Send Request'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function ActionMenu({ onRequestDeal, onRequestChange }: { onRequestDeal?: () => void; onRequestChange: () => void }) {
   const [open, setOpen] = useState(false)
   const [pos,  setPos]  = useState({ top: 0, left: 0 })
   const btnRef  = useRef<HTMLButtonElement>(null)
@@ -94,10 +174,11 @@ function ActionMenu({ onEdit, onRequestDeal }: { onEdit: () => void; onRequestDe
           style={{ top: pos.top, left: pos.left }}
         >
           <button
-            onClick={() => { onEdit(); setOpen(false) }}
-            className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-ink hover:bg-line/40 transition-colors cursor-pointer"
+            onClick={() => { onRequestChange(); setOpen(false) }}
+            className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs hover:bg-amber-50 transition-colors cursor-pointer"
+            style={{ color: '#c07800' }}
           >
-            <Pencil size={12} /> Edit listing
+            <MessageCircle size={12} /> Request Change
           </button>
           {onRequestDeal && (
             <button
@@ -177,18 +258,20 @@ function PendingReviewsCard({ items, tone, onSelect }: { items: Listing[]; tone:
   )
 }
 
-const COLS    = 'grid-cols-[2fr_0.8fr_1fr_1fr_0.7fr_0.7fr_1fr_40px]'
-const HEADERS = ['Property', 'Type', 'Price', 'Status', 'Views', 'Leads', 'Updated', ''] as const
+const COLS    = 'grid-cols-[2fr_0.8fr_1fr_1fr_0.7fr_0.7fr_1fr_1fr_40px]'
+const HEADERS = ['Property', 'Type', 'Price', 'Status', 'Views', 'Leads', 'Realtor', 'Updated', ''] as const
 const FILTERS = ['All', 'Active', 'Review', 'Rejected', 'Archived'] as const
 
 export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => void }) {
   const [listings, setListings] = useState<Listing[]>([])
+  const [agent, setAgent] = useState<{ name: string; email: string; phone: string | null } | null>(null)
   const [loading,  setLoading]  = useState(true)
+  const [loadingAgent, setLoadingAgent] = useState(true)
   const [filter,   setFilter]   = useState<typeof FILTERS[number]>('All')
   const [query,    setQuery]    = useState('')
   const [selected,  setSelected]  = useState<Listing | null>(null)
-  const [editing,   setEditing]   = useState(false)
   const [openDeal,  setOpenDeal]  = useState(false)
+  const [requestChangeListing, setRequestChangeListing] = useState<Listing | null>(null)
 
   function load() {
     getMyListings()
@@ -197,7 +280,12 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    getMyAgent().then(d => {
+      if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null })
+    }).catch(() => {}).finally(() => setLoadingAgent(false))
+  }, [])
 
   const afterFilter = filter === 'All'
     ? listings
@@ -210,27 +298,47 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
       )
     : afterFilter
 
-  if (editing && selected) {
-    return (
-      <OwnerEditListing
-        listing={selected}
-        tone={tone}
-        onBack={() => setEditing(false)}
-        onSaved={(updated: Listing) => {
-          setListings(prev => prev.map(l => l.id === updated.id ? updated : l))
-          setSelected(updated)
-          setEditing(false)
-        }}
-      />
-    )
-  }
-
-
-
   const pendingReviews = listings.filter(l => l.has_pending_deal_request || l.has_pending_edit)
 
   return (
     <>
+      {/* Agent Banner */}
+      <div className="flex items-center gap-3 bg-paper border border-line rounded-2xl px-4 py-3.5 mb-4">
+        {loadingAgent ? (
+          <div className="flex items-center gap-3 animate-pulse w-full">
+            <div className="w-9 h-9 rounded-full bg-line-soft shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-3 bg-line-soft rounded w-24" />
+              <div className="h-3.5 bg-line-soft rounded w-36" />
+            </div>
+          </div>
+        ) : agent ? (
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-full shrink-0 grid place-items-center font-bold text-[13px] text-white"
+              style={{ background: tone }}
+            >
+              {agent.name[0].toUpperCase()}
+            </div>
+            <div>
+              <div className="text-[11.5px] text-dim font-medium">Your Realtor Agent</div>
+              <div className="text-[13.5px] font-bold text-ink">{agent.name}</div>
+              <div className="text-[11.5px] text-dim">{agent.email}{agent.phone ? ` · ${agent.phone}` : ''}</div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="w-9 h-9 rounded-full shrink-0 grid place-items-center" style={{ background: `${tone}18` }}>
+              <UserCircle size={18} style={{ color: tone }} />
+            </div>
+            <div>
+              <div className="text-[11.5px] text-dim font-medium">Your Realtor Agent</div>
+              <div className="text-[13px] text-ink2">Not yet assigned</div>
+            </div>
+          </>
+        )}
+      </div>
+
       <div className={pendingReviews.length > 0 ? 'flex flex-col gap-5 xl:flex-row xl:items-start' : ''}>
       <div className={`bg-paper border border-line rounded-2xl overflow-hidden${pendingReviews.length > 0 ? ' flex-1 min-w-0' : ''}`}>
 
@@ -251,13 +359,6 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                   className="text-xs border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1"
                 />
               </div>
-              <button
-                onClick={() => go('submit-listing')}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
-                style={{ background: tone }}
-              >
-                <Plus size={13} /> Add Listing
-              </button>
             </div>
             <div className="flex gap-1.5 flex-wrap">
               {FILTERS.map(f => (
@@ -309,17 +410,9 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
             <div className="text-center">
               <div className="text-[15px] font-semibold text-ink mb-1">No listings yet</div>
               <div className="text-xs text-dim max-w-55">
-                Add your first property to start attracting buyers and renters.
+                Your realtor will add listings on your behalf once assigned.
               </div>
             </div>
-            <button
-              onClick={() => go('submit-listing')}
-              className="flex items-center gap-1.5 py-2 px-5 rounded-full text-[13px] font-bold cursor-pointer"
-              style={{ background: tone, color: '#fff' }}
-            >
-              <Plus size={14} strokeWidth={2.5} />
-              Add your first listing
-            </button>
           </div>
         ) : visible.length === 0 ? (
           <div className="py-12 text-center text-sm text-dim">
@@ -332,7 +425,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                 {/* Desktop row */}
                 <div
                   className={`hidden sm:grid ${COLS} items-center px-5.5 py-3.5 cursor-pointer hover:bg-line-soft/40 transition-colors`}
-                  onClick={() => { setSelected(l); setEditing(false) }}
+                  onClick={() => setSelected(l)}
                 >
                   {/* Property */}
                   <div className="flex items-center gap-3 min-w-0 pr-4">
@@ -358,12 +451,16 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                   <div className="text-[12px] text-ink2">{l.view_count.toLocaleString()}</div>
                   {/* Leads */}
                   <div className="text-[12px] text-ink2">{l.leads_count.toLocaleString()}</div>
+                  {/* Realtor */}
+                  <div className="text-[12px] truncate" style={{ color: l.submitted_by_name ? tone : '#94a3b8' }}>
+                    {l.submitted_by_name ?? 'Unassigned'}
+                  </div>
                   {/* Updated */}
                   <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at)}</div>
                   {/* Actions */}
                   <div onClick={e => e.stopPropagation()}>
                     <ActionMenu
-                      onEdit={() => { setSelected(l); setEditing(true) }}
+                      onRequestChange={() => setRequestChangeListing(l)}
                       onRequestDeal={l.status === 'active' && !l.is_deal ? () => { setSelected(l); setOpenDeal(true) } : undefined}
                     />
                   </div>
@@ -372,7 +469,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                 {/* Mobile card */}
                 <div
                   className="sm:hidden px-4 py-3.5 cursor-pointer"
-                  onClick={() => { setSelected(l); setEditing(false) }}
+                  onClick={() => setSelected(l)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -394,7 +491,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                     </div>
                   </div>
                   <div className="text-[11px] text-dim mt-2">
-                    {fmtType(l.type)} · {l.view_count} views · {l.leads_count} leads · Updated {fmtRelative(l.updated_at)}
+                    {fmtType(l.type)} · {l.view_count} views · {l.leads_count} leads · {l.submitted_by_name ? `Realtor: ${l.submitted_by_name}` : 'No realtor'} · Updated {fmtRelative(l.updated_at)}
                   </div>
                 </div>
               </div>
@@ -405,19 +502,25 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
 
       {pendingReviews.length > 0 && (
         <div className="xl:w-64 shrink-0">
-          <PendingReviewsCard items={pendingReviews} tone={tone} onSelect={l => { setSelected(l); setEditing(false) }} />
+          <PendingReviewsCard items={pendingReviews} tone={tone} onSelect={l => setSelected(l)} />
         </div>
       )}
       </div>
 
-      {selected && !editing && (
+      {selected && (
         <ListingDetailPanel
           listing={selected}
           tone={tone}
           role="owner"
           openDeal={openDeal}
           onClose={() => { setSelected(null); setOpenDeal(false) }}
-          onEdit={() => setEditing(true)}
+        />
+      )}
+
+      {requestChangeListing && (
+        <RequestChangeModal
+          listing={requestChangeListing}
+          onClose={() => setRequestChangeListing(null)}
         />
       )}
     </>

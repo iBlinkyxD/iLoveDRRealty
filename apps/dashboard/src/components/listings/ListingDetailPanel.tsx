@@ -60,7 +60,7 @@ interface Props {
   role?: string
   openDeal?: boolean
   onClose: () => void
-  onEdit: () => void
+  onEdit?: () => void
 }
 
 export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onEdit }: Props) {
@@ -553,13 +553,15 @@ export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onE
 
         {/* ── Footer ────────────────────────────────────────────────────── */}
         <div className="border-t border-line px-5 py-4 flex gap-3 shrink-0 bg-paper">
-          <button
-            onClick={onEdit}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
-            style={{ background: tone }}
-          >
-            <Pencil size={14} /> Edit Listing
-          </button>
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer"
+              style={{ background: tone }}
+            >
+              <Pencil size={14} /> Edit Listing
+            </button>
+          )}
           {canRequestDeal && (
             <button
               onClick={() => { setDealOpen(v => !v); setDiscountValue(''); setDealMessage('') }}

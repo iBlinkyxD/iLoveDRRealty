@@ -2,6 +2,7 @@ import type { UserInfo } from '../lib/auth'
 import { AdminHome } from './admin/Home'
 import { AdminUsers } from './admin/Users'
 import { AdminListings } from './admin/Listings'
+import { AdminLeads } from './admin/Leads'
 import { Analytics } from './admin/Analytics'
 import { AdminSettings } from './admin/Settings'
 
@@ -9,6 +10,7 @@ const PAGE_TITLES: Record<string, string> = {
   home:      'Platform overview',
   users:     'User management',
   listings:  'Listings',
+  leads:     'Leads',
   analytics: 'Analytics',
   settings:  'Settings',
 }
@@ -16,6 +18,7 @@ const PAGE_SUBS: Record<string, string> = {
   home:      'Listings, users, and platform activity',
   users:     'Manage users, roles, and upgrade requests',
   listings:  'Manage listings requests',
+  leads:     'Inquiries, bookings, and buyer/seller interest',
   analytics: 'Platform metrics · May 2026',
   settings:  'Platform configuration',
 }
@@ -25,6 +28,7 @@ export default function AdminDash({ go, view = 'home', user, onUserUpdate }: { g
     switch (view) {
       case 'users':    return <AdminUsers />
       case 'listings': return <AdminListings />
+      case 'leads':    return <AdminLeads />
       case 'analytics': return <Analytics />
       case 'settings': return <AdminSettings user={user} onUserUpdate={onUserUpdate} />
       default:         return <AdminHome go={go} />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  Search, Mail, ChevronDown, Check, X,
+  Search, Mail, Check, X,
   UserPlus, UserCheck, CheckCircle2, XCircle, Archive, MoreHorizontal,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -14,6 +14,7 @@ import {
 import { TONE, FilterPills, ROLE_COLOR, STATUS_STYLE } from './shared'
 import { AddUserPanel }    from '../../components/admin/AddUserPanel'
 import { UserDetailPanel } from '../../components/admin/UserDetailPanel'
+import { ConfirmModal }    from '../../components/shared/ConfirmModal'
 
 const ROLE_PILLS   = ['All', 'Buyer', 'Owner', 'Realtor', 'Admin']
 const STATUS_PILLS = ['All', 'Active', 'Pending', 'Suspended']
@@ -78,13 +79,13 @@ export function AdminUsers() {
   const [roleFilter,   setRoleFilter]   = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
   const [search,       setSearch]       = useState('')
-  const [working,      setWorking]      = useState<string | null>(null)
-  const [rejectingId,  setRejectingId]  = useState<string | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
-  const [menuOpenId,   setMenuOpenId]   = useState<string | null>(null)
+  const [working,         setWorking]         = useState<string | null>(null)
+  const [rejectOpenReqId, setRejectOpenReqId] = useState<string | null>(null)
+  const [menuOpenId,      setMenuOpenId]      = useState<string | null>(null)
   const [menuPos,      setMenuPos]      = useState<{ top: number; right: number } | null>(null)
   const [showAdd,      setShowAdd]      = useState(false)
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
+  const [confirmSuspendUser, setConfirmSuspendUser] = useState<AdminUser | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
   async function load() {
@@ -162,8 +163,7 @@ export function AdminUsers() {
     setWorking(reqId)
     try {
       await rejectUpgradeRequest(reqId, reason)
-      setRejectingId(null)
-      setRejectReason('')
+      setRejectOpenReqId(null)
       await load()
       toast.success('Upgrade request rejected.')
     } finally { setWorking(null) }
@@ -291,8 +291,6 @@ export function AdminUsers() {
                 const avColor      = roleColor(currentRole)
                 const nameOrEmail  = req.user_display_name || req.user_email
                 const initial      = nameOrEmail[0].toUpperCase()
-                const isRejectOpen = rejectingId === req.id
-
                 return (
                   <div
                     key={req.id}
@@ -324,35 +322,14 @@ export function AdminUsers() {
                           <Check size={11} /> Approve
                         </button>
                         <button
-                          onClick={() => { setRejectingId(isRejectOpen ? null : req.id); setRejectReason('') }}
+                          onClick={() => { if (currentUser) setSelectedUser(currentUser); setRejectOpenReqId(req.id) }}
                           disabled={!!working}
                           className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink2 bg-paper cursor-pointer disabled:opacity-50"
                         >
                           <X size={11} /> Reject
-                          <ChevronDown size={10} style={{ transform: isRejectOpen ? 'rotate(180deg)' : undefined, transition: 'transform 150ms' }} />
                         </button>
                       </div>
                     </div>
-                    {isRejectOpen && (
-                      <div className="mt-2.5 flex gap-2 pl-11">
-                        <input
-                          type="text"
-                          value={rejectReason}
-                          onChange={e => setRejectReason(e.target.value)}
-                          placeholder="Reason for rejection…"
-                          className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[12.5px] text-ink outline-none focus:border-coral"
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => handleRejectUpgrade(req.id, rejectReason)}
-                          disabled={!rejectReason.trim() || !!working}
-                          className="px-4 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 border-0"
-                          style={{ background: '#e10f1f' }}
-                        >
-                          Confirm
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )
               })}
@@ -458,7 +435,7 @@ export function AdminUsers() {
                             </button>
                             {u.role !== 'admin' && (
                               <button
-                                onClick={() => { u.status === 'suspended' ? handleUnsuspend(u) : handleSuspend(u); setMenuOpenId(null); setMenuPos(null) }}
+                                onClick={() => { setConfirmSuspendUser(u); setMenuOpenId(null); setMenuPos(null) }}
                                 disabled={working === u.id}
                                 className="w-full text-left px-3.5 py-2 text-[12.5px] cursor-pointer disabled:opacity-50 hover:bg-line-soft"
                                 style={{ color: u.status === 'suspended' ? '#1f7a3d' : '#dc2626' }}
@@ -546,6 +523,24 @@ export function AdminUsers() {
       </div>
 
       {/* ── Panels ───────────────────────────────────────────────────────── */}
+      {confirmSuspendUser && (
+        <ConfirmModal
+          title={confirmSuspendUser.status === 'suspended' ? 'Restore this account?' : 'Suspend this account?'}
+          description={confirmSuspendUser.status === 'suspended'
+            ? `${confirmSuspendUser.display_name ?? confirmSuspendUser.email} will regain access to the platform.`
+            : `${confirmSuspendUser.display_name ?? confirmSuspendUser.email} will lose access to the platform immediately.`
+          }
+          confirmLabel={confirmSuspendUser.status === 'suspended' ? 'Restore' : 'Suspend'}
+          variant={confirmSuspendUser.status === 'suspended' ? 'warning' : 'danger'}
+          loading={working === confirmSuspendUser.id}
+          onConfirm={async () => {
+            if (confirmSuspendUser.status === 'suspended') await handleUnsuspend(confirmSuspendUser)
+            else await handleSuspend(confirmSuspendUser)
+            setConfirmSuspendUser(null)
+          }}
+          onCancel={() => setConfirmSuspendUser(null)}
+        />
+      )}
       <AddUserPanel
         open={showAdd}
         onClose={() => setShowAdd(false)}
@@ -555,7 +550,8 @@ export function AdminUsers() {
         user={selectedUser}
         requests={requests}
         working={working}
-        onClose={() => setSelectedUser(null)}
+        openRejectId={rejectOpenReqId}
+        onClose={() => { setSelectedUser(null); setRejectOpenReqId(null) }}
         onSuspend={handleSuspend}
         onUnsuspend={handleUnsuspend}
         onApproveUpgrade={handleApproveUpgrade}

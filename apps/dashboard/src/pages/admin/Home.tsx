@@ -5,10 +5,11 @@ import {
 } from 'lucide-react'
 import { TONE, FilterPills, ApprovalRow } from './shared'
 import { getAdminListings, getAdminUpgradeRequests, getAdminStats, getAdminActivityLog, getAdminUsers, type AdminListing, type AdminUpgradeRequest, type ActivityEntry, type AdminStats, type AdminUser } from '../../api/admin'
+import { getAdminLeads, type Lead } from '../../api/leads'
 
 type ApprovalItem = {
   id: string
-  type: 'Listing' | 'User'
+  type: 'Listing' | 'User' | 'Lead'
   title: string
   submittedBy: string
   time: string
@@ -49,6 +50,25 @@ function upgradeToApprovalItem(r: AdminUpgradeRequest): ApprovalItem {
   }
 }
 
+const LEAD_TYPE_LABEL: Record<string, string> = {
+  property_inquiry: 'Inquiry',
+  booking:          'Booking',
+  buyer_interest:   'Buyer Interest',
+  seller_interest:  'Seller Interest',
+}
+
+function leadToApprovalItem(l: Lead): ApprovalItem {
+  const typeLabel = LEAD_TYPE_LABEL[l.type] ?? l.type
+  const sub = [l.email, l.property_title].filter(Boolean).join(' · ')
+  return {
+    id: l.id,
+    type: 'Lead',
+    title: `${typeLabel}: ${l.name}`,
+    submittedBy: sub,
+    time: fmtRelative(l.created_at),
+  }
+}
+
 const EVENT_META: Record<string, { icon: typeof CheckCircle2; tone: string }> = {
   listing_approved: { icon: CheckCircle2, tone: '#1f7a3d' },
   listing_rejected: { icon: XCircle,      tone: '#e10f1f' },
@@ -72,9 +92,10 @@ function last6Months(): { key: string; label: string }[] {
 }
 
 export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) {
-  const [filter, setFilter] = useState<'All' | 'Listing' | 'User'>('All')
+  const [filter, setFilter] = useState<'All' | 'Listing' | 'User' | 'Lead'>('All')
   const [pendingListings,  setPendingListings]  = useState<AdminListing[]>([])
   const [pendingUpgrades,  setPendingUpgrades]  = useState<AdminUpgradeRequest[]>([])
+  const [newLeads,         setNewLeads]         = useState<Lead[]>([])
   const [loadingQueue,     setLoadingQueue]      = useState(true)
   const [stats,            setStats]             = useState<AdminStats | null>(null)
   const [loadingStats,     setLoadingStats]      = useState(true)
@@ -87,10 +108,12 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
     Promise.all([
       getAdminListings('pending_approval'),
       getAdminUpgradeRequests('pending'),
+      getAdminLeads({ status: 'new' }),
     ])
-      .then(([listings, upgrades]) => {
+      .then(([listings, upgrades, leads]) => {
         setPendingListings(listings)
         setPendingUpgrades(upgrades)
+        setNewLeads(leads)
       })
       .catch(() => {})
       .finally(() => setLoadingQueue(false))
@@ -118,20 +141,21 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
   }, [])
 
   const approvalQueue: ApprovalItem[] = [
+    ...newLeads.map(leadToApprovalItem),
     ...pendingListings.map(toApprovalItem),
     ...pendingUpgrades.map(upgradeToApprovalItem),
   ]
 
   const filtered = approvalQueue.filter(a => filter === 'All' || a.type === filter)
 
-  const pendingCount  = pendingListings.length + pendingUpgrades.length
+  const pendingCount  = pendingListings.length + pendingUpgrades.length + newLeads.length
   const loadingKpis   = loadingQueue || loadingStats
 
   const kpis = [
     {
       label: 'Pending Approvals',
       value: pendingCount,
-      sub: `${pendingListings.length} listings · ${pendingUpgrades.length} requests`,
+      sub: `${newLeads.length} leads · ${pendingListings.length} listings · ${pendingUpgrades.length} requests`,
       accent: pendingCount > 0 ? '#d97706' : undefined as string | undefined,
     },
     {
@@ -195,7 +219,7 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
           <div className="flex flex-wrap justify-between items-center gap-2 px-4 sm:px-5.5 py-4 border-b border-line">
             <div className="font-sans text-[17px] font-bold text-ink">Approval queue</div>
             <div className="flex items-center gap-3">
-              <FilterPills options={['All', 'Listing', 'User']} value={filter} onChange={v => setFilter(v as typeof filter)} />
+              <FilterPills options={['All', 'Lead', 'Listing', 'User']} value={filter} onChange={v => setFilter(v as typeof filter)} />
             </div>
           </div>
           <div className="flex flex-col">
@@ -237,7 +261,7 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
                   key={i}
                   item={item}
                   last={i === Math.min(4, filtered.length - 1)}
-                  onClick={() => go(item.type === 'Listing' ? 'listings' : 'users', item.id)}
+                  onClick={() => go(item.type === 'Listing' ? 'listings' : item.type === 'Lead' ? 'leads' : 'users', item.id)}
                 />
               ))
             )}

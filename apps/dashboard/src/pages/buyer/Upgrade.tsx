@@ -1,75 +1,386 @@
 import { useEffect, useState } from 'react'
-import { Key, Building2, Clock, CheckCircle } from 'lucide-react'
+import { Key, Building2, Clock, CheckCircle, X } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { submitUpgradeRequest, getMyUpgradeRequests } from '../../api/upgradeRequests'
+import { PhoneInput } from 'react-international-phone'
+import { isPossiblePhoneNumber } from 'libphonenumber-js'
+import 'react-international-phone/style.css'
+import { submitUpgradeRequest, getMyUpgradeRequests, type RealtorQuestionnaire } from '../../api/upgradeRequests'
 import type { UpgradeRequest } from '../../api/upgradeRequests'
+import { submitLead, getMyLeads } from '../../api/leads'
+import { getMe } from '../../api/auth'
 
-const ROLES = [
-  {
-    key: 'owner' as const,
-    label: 'Property Owner',
-    Icon: Key,
-    tone: '#f0a800',
-    bg: '#fff9ed',
-    desc: 'List your properties, manage bookings, track leads, and view earnings.',
-  },
-  {
-    key: 'realtor' as const,
-    label: 'Realtor',
-    Icon: Building2,
-    tone: '#1f7a3d',
-    bg: '#f0faf4',
-    desc: 'Manage listings, run your sales pipeline, and close deals.',
-  },
-]
+// ── Owner lead form ────────────────────────────────────────────────────────────
 
-export function Upgrade() {
-  const [pending, setPending] = useState<UpgradeRequest | null>(null)
-  const [submitting, setSubmitting] = useState<'owner' | 'realtor' | null>(null)
-  const [loading, setLoading] = useState(true)
+export function OwnerLeadModal({ onClose, onDone }: { onClose: () => void; onDone?: () => void }) {
+  const [done, setDone] = useState(false)
+
+  if (done) {
+    return (
+      <>
+        <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-paper rounded-2xl shadow-2xl w-full max-w-md p-7 flex flex-col items-center text-center gap-4">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#fff9ed' }}>
+              <CheckCircle size={26} style={{ color: '#f0a800' }} />
+            </div>
+            <div>
+              <div className="font-sans text-[19px] font-bold text-ink mb-1">Request received!</div>
+              <p className="text-[13.5px] text-dim leading-[1.6]">
+                We'll review your property details and connect you with a realtor shortly.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-paper rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-line">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#fff9ed' }}>
+                <Key size={17} style={{ color: '#f0a800' }} />
+              </div>
+              <div>
+                <div className="font-sans text-[16px] font-bold text-ink">List Your Property</div>
+                <div className="text-[11.5px] text-dim">We'll connect you with a realtor.</div>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-line-soft cursor-pointer border-0 bg-transparent">
+              <X size={15} className="text-dim" />
+            </button>
+          </div>
+          <div className="px-6 py-5">
+            <OwnerLeadForm onBack={onClose} onDone={() => { onDone?.(); setDone(true) }} />
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+  const [me, setMe] = useState<{ display_name: string; email: string; phone?: string } | null>(null)
+  const [form, setForm] = useState({ name: '', email: '', location: '', message: '' })
+  const [phone, setPhone] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    getMyUpgradeRequests()
-      .then(reqs => {
-        const existing = reqs.find(r => r.status === 'pending')
-        if (existing) setPending(existing)
-      })
-      .finally(() => setLoading(false))
+    getMe().then(data => {
+      setMe(data)
+      setForm(f => ({ ...f, name: data.display_name || '', email: data.email || '' }))
+      if (data.phone) setPhone(data.phone)
+    }).catch(() => {})
   }, [])
 
-  async function handleRequest(role: 'owner' | 'realtor') {
-    setSubmitting(role)
+  function set(k: keyof typeof form) {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }))
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.name.trim() || !form.email.trim()) return
+    setSubmitting(true)
     try {
-      const req = await submitUpgradeRequest(role)
-      setPending(req)
+      const phoneValue = phone && isPossiblePhoneNumber(phone) ? phone : undefined
+      await submitLead({
+        type: 'seller_interest',
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: phoneValue,
+        message: [
+          form.location ? `Property location: ${form.location.trim()}` : '',
+          form.message.trim(),
+        ].filter(Boolean).join('\n\n') || undefined,
+      })
+      onDone()
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (!me) return null
+
+  return (
+    <div>
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Your Name</label>
+            <input
+              value={form.name}
+              onChange={set('name')}
+              required
+              className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-gold"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Email</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={set('email')}
+              required
+              className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-gold"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Phone <span className="normal-case font-normal text-dim">(optional)</span></label>
+            <PhoneInput
+              defaultCountry="do"
+              value={phone}
+              onChange={setPhone}
+              inputClassName="!w-full !px-3 !py-2.5 !rounded-r-xl !border-line !bg-white !text-[13px] !text-ink !outline-none focus:!border-gold !h-auto"
+              countrySelectorStyleProps={{
+                buttonClassName: '!border-line !bg-white !rounded-l-xl !h-auto !px-2.5 !py-2.5',
+              }}
+              style={{ '--react-international-phone-border-radius': '0.75rem' } as React.CSSProperties}
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Property Location <span className="normal-case font-normal text-dim">(optional)</span></label>
+            <input
+              value={form.location}
+              onChange={set('location')}
+              placeholder="e.g. Punta Cana, La Romana…"
+              className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-gold placeholder:text-dim"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Tell us about your property</label>
+            <textarea
+              value={form.message}
+              onChange={set('message')}
+              rows={4}
+              placeholder="Type, size, price range, any details…"
+              className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-gold resize-none placeholder:text-dim"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={submitting || !form.name.trim() || !form.email.trim()}
+            className="w-full py-2.5 rounded-xl text-[13.5px] font-bold text-white border-0 cursor-pointer disabled:opacity-60"
+            style={{ background: '#f0a800' }}
+          >
+            {submitting ? 'Sending…' : 'Send My Details'}
+          </button>
+        </form>
+    </div>
+  )
+}
+
+// ── Realtor questionnaire modal ────────────────────────────────────────────────
+
+export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone: (req: UpgradeRequest) => void }) {
+  const [form, setForm] = useState<RealtorQuestionnaire & { years_experience_str: string }>({
+    license_number: '',
+    territory: '',
+    years_experience: undefined,
+    years_experience_str: '',
+    specialties: '',
+    bio: '',
+  })
+  const [submitting, setSubmitting] = useState(false)
+
+  function set(k: string) {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }))
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    try {
+      const yearsNum = parseInt(form.years_experience_str)
+      const req = await submitUpgradeRequest('realtor', {
+        license_number: form.license_number?.trim() || undefined,
+        territory: form.territory?.trim() || undefined,
+        years_experience: isNaN(yearsNum) ? undefined : yearsNum,
+        specialties: form.specialties?.trim() || undefined,
+        bio: form.bio?.trim() || undefined,
+      })
+      onDone(req)
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       toast.error(msg ?? 'Something went wrong. Please try again.')
     } finally {
-      setSubmitting(null)
+      setSubmitting(false)
     }
   }
 
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-paper rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-line">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#f0faf4' }}>
+                <Building2 size={17} style={{ color: '#1f7a3d' }} />
+              </div>
+              <div>
+                <div className="font-sans text-[16px] font-bold text-ink">Realtor Application</div>
+                <div className="text-[11.5px] text-dim">Help us verify your credentials</div>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-line-soft cursor-pointer border-0 bg-transparent">
+              <X size={15} className="text-dim" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">License # <span className="normal-case font-normal">(optional)</span></label>
+                <input
+                  value={form.license_number}
+                  onChange={set('license_number')}
+                  placeholder="e.g. DR-2024-001"
+                  className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-brand placeholder:text-dim"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Years Experience</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={form.years_experience_str}
+                  onChange={set('years_experience_str')}
+                  placeholder="e.g. 5"
+                  className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-brand placeholder:text-dim"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Territory / Area <span className="normal-case font-normal">(optional)</span></label>
+              <input
+                value={form.territory}
+                onChange={set('territory')}
+                placeholder="e.g. Punta Cana, Santo Domingo…"
+                className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-brand placeholder:text-dim"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Specialties <span className="normal-case font-normal">(optional)</span></label>
+              <input
+                value={form.specialties}
+                onChange={set('specialties')}
+                placeholder="e.g. Luxury villas, Vacation rentals, Commercial…"
+                className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-brand placeholder:text-dim"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Brief Bio <span className="normal-case font-normal">(optional)</span></label>
+              <textarea
+                value={form.bio}
+                onChange={set('bio')}
+                rows={3}
+                placeholder="Tell us about your background and experience…"
+                className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-brand resize-none placeholder:text-dim"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 py-2.5 rounded-xl border-0 text-[13.5px] font-bold text-white cursor-pointer disabled:opacity-60"
+                style={{ background: '#1f7a3d' }}
+              >
+                {submitting ? 'Submitting…' : 'Submit Application'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ── Main Upgrade page ──────────────────────────────────────────────────────────
+
+export function Upgrade() {
+  const [pending, setPending]           = useState<UpgradeRequest | null>(null)
+  const [loading, setLoading]           = useState(true)
+  const [ownerFormOpen, setOwnerFormOpen] = useState(false)
+  const [ownerDone, setOwnerDone]       = useState(false)
+  const [ownerPending, setOwnerPending] = useState(false)
+  const [realtorModalOpen, setRealtorModalOpen] = useState(false)
+
+  useEffect(() => {
+    Promise.all([getMyUpgradeRequests(), getMyLeads()])
+      .then(([reqs, leads]) => {
+        const existing = reqs.find(r => r.status === 'pending')
+        if (existing) setPending(existing)
+        if (leads.some(l => l.type === 'seller_interest' && !l.property_id)) {
+          setOwnerPending(true)
+        }
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
   if (loading) return null
 
-  if (pending) {
-    const role = ROLES.find(r => r.key === pending.requested_role)!
+  // Owner submitted lead
+  if (ownerDone) {
     return (
       <div className="max-w-md">
         <div className="bg-paper border border-line rounded-2xl p-7 flex flex-col items-center text-center gap-4">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: `${role.tone}18` }}>
-            <Clock size={26} style={{ color: role.tone }} />
+          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#fff9ed' }}>
+            <CheckCircle size={26} style={{ color: '#f0a800' }} />
           </div>
           <div>
-            <div className="font-sans text-[19px] font-bold text-ink mb-1">Request submitted</div>
+            <div className="font-sans text-[19px] font-bold text-ink mb-1">Request received!</div>
             <p className="text-[13.5px] text-dim leading-[1.6]">
-              Your request to become a <span className="font-semibold text-ink">{role.label}</span> is pending review.
+              We'll review your property details and connect you with a realtor shortly.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Realtor upgrade pending
+  if (pending) {
+    return (
+      <div className="max-w-md">
+        <div className="bg-paper border border-line rounded-2xl p-7 flex flex-col items-center text-center gap-4">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#f0faf4' }}>
+            <Clock size={26} style={{ color: '#1f7a3d' }} />
+          </div>
+          <div>
+            <div className="font-sans text-[19px] font-bold text-ink mb-1">Application submitted</div>
+            <p className="text-[13.5px] text-dim leading-[1.6]">
+              Your <span className="font-semibold text-ink">Realtor</span> application is pending review.
               You'll have full access once an admin approves it.
             </p>
           </div>
           <div
             className="flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-semibold"
-            style={{ background: `${role.tone}14`, color: role.tone }}
+            style={{ background: '#f0faf4', color: '#1f7a3d' }}
           >
             <CheckCircle size={13} />
             Pending admin review
@@ -79,36 +390,74 @@ export function Upgrade() {
     )
   }
 
+  if (ownerFormOpen) {
+    return <OwnerLeadForm onBack={() => setOwnerFormOpen(false)} onDone={() => { setOwnerPending(true); setOwnerDone(true) }} />
+  }
+
   return (
-    <div>
+    <>
       <p className="text-[14px] text-dim mb-6 max-w-lg leading-[1.6]">
-        Expand your access by requesting a role upgrade. Once an admin reviews and approves your request, you'll unlock the full feature set for that role.
+        Expand your access by requesting a role upgrade. Once reviewed and approved, you'll unlock the full feature set for that role.
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl">
-        {ROLES.map(({ key, label, Icon, tone, bg, desc }) => (
-          <div
-            key={key}
-            className="bg-paper border border-line rounded-2xl p-6 flex flex-col gap-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg }}>
-                <Icon size={20} style={{ color: tone }} />
-              </div>
-              <div className="font-sans text-[17px] font-bold text-ink">{label}</div>
+        {/* Owner card */}
+        <div className="bg-paper border border-line rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#fff9ed' }}>
+              <Key size={20} style={{ color: '#f0a800' }} />
             </div>
-            <p className="text-[13px] text-dim leading-[1.6] flex-1">{desc}</p>
-            <button
-              onClick={() => handleRequest(key)}
-              disabled={submitting !== null}
-              className="w-full py-2.5 rounded-xl text-[13.5px] font-bold text-white border-0 cursor-pointer transition-opacity duration-120 disabled:opacity-60"
-              style={{ background: tone }}
-            >
-              {submitting === key ? 'Requesting…' : `Request ${label} Access`}
-            </button>
+            <div className="font-sans text-[17px] font-bold text-ink">Property Owner</div>
           </div>
-        ))}
+          <p className="text-[13px] text-dim leading-[1.6] flex-1">
+            List your properties, manage bookings, track leads, and view earnings.
+          </p>
+          {ownerPending ? (
+            <div
+              className="w-full py-2.5 rounded-xl text-[13.5px] font-semibold flex items-center justify-center gap-2"
+              style={{ background: '#fff9ed', color: '#b07800' }}
+            >
+              <Clock size={14} />
+              Request Pending
+            </div>
+          ) : (
+            <button
+              onClick={() => setOwnerFormOpen(true)}
+              className="w-full py-2.5 rounded-xl text-[13.5px] font-bold text-white border-0 cursor-pointer"
+              style={{ background: '#f0a800' }}
+            >
+              List My Property
+            </button>
+          )}
+        </div>
+
+        {/* Realtor card */}
+        <div className="bg-paper border border-line rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#f0faf4' }}>
+              <Building2 size={20} style={{ color: '#1f7a3d' }} />
+            </div>
+            <div className="font-sans text-[17px] font-bold text-ink">Realtor</div>
+          </div>
+          <p className="text-[13px] text-dim leading-[1.6] flex-1">
+            Manage listings, run your sales pipeline, and close deals.
+          </p>
+          <button
+            onClick={() => setRealtorModalOpen(true)}
+            className="w-full py-2.5 rounded-xl text-[13.5px] font-bold text-white border-0 cursor-pointer"
+            style={{ background: '#1f7a3d' }}
+          >
+            Apply as Realtor
+          </button>
+        </div>
       </div>
-    </div>
+
+      {realtorModalOpen && (
+        <RealtorModal
+          onClose={() => setRealtorModalOpen(false)}
+          onDone={req => { setPending(req); setRealtorModalOpen(false) }}
+        />
+      )}
+    </>
   )
 }

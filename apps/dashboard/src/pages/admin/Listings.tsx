@@ -2,20 +2,23 @@ import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   Check, X, Home, Search, MoreHorizontal, Archive,
-  MapPin, Pencil, GitCompare, Eye, Plus, CheckCircle2, XCircle, Star,
+  MapPin, Pencil, GitCompare, Eye, Plus, CheckCircle2, XCircle, Star, Clock, Sparkles,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
   getAdminListings, approveAdminListing, rejectAdminListing, archiveAdminListing,
   getAdminListingEdits, approveListingEdit, rejectListingEdit,
   getAdminDealRequests, approveDealRequest, rejectDealRequest,
+  clearListingDeal, setListingDeal,
   getAdminActivityLog,
 } from '../../api/admin'
 import type { AdminListing, AdminListingEdit, ActivityEntry, DealRequest } from '../../api/admin'
 import { AdminEditListing, AdminSubmitListing } from './SubmitListing'
 import { TONE, FilterPills } from './shared'
 import { ListingDetailPanel } from '../../components/admin/ListingDetailPanel'
-import { ListingEditDiffPanel } from '../../components/admin/ListingEditDiffPanel'
+import { ListingEditReviewPage } from '../../components/admin/ListingEditReviewPage'
+import { ListingHistoryPanel } from '../../components/admin/ListingHistoryPanel'
+import { ConfirmModal } from '../../components/shared/ConfirmModal'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -62,7 +65,7 @@ function StatusChip({ status }: { status: string }) {
   )
 }
 
-function ActionMenu({ onView, onEdit, onArchive }: { onView: () => void; onEdit: () => void; onArchive: () => void }) {
+function ActionMenu({ onView, onEdit, onHistory, onSetDeal, onArchive }: { onView: () => void; onEdit: () => void; onHistory: () => void; onSetDeal?: () => void; onArchive: () => void }) {
   const [open, setOpen] = useState(false)
   const [pos, setPos]   = useState({ top: 0, left: 0 })
   const btnRef  = useRef<HTMLButtonElement>(null)
@@ -82,7 +85,12 @@ function ActionMenu({ onView, onEdit, onArchive }: { onView: () => void; onEdit:
   function toggle() {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect()
-      setPos({ top: r.bottom + 6, left: r.right - 176 })
+      const menuW = 176
+      const menuH = 200 // approximate; enough to flip up if near bottom
+      const left = Math.max(8, Math.min(r.right - menuW, window.innerWidth - menuW - 8))
+      const fitsBelow = r.bottom + 6 + menuH < window.innerHeight
+      const top = fitsBelow ? r.bottom + 6 : r.top - menuH - 6
+      setPos({ top, left })
     }
     setOpen(v => !v)
   }
@@ -114,6 +122,20 @@ function ActionMenu({ onView, onEdit, onArchive }: { onView: () => void; onEdit:
           >
             <Pencil size={12} /> Edit listing
           </button>
+          <button
+            onClick={() => { onHistory(); setOpen(false) }}
+            className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
+          >
+            <Clock size={12} /> View history
+          </button>
+          {onSetDeal && (
+            <button
+              onClick={() => { onSetDeal(); setOpen(false) }}
+              className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-amber-600 hover:bg-amber-50 cursor-pointer"
+            >
+              <Sparkles size={12} /> Set as Deal of Week
+            </button>
+          )}
           <div className="border-t border-line mx-2" />
           <button
             onClick={() => { onArchive(); setOpen(false) }}
@@ -156,9 +178,15 @@ export function AdminListings() {
   const [working,      setWorking]      = useState(false)
   const [rejectingDealId, setRejectingDealId] = useState<string | null>(null)
   const [dealRejectReason, setDealRejectReason] = useState('')
-  const [selected,     setSelected]     = useState<AdminListing | null>(null)
-  const [selectedEdit, setSelectedEdit] = useState<AdminListingEdit | null>(null)
-  const [editing,      setEditing]      = useState(false)
+  const [setDealTarget,    setSetDealTarget]    = useState<AdminListing | null>(null)
+  const [setDealValue,     setSetDealValue]     = useState('')
+  const [setDealType,      setSetDealType]      = useState<'pct' | 'fixed'>('pct')
+  const [selected,           setSelected]           = useState<AdminListing | null>(null)
+  const [selectedEdit,       setSelectedEdit]       = useState<AdminListingEdit | null>(null)
+  const [historyListing,     setHistoryListing]     = useState<AdminListing | null>(null)
+  const [confirmArchive,     setConfirmArchive]     = useState<AdminListing | null>(null)
+  const [confirmClearDealId, setConfirmClearDealId] = useState<string | null>(null)
+  const [editing,         setEditing]         = useState(false)
   const [showAdd,      setShowAdd]      = useState(false)
   const [activity,     setActivity]     = useState<ActivityEntry[]>([])
   const [actLoading,   setActLoading]   = useState(true)
@@ -281,6 +309,29 @@ export function AdminListings() {
       setDealRejectReason('')
       await load()
       toast.success('Deal request rejected.')
+    } finally { setWorking(false) }
+  }
+
+  async function handleSetDeal() {
+    if (!setDealTarget) return
+    setWorking(true)
+    try {
+      const val = setDealValue.trim() ? parseFloat(setDealValue) : null
+      await setListingDeal(setDealTarget.id, val, setDealType)
+      setSetDealTarget(null)
+      setSetDealValue('')
+      setSetDealType('pct')
+      await load()
+      toast.success('Deal of the Week set!')
+    } finally { setWorking(false) }
+  }
+
+  async function handleClearDeal(id: string) {
+    setWorking(true)
+    try {
+      await clearListingDeal(id)
+      await load()
+      toast.success('Deal cleared.')
     } finally { setWorking(false) }
   }
 
@@ -500,6 +551,51 @@ export function AdminListings() {
             </div>
           )}
 
+          {/* ── Active Deals section ─────────────────────────────────── */}
+          {!loading && all.some(l => l.is_deal) && (
+            <div className="border-b border-line">
+              <div className="px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                <Star size={11} fill="#f59e0b" style={{ color: '#f59e0b' }} />
+                <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
+                  Active Deals ({all.filter(l => l.is_deal).length})
+                </span>
+              </div>
+              <div className="divide-y divide-line-soft">
+                {all.filter(l => l.is_deal).map(l => (
+                  <div key={l.id} className="px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/50 transition-colors">
+                    <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => setSelected(l)}>
+                      {l.images?.[0] ? (
+                        <img src={l.images[0]} alt="" className="w-14 h-9 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#f0a80018' }}>
+                          <Star size={14} style={{ color: '#f0a800' }} />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                        <div className="text-[11px] text-dim flex items-center gap-1 truncate">
+                          <MapPin size={9} />{l.location}
+                          {l.deal_discount_value && (
+                            <span className="ml-1 font-semibold" style={{ color: '#c07800' }}>
+                              · {l.deal_discount_type === 'fixed' ? `−$${Number(l.deal_discount_value).toLocaleString()} off` : `−${l.deal_discount_value}% off`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setConfirmClearDealId(l.id)}
+                      disabled={working}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-red-500 bg-paper hover:bg-red-50 cursor-pointer disabled:opacity-50 shrink-0"
+                    >
+                      <X size={11} /> Clear Deal
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── Deal Requests section ────────────────────────────────── */}
           {!loading && dealRequests.length > 0 && (
             <div className="border-b border-line">
@@ -650,7 +746,9 @@ export function AdminListings() {
                       <ActionMenu
                         onView={() => setSelected(l)}
                         onEdit={() => { setSelected(l); setEditing(true) }}
-                        onArchive={() => handleArchive(l.id)}
+                        onHistory={() => setHistoryListing(l)}
+                        onSetDeal={l.status === 'active' && !l.is_deal ? () => { setSetDealTarget(l); setSetDealValue(''); setSetDealType('pct') } : undefined}
+                        onArchive={() => setConfirmArchive(l)}
                       />
                     </div>
                   </div>
@@ -736,20 +834,146 @@ export function AdminListings() {
           onEdit={() => setEditing(true)}
           onApprove={() => handleApprove(selected.id)}
           onReject={(reason) => handleReject(selected.id, reason)}
-          onArchive={() => handleArchive(selected.id)}
+          onArchive={() => setConfirmArchive(selected)}
+          onSetDeal={selected.status === 'active' && !selected.is_deal
+            ? async (value, type) => {
+                await setListingDeal(selected.id, value, type)
+                await load()
+                toast.success('Deal of the Week set!')
+              }
+            : undefined}
+          onClearDeal={selected.is_deal ? () => setConfirmClearDealId(selected.id) : undefined}
           working={working}
         />
       )}
 
-      {/* Edit diff slide-over */}
+      {/* History slide-over */}
+      {historyListing && (
+        <ListingHistoryPanel
+          listingId={historyListing.id}
+          listingTitle={historyListing.title}
+          onClose={() => setHistoryListing(null)}
+        />
+      )}
+
+      {/* Edit review — full screen */}
       {selectedEdit && (
-        <ListingEditDiffPanel
+        <ListingEditReviewPage
           edit={selectedEdit}
           working={working}
           onApprove={() => handleApproveEdit(selectedEdit.id)}
           onReject={(reason) => handleRejectEdit(selectedEdit.id, reason)}
           onClose={() => setSelectedEdit(null)}
         />
+      )}
+
+      {/* Archive confirmation */}
+      {confirmArchive && (
+        <ConfirmModal
+          title="Archive this listing?"
+          description={`"${titleCase(confirmArchive.title)}" will be removed from the site and marked as archived. This can be reversed by contacting a developer.`}
+          confirmLabel="Archive"
+          variant="danger"
+          loading={working}
+          onConfirm={async () => {
+            await handleArchive(confirmArchive.id)
+            setConfirmArchive(null)
+          }}
+          onCancel={() => setConfirmArchive(null)}
+        />
+      )}
+
+      {/* Clear Deal confirmation */}
+      {confirmClearDealId && (
+        <ConfirmModal
+          title="Remove Deal of the Week?"
+          description="This listing will no longer appear in the Deal of the Week section on the landing page."
+          confirmLabel="Remove Deal"
+          variant="warning"
+          loading={working}
+          onConfirm={async () => {
+            await handleClearDeal(confirmClearDealId)
+            setConfirmClearDealId(null)
+          }}
+          onCancel={() => setConfirmClearDealId(null)}
+        />
+      )}
+
+      {/* Set as Deal modal */}
+      {setDealTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,16,46,0.45)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles size={16} style={{ color: '#f59e0b' }} />
+              <div className="font-bold text-[15px] text-ink">Set as Deal of the Week</div>
+            </div>
+            <div className="text-[12.5px] text-dim mb-4 truncate">{titleCase(setDealTarget.title)}</div>
+
+            <div className="space-y-3">
+              <div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-[.06em] mb-1.5">Discount type</div>
+                <div className="flex rounded-lg border border-line overflow-hidden text-[12px] font-semibold">
+                  {(['pct', 'fixed'] as const).map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setSetDealType(t)}
+                      className="flex-1 py-2 cursor-pointer transition-colors"
+                      style={{ background: setDealType === t ? '#f59e0b' : 'white', color: setDealType === t ? 'white' : '#6b7280' }}
+                    >
+                      {t === 'pct' ? 'Percentage (%)' : 'Fixed ($)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-[.06em] mb-1.5">
+                  Discount value <span className="normal-case font-normal">(optional)</span>
+                </div>
+                <div className="flex items-center border border-line rounded-lg overflow-hidden">
+                  <span className="px-3 text-[13px] text-dim bg-line-soft border-r border-line py-2">
+                    {setDealType === 'pct' ? '%' : '$'}
+                  </span>
+                  <input
+                    type="text"
+                    inputMode={setDealType === 'pct' ? 'decimal' : 'numeric'}
+                    value={setDealType === 'fixed' && setDealValue
+                      ? Number(setDealValue.replace(/,/g, '')).toLocaleString('en-US')
+                      : setDealValue}
+                    onChange={e => {
+                      const raw = setDealType === 'fixed'
+                        ? e.target.value.replace(/[^0-9]/g, '')
+                        : e.target.value.replace(/[^0-9.]/g, '')
+                      setSetDealValue(raw)
+                    }}
+                    placeholder="Leave blank for no discount"
+                    className="flex-1 px-3 py-2 text-[13px] text-ink outline-none bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={handleSetDeal}
+                disabled={working}
+                className="flex-1 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer disabled:opacity-50 border-0"
+                style={{ background: '#f59e0b' }}
+              >
+                <Star size={13} className="inline mr-1.5" fill="white" />
+                Set as Deal
+              </button>
+              <button
+                onClick={() => setSetDealTarget(null)}
+                disabled={working}
+                className="px-4 py-2.5 rounded-xl text-[13px] font-semibold text-ink border border-line bg-paper cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

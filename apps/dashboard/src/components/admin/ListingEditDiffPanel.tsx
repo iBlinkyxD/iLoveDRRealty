@@ -27,12 +27,17 @@ const DIFF_LABELS: Record<string, string> = {
   gated_community: 'Gated Community', construction_status: 'Construction Status',
   year_built: 'Year Built', features: 'Features', maps_url: 'Google Maps URL',
   latitude: 'Latitude', longitude: 'Longitude', tag: 'Tag', images: 'Photos',
+  tags: 'Tags', video_links: 'Video Links', tour_3d_url: '3D Tour URL',
+  utilities: 'Utilities', included_utilities: 'What is Included',
+  association_fee: 'Assoc. Fee ($/mo)', deposit_policy: 'Deposit Policy',
 }
+
+const ARRAY_FIELDS = new Set(['features', 'images', 'tags', 'video_links', 'included_utilities'])
 
 function formatVal(key: string, val: unknown): string {
   if (val == null) return '—'
-  if (key === 'price') return `$${Number(val).toLocaleString()}`
-  if (key === 'features' || key === 'images') return Array.isArray(val) ? (val as unknown[]).length + ' items' : '—'
+  if (key === 'price' || key === 'association_fee') return `$${Number(val).toLocaleString()}`
+  if (ARRAY_FIELDS.has(key)) return Array.isArray(val) ? (val as unknown[]).join(', ') || '—' : '—'
   if (typeof val === 'boolean') return val ? 'Yes' : 'No'
   return String(val)
 }
@@ -52,9 +57,7 @@ export function ListingEditDiffPanel({ edit, working, onApprove, onReject, onClo
   const changed = Object.keys(DIFF_LABELS).filter(key => {
     const cur  = edit.current_data[key]
     const prop = edit.proposed_data[key]
-    if (key === 'features' || key === 'images') {
-      return JSON.stringify(cur) !== JSON.stringify(prop)
-    }
+    if (ARRAY_FIELDS.has(key)) return JSON.stringify(cur) !== JSON.stringify(prop)
     return String(cur ?? '') !== String(prop ?? '')
   })
 

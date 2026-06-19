@@ -8,8 +8,19 @@ export interface UpgradeRequest {
   rejection_reason: string | null
 }
 
-export async function submitUpgradeRequest(requested_role: 'owner' | 'realtor'): Promise<UpgradeRequest> {
-  const res = await client.post<UpgradeRequest>('/upgrade-requests', { requested_role })
+export interface RealtorQuestionnaire {
+  license_number?: string
+  territory?: string
+  years_experience?: number
+  specialties?: string
+  bio?: string
+}
+
+export async function submitUpgradeRequest(
+  requested_role: 'owner' | 'realtor',
+  questionnaire?: RealtorQuestionnaire,
+): Promise<UpgradeRequest> {
+  const res = await client.post<UpgradeRequest>('/upgrade-requests', { requested_role, ...questionnaire })
   return res.data
 }
 

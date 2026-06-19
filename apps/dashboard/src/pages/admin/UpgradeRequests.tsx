@@ -154,6 +154,42 @@ export function UpgradeRequests() {
                     )}
                   </div>
 
+                  {/* Realtor questionnaire answers */}
+                  {req.requested_role === 'realtor' && (req.license_number || req.territory || req.years_experience != null || req.specialties || req.bio) && (
+                    <div className="mt-3 ml-12 grid grid-cols-2 gap-x-6 gap-y-2 bg-paper2 rounded-xl px-4 py-3 sm:grid-cols-3">
+                      {req.license_number && (
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-wide text-dim mb-0.5">License #</div>
+                          <div className="text-[12.5px] text-ink">{req.license_number}</div>
+                        </div>
+                      )}
+                      {req.years_experience != null && (
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-wide text-dim mb-0.5">Experience</div>
+                          <div className="text-[12.5px] text-ink">{req.years_experience} yr{req.years_experience !== 1 ? 's' : ''}</div>
+                        </div>
+                      )}
+                      {req.territory && (
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-wide text-dim mb-0.5">Territory</div>
+                          <div className="text-[12.5px] text-ink">{req.territory}</div>
+                        </div>
+                      )}
+                      {req.specialties && (
+                        <div className="col-span-2 sm:col-span-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wide text-dim mb-0.5">Specialties</div>
+                          <div className="text-[12.5px] text-ink">{req.specialties}</div>
+                        </div>
+                      )}
+                      {req.bio && (
+                        <div className="col-span-2 sm:col-span-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wide text-dim mb-0.5">Bio</div>
+                          <div className="text-[12.5px] text-ink2 leading-relaxed">{req.bio}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Reject reason input — inline expansion */}
                   {isRejectOpen && (
                     <div className="mt-3 ml-12 flex gap-2">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { DollarSign, Home } from 'lucide-react'
+import { DollarSign } from 'lucide-react'
 import { Card, RoleKpiCard } from '../../components/dashboard/shared'
 import { getOwnerBookings, type Booking } from '../../api/bookings'
 
@@ -101,15 +101,8 @@ export function Earnings({ tone, go }: { tone: string; go?: (v: string) => void 
         </div>
         <div>
           <div className="text-[13.5px] font-semibold text-ink mb-0.5">No earnings yet</div>
-          <div className="text-[11.5px] text-dim">Add a listing and accept bookings to start tracking your revenue.</div>
+          <div className="text-[11.5px] text-dim">Revenue from confirmed bookings will appear here once your listing is active.</div>
         </div>
-        <button
-          onClick={() => go?.('listings')}
-          className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
-          style={{ background: TONE }}
-        >
-          <Home size={13} strokeWidth={2.5} /> Add a listing
-        </button>
       </div>
     )
   }

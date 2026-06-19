@@ -1,28 +1,21 @@
 import { Calendar } from 'lucide-react'
-import { Card, StatusPill } from '../../components/dashboard/shared'
-
-const OWNER_CAL_EVENTS = [
-  { guest: 'Michael Torres',  property: 'Villa Paraíso',     date: 'Jun 14 – Jun 21', tone: '#1f7a3d' },
-  { guest: 'Sarah Mitchell',  property: 'Casa del Mar',      date: 'Jun 28 – Jul 5',  tone: '#0b63ab' },
-  { guest: 'David Chen',      property: 'Villa Paraíso',     date: 'Jul 10 – Jul 17', tone: '#f0a800' },
-  { guest: 'Emma Johansson',  property: 'Playa Hermosa',     date: 'Jul 22 – Jul 29', tone: '#9333ea' },
-]
+import { Card } from '../../components/dashboard/shared'
 
 export function OwnerCalendar({ tone }: { tone: string }) {
   return (
-    <Card title={<><Calendar size={14} /> Booking Calendar</>} sub="June – August 2026">
-      <div className="flex flex-col gap-3">
-        {OWNER_CAL_EVENTS.map((e, i) => (
-          <div key={i} className="flex items-center gap-3.5 py-3.5 px-4 rounded-[10px] bg-[#F8F9FC] border border-line border-l-4" style={{ borderLeftColor: e.tone }}>
-            <div className="flex-1">
-              <div className="text-[13.5px] font-bold text-ink">{e.guest}</div>
-              <div className="text-xs text-dim mt-0.5">{e.property} · {e.date}</div>
-            </div>
-            <StatusPill label="Confirmed" />
-          </div>
-        ))}
-        <div className="p-4 rounded-[10px] text-center text-[13px] font-semibold border border-dashed" style={{ background: `${tone}10`, borderColor: tone, color: tone }}>
-          + Block dates / Add availability
+    <Card title={<><Calendar size={14} /> Booking Calendar</>} sub="Coming soon">
+      <div className="flex flex-col items-center justify-center py-12 gap-4">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: `${tone}15` }}>
+          <Calendar size={26} style={{ color: tone }} />
+        </div>
+        <div className="text-center">
+          <div className="text-[15px] font-bold text-ink mb-1">Booking Calendar</div>
+          <p className="text-[13px] text-dim leading-[1.6] max-w-65">
+            Track guest bookings, block dates, and manage availability — coming soon.
+          </p>
+        </div>
+        <div className="px-4 py-2 rounded-xl text-[12px] font-semibold" style={{ background: `${tone}15`, color: tone }}>
+          Coming Soon
         </div>
       </div>
     </Card>

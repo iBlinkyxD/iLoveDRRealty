@@ -1,7 +1,8 @@
 import { X, Check, ChevronDown, Key, Building2, Mail, Phone, Calendar, Copy, CheckCheck } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ROLE_COLOR } from '../../pages/admin/shared'
 import type { AdminUser, AdminUpgradeRequest } from '../../api/admin'
+import { ConfirmModal } from '../shared/ConfirmModal'
 
 const UPGRADE_ROLE_ICON: Record<string, typeof Key>  = { owner: Key, realtor: Building2 }
 const UPGRADE_ROLE_LABEL: Record<string, string>     = { owner: 'Property Owner', realtor: 'Realtor' }
@@ -35,6 +36,7 @@ interface Props {
   user: AdminUser | null
   requests: AdminUpgradeRequest[]
   working: string | null
+  openRejectId?: string | null
   onClose: () => void
   onSuspend: (u: AdminUser) => void
   onUnsuspend: (u: AdminUser) => void
@@ -43,12 +45,20 @@ interface Props {
 }
 
 export function UserDetailPanel({
-  user, requests, working, onClose,
+  user, requests, working, openRejectId, onClose,
   onSuspend, onUnsuspend, onApproveUpgrade, onRejectUpgrade,
 }: Props) {
-  const [rejectingId,  setRejectingId]  = useState<string | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [rejectingId,   setRejectingId]   = useState<string | null>(null)
+  const [rejectReason,  setRejectReason]  = useState('')
+  const [copied,        setCopied]        = useState(false)
+  const [confirmSuspend, setConfirmSuspend] = useState(false)
+
+  useEffect(() => {
+    if (openRejectId) {
+      setRejectingId(openRejectId)
+      setRejectReason('')
+    }
+  }, [openRejectId])
 
   function copyEmail() {
     navigator.clipboard.writeText(user?.email ?? '').then(() => {
@@ -319,7 +329,7 @@ export function UserDetailPanel({
           {user.role !== 'admin' && (
             user.status === 'suspended' ? (
               <button
-                onClick={() => { onUnsuspend(user); onClose() }}
+                onClick={() => setConfirmSuspend(true)}
                 disabled={working === user.id}
                 className="flex-1 px-4 py-2.5 rounded-xl border-0 text-[13px] font-semibold text-white cursor-pointer disabled:opacity-50"
                 style={{ background: '#1f7a3d' }}
@@ -328,7 +338,7 @@ export function UserDetailPanel({
               </button>
             ) : (
               <button
-                onClick={() => { onSuspend(user); onClose() }}
+                onClick={() => setConfirmSuspend(true)}
                 disabled={working === user.id}
                 className="flex-1 px-4 py-2.5 rounded-xl border-0 text-[13px] font-semibold text-white cursor-pointer disabled:opacity-50"
                 style={{ background: '#dc2626' }}
@@ -340,6 +350,25 @@ export function UserDetailPanel({
         </div>
 
       </div>
+      {confirmSuspend && (
+        <ConfirmModal
+          title={user.status === 'suspended' ? 'Restore this account?' : 'Suspend this account?'}
+          description={user.status === 'suspended'
+            ? `${user.display_name ?? user.email} will regain access to the platform.`
+            : `${user.display_name ?? user.email} will lose access to the platform immediately.`
+          }
+          confirmLabel={user.status === 'suspended' ? 'Restore' : 'Suspend'}
+          variant={user.status === 'suspended' ? 'warning' : 'danger'}
+          loading={working === user.id}
+          onConfirm={() => {
+            if (user.status === 'suspended') onUnsuspend(user)
+            else onSuspend(user)
+            setConfirmSuspend(false)
+            onClose()
+          }}
+          onCancel={() => setConfirmSuspend(false)}
+        />
+      )}
     </>
   )
 }

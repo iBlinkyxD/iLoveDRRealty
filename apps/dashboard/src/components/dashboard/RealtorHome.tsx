@@ -4,7 +4,7 @@ import {
 } from 'lucide-react'
 import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
 import { getMyListings, type Listing } from '../../api/listings'
-import { getRealtorInquiries, type Inquiry } from '../../api/inquiries'
+import { getRealtorLeads, type Lead } from '../../api/leads'
 
 export const REALTOR_LISTINGS = [
   { name: 'Oceanfront Villa — Cap Cana',   status: 'Active', leads: 8, views: 1420, price: '$2.45M' },
@@ -74,24 +74,25 @@ function avatarTone(name: string): string {
 }
 
 export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: string }) {
-  const [myListings,       setMyListings]       = useState<Listing[]>([])
-  const [inquiries,        setInquiries]        = useState<Inquiry[]>([])
-  const [loadingListings,  setLoadingListings]  = useState(true)
-  const [loadingInquiries, setLoadingInquiries] = useState(true)
+  const [myListings,      setMyListings]      = useState<Listing[]>([])
+  const [leads,           setLeads]           = useState<Lead[]>([])
+  const [loadingListings, setLoadingListings] = useState(true)
+  const [loadingLeads,    setLoadingLeads]    = useState(true)
 
   useEffect(() => {
     getMyListings().then(setMyListings).catch(() => {}).finally(() => setLoadingListings(false))
-    getRealtorInquiries().then(setInquiries).catch(() => {}).finally(() => setLoadingInquiries(false))
+    getRealtorLeads().then(setLeads).catch(() => {}).finally(() => setLoadingLeads(false))
   }, [])
 
   const activeCount  = myListings.filter(l => l.status === 'active').length
   const pendingCount = myListings.filter(l => l.status === 'pending_approval').length
+  const hotLeads     = leads.filter(l => l.status === 'assigned')
 
   const kpis = [
     { label: 'Active Clients',   value: '18',  sub: '+4 this month' },
-    { label: 'Active Listings',  value: loadingListings   ? '…' : String(activeCount),   sub: `${pendingCount} pending review` },
+    { label: 'Active Listings',  value: loadingListings ? '…' : String(activeCount),   sub: `${pendingCount} pending review` },
     { label: 'Pending Closings', value: '3',   sub: 'Est. $4.1M total' },
-    { label: 'Leads This Month', value: loadingInquiries  ? '…' : String(inquiries.length), sub: inquiries.length ? `${inquiries.length} total` : 'No leads yet', accent: inquiries.length > 0 ? '#1f7a3d' : undefined },
+    { label: 'Needs Attention',  value: loadingLeads   ? '…' : String(hotLeads.length), sub: hotLeads.length ? 'assigned, not contacted' : 'All caught up', accent: hotLeads.length > 0 ? '#e10f1f' : undefined },
   ]
 
   return (
@@ -202,7 +203,7 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
 
           <Card title={<><ClipboardList size={14} /> Hot Leads</>}
             action={<button onClick={() => go('leads')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">All →</button>}>
-            {loadingInquiries ? (
+            {loadingLeads ? (
               <div className="flex flex-col gap-2.5">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className={`flex items-start gap-2.5 pb-2.5 ${i < 2 ? 'border-b border-line' : ''} animate-pulse`}>
@@ -214,31 +215,55 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                   </div>
                 ))}
               </div>
-            ) : inquiries.length === 0 ? (
+            ) : hotLeads.length === 0 ? (
               <div className="py-8 flex flex-col items-center gap-2 text-center">
                 <MessageCircle size={22} className="text-dim" />
-                <div className="text-[13px] font-semibold text-ink">No leads yet</div>
-                <div className="text-[11.5px] text-dim">Inquiries from buyers will appear here.</div>
+                <div className="text-[13px] font-semibold text-ink">
+                  {leads.length === 0 ? 'No leads assigned yet' : 'All caught up!'}
+                </div>
+                <div className="text-[11.5px] text-dim">
+                  {leads.length === 0 ? 'An admin will assign leads to you here.' : 'No leads are waiting to be contacted.'}
+                </div>
               </div>
             ) : (
               <div className="flex flex-col gap-2.5">
-                {inquiries.slice(0, 5).map((inq, i) => (
-                  <div key={inq.id} className={`flex items-start gap-2.5 pb-2.5 ${i < Math.min(inquiries.length, 5) - 1 ? 'border-b border-line' : ''}`}>
-                    <div className="w-8.5 h-8.5 rounded-full shrink-0 grid place-items-center font-bold text-[13px] text-white" style={{ background: avatarTone(inq.name) }}>
-                      {inq.name[0]}
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <div className="flex justify-between items-center gap-2">
-                        <div className="text-[13px] font-bold text-ink truncate">{inq.name}</div>
-                        <div className="text-[11px] text-dim shrink-0">{fmtRelative(inq.created_at)}</div>
+                {hotLeads.slice(0, 5).map((lead, i) => {
+                  const typeColor: Record<string, string> = {
+                    property_inquiry: '#1f7a3d', booking: '#0d9488',
+                    buyer_interest: '#e10f1f', seller_interest: '#f0a800',
+                  }
+                  const typeLabel: Record<string, string> = {
+                    property_inquiry: 'Inquiry', booking: 'Booking',
+                    buyer_interest: 'Buyer', seller_interest: 'Seller',
+                  }
+                  const c = typeColor[lead.type] ?? '#64748b'
+                  return (
+                    <div key={lead.id} className={`flex items-start gap-2.5 pb-2.5 ${i < Math.min(hotLeads.length, 5) - 1 ? 'border-b border-line' : ''}`}>
+                      <div className="w-8.5 h-8.5 rounded-full shrink-0 grid place-items-center font-bold text-[13px] text-white" style={{ background: c }}>
+                        {lead.name[0]?.toUpperCase() ?? '?'}
                       </div>
-                      {inq.listing_title && <div className="text-[11px] text-dim truncate">{inq.listing_title}</div>}
-                      <div className="text-xs text-ink2 leading-[1.35] mt-0.5 line-clamp-2">{inq.message}</div>
+                      <div className="flex-1 overflow-hidden">
+                        <div className="flex justify-between items-center gap-2">
+                          <div className="text-[13px] font-bold text-ink truncate">{lead.name}</div>
+                          <div className="text-[11px] text-dim shrink-0">{fmtRelative(lead.assigned_at ?? lead.created_at)}</div>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10.5px] font-semibold px-1.5 py-px rounded-full" style={{ background: `${c}18`, color: c }}>
+                            {typeLabel[lead.type] ?? lead.type}
+                          </span>
+                          {lead.property_title && (
+                            <div className="text-[11px] text-dim truncate">{lead.property_title}</div>
+                          )}
+                        </div>
+                        {lead.message && (
+                          <div className="text-[11.5px] text-ink2 leading-[1.35] mt-0.5 line-clamp-1">{lead.message}</div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
                 <button onClick={() => go('leads')} className="text-[12.5px] font-semibold bg-transparent border-none cursor-pointer p-0 text-left" style={{ color: tone }}>
-                  View all {inquiries.length} leads →
+                  View all {leads.length} leads →
                 </button>
               </div>
             )}

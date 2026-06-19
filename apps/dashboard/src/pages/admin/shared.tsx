@@ -115,13 +115,20 @@ export function FilterPills({ options, value, onChange }: { options: string[]; v
   )
 }
 
+const APPROVAL_TYPE_COLOR: Record<string, string> = {
+  Listing: '#0b63ab',
+  User:    '#f0a800',
+  Lead:    '#e10f1f',
+}
+
 export function ApprovalRow({
   item, last, onClick,
 }: {
-  item: { type: 'Listing' | 'User'; title: string; submittedBy: string; time: string; flag?: string }
+  item: { type: 'Listing' | 'User' | 'Lead'; title: string; submittedBy: string; time: string; flag?: string }
   last?: boolean
   onClick?: () => void
 }) {
+  const typeColor = APPROVAL_TYPE_COLOR[item.type] ?? '#64748b'
   return (
     <div
       className={`px-4 sm:px-5.5 py-3.5 flex items-start gap-3${last ? '' : ' border-b border-line-soft'}${onClick ? ' cursor-pointer hover:bg-line-soft/40 transition-colors' : ''}`}
@@ -130,8 +137,8 @@ export function ApprovalRow({
       <span
         className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full shrink-0 mt-0.5"
         style={{
-          color: item.type === 'Listing' ? '#0b63ab' : '#f0a800',
-          background: `${item.type === 'Listing' ? '#0b63ab' : '#f0a800'}18`,
+          color: typeColor,
+          background: `${typeColor}18`,
         }}
       >
         {item.type}

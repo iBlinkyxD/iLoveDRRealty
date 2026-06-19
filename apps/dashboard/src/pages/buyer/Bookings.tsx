@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CalendarDays, MapPin, Search, X } from 'lucide-react'
 import { StatusPill, fmtPrice } from '../../components/dashboard/shared'
 import { getMyBookings, cancelBooking, type Booking } from '../../api/bookings'
+import { ConfirmModal } from '../../components/shared/ConfirmModal'
 
 const TONE = '#e10f1f'
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
@@ -32,10 +33,11 @@ function filterBookings(bookings: Booking[], tab: Tab): Booking[] {
 }
 
 export function BuyerBookings() {
-  const [bookings, setBookings]   = useState<Booking[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [tab, setTab]             = useState<Tab>('all')
-  const [cancelling, setCancelling] = useState<string | null>(null)
+  const [bookings,         setBookings]         = useState<Booking[]>([])
+  const [loading,          setLoading]          = useState(true)
+  const [tab,              setTab]              = useState<Tab>('all')
+  const [cancelling,       setCancelling]       = useState<string | null>(null)
+  const [confirmCancelId,  setConfirmCancelId]  = useState<string | null>(null)
 
   useEffect(() => {
     getMyBookings()
@@ -178,7 +180,7 @@ export function BuyerBookings() {
                     </div>
                     {isCancellable && isFuture && (
                       <button
-                        onClick={() => handleCancel(b.id)}
+                        onClick={() => setConfirmCancelId(b.id)}
                         disabled={cancelling === b.id}
                         className="flex items-center gap-1 text-[11.5px] font-semibold text-red-500 bg-transparent border border-red-200 rounded-lg px-2.5 py-1 cursor-pointer hover:bg-red-50 disabled:opacity-50"
                       >
@@ -193,6 +195,20 @@ export function BuyerBookings() {
           </div>
         )}
       </div>
+      {confirmCancelId && (
+        <ConfirmModal
+          title="Cancel this booking?"
+          description="This action cannot be undone. Your booking will be permanently cancelled."
+          confirmLabel="Yes, cancel booking"
+          variant="danger"
+          loading={cancelling === confirmCancelId}
+          onConfirm={async () => {
+            await handleCancel(confirmCancelId)
+            setConfirmCancelId(null)
+          }}
+          onCancel={() => setConfirmCancelId(null)}
+        />
+      )}
     </div>
   )
 }

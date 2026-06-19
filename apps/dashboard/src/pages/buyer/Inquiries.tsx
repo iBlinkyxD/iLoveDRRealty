@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react'
 import { MessageCircle, Search } from 'lucide-react'
-import { Card, StatusPill } from '../../components/dashboard/shared'
-import { getMyInquiries, type Inquiry } from '../../api/inquiries'
+import { Card } from '../../components/dashboard/shared'
+import { getMyLeads, type Lead } from '../../api/leads'
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
+
+const STATUS_COLOR: Record<string, string> = {
+  new: '#64748b',
+  assigned: '#0d9488',
+  contacted: '#1f7a3d',
+  closed: '#94a3b8',
+}
 
 function fmtRelative(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -18,12 +25,12 @@ function fmtRelative(iso: string): string {
 }
 
 export function Inquiries() {
-  const [inquiries, setInquiries] = useState<Inquiry[]>([])
+  const [inquiries, setInquiries] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getMyInquiries()
-      .then(setInquiries)
+    getMyLeads()
+      .then(data => setInquiries(data.filter(l => l.type === 'property_inquiry')))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -65,16 +72,24 @@ export function Inquiries() {
               {inquiries.map((inq, i) => (
                 <tr key={inq.id}>
                   <td className={`px-5 py-3 text-[13px] text-ink font-semibold max-w-45 truncate ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
-                    {inq.listing_title ?? 'General inquiry'}
+                    {inq.property_title ?? 'General inquiry'}
                   </td>
                   <td className={`px-5 py-3 text-[13px] text-ink2 max-w-55 truncate ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
-                    {inq.message}
+                    {inq.message ?? '—'}
                   </td>
                   <td className={`px-5 py-3 text-[13px] text-dim whitespace-nowrap ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
                     {fmtRelative(inq.created_at)}
                   </td>
                   <td className={`px-5 py-3 ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
-                    <StatusPill label="Pending" />
+                    <span
+                      className="inline-flex items-center px-2.5 py-0.75 rounded-full text-[11.5px] font-semibold capitalize"
+                      style={{
+                        background: `${STATUS_COLOR[inq.status] ?? '#64748b'}15`,
+                        color: STATUS_COLOR[inq.status] ?? '#64748b',
+                      }}
+                    >
+                      {inq.status === 'new' ? 'Pending' : inq.status}
+                    </span>
                   </td>
                 </tr>
               ))}

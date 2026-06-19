@@ -11,6 +11,11 @@ export interface AdminUpgradeRequest {
   created_at: string
   reviewed_by_name: string | null
   reviewed_at: string | null
+  license_number: string | null
+  territory: string | null
+  years_experience: number | null
+  specialties: string | null
+  bio: string | null
 }
 
 export async function getAdminUpgradeRequests(status?: string): Promise<AdminUpgradeRequest[]> {
@@ -71,6 +76,9 @@ export interface AdminListing {
   reviewed_at: string | null
   view_count: number
   updated_at: string | null
+  is_deal: boolean
+  deal_discount_value: number | null
+  deal_discount_type: string
 }
 
 export async function getAdminListings(status?: string): Promise<AdminListing[]> {
@@ -215,4 +223,25 @@ export async function rejectDealRequest(id: string, reason: string): Promise<voi
 
 export async function clearListingDeal(id: string): Promise<void> {
   await client.post(`/admin/listings/${id}/clear-deal`)
+}
+
+export async function setListingDeal(id: string, discountValue: number | null, discountType: string): Promise<void> {
+  await client.post(`/admin/listings/${id}/set-deal`, { discount_value: discountValue, discount_type: discountType })
+}
+
+export interface ListingEvent {
+  id: string
+  listing_id: string
+  event_type: 'submitted' | 'approved' | 'rejected' | 'archived' | 'edit_submitted' | 'edit_approved' | 'edit_rejected'
+  actor_name: string | null
+  actor_email: string | null
+  note: string | null
+  snapshot_before: Record<string, unknown> | null
+  snapshot_after: Record<string, unknown> | null
+  created_at: string
+}
+
+export async function getListingHistory(listingId: string): Promise<ListingEvent[]> {
+  const res = await client.get<ListingEvent[]>(`/admin/listings/${listingId}/history`)
+  return res.data
 }

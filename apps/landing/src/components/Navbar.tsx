@@ -3,9 +3,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useNav } from '../hooks/useNav'
 import { NAV_ITEMS } from '../design'
-import { useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Menu, X, LayoutDashboard, LogOut } from 'lucide-react'
+import { getMe, logout } from '../api/auth'
 
+const _dashRaw = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://app.ilovedrrealty.com'
+const DASHBOARD_URL = _dashRaw.startsWith('http') ? _dashRaw : `https://${_dashRaw}`
+
+type Me = { display_name: string; email: string; avatar_url: string | null }
 
 export function Logo({ size = 42 }: { size?: number }) {
   return (
@@ -20,11 +25,92 @@ export function Logo({ size = 42 }: { size?: number }) {
   )
 }
 
+function Avatar({ me, size = 32 }: { me: Me; size?: number }) {
+  const [imgError, setImgError] = useState(false)
+
+  if (me.avatar_url && !imgError) {
+    return (
+      <img
+        src={me.avatar_url}
+        alt={me.display_name}
+        referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
+        className="rounded-full object-cover shrink-0"
+        style={{ width: size, height: size }}
+      />
+    )
+  }
+  return (
+    <div
+      className="rounded-full grid place-items-center text-white font-bold shrink-0"
+      style={{ width: size, height: size, fontSize: size * 0.375, background: '#e10f1f' }}
+    >
+      {me.display_name[0]?.toUpperCase() ?? '?'}
+    </div>
+  )
+}
+
+function UserDropdown({ me, onClose }: { me: Me; onClose: () => void }) {
+  async function handleLogout() {
+    try { await logout() } catch { /* ignore */ }
+    onClose()
+    window.location.reload()
+  }
+
+  return (
+    <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-line rounded-2xl shadow-[0_8px_30px_-8px_rgba(0,16,46,.2)] z-50 overflow-hidden py-1">
+      <div className="px-4 py-3 border-b border-line">
+        <div className="font-sans text-[13px] font-semibold text-ink truncate">{me.display_name}</div>
+        <div className="font-sans text-[11.5px] text-ink2 truncate">{me.email}</div>
+      </div>
+      <a
+        href={DASHBOARD_URL}
+        onClick={onClose}
+        className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-ink hover:bg-paper2 transition-colors font-sans"
+      >
+        <LayoutDashboard size={15} className="text-ink2" />
+        Dashboard
+      </a>
+      <button
+        onClick={handleLogout}
+        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-coral hover:bg-paper2 transition-colors cursor-pointer bg-transparent border-none font-sans text-left"
+      >
+        <LogOut size={15} className="text-coral" />
+        Log out
+      </button>
+    </div>
+  )
+}
+
 export default function Navbar() {
   const pathname = usePathname()
   const go = useNav()
   const current = !pathname || pathname === '/' ? 'landing' : pathname.replace(/^\/|\/$/g, '')
   const [open, setOpen] = useState(false)
+  const [me, setMe] = useState<Me | null>(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    getMe().then(setMe).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [dropdownOpen])
+
+  async function handleMobileLogout() {
+    try { await logout() } catch { /* ignore */ }
+    setOpen(false)
+    window.location.reload()
+  }
 
   return (
     <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-3.5 border-b border-line">
@@ -56,28 +142,56 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden min-[1080px]:flex flex-1 gap-2 items-center justify-end">
-          <button
-            onClick={() => go('login')}
-            className="font-sans text-[13.5px] font-semibold cursor-pointer text-ink bg-transparent border-none py-2.25 px-3.5"
-          >
-            Log in
-          </button>
-          <button
-            onClick={() => go('signup')}
-            className="font-sans text-[13.5px] font-semibold cursor-pointer text-white bg-coral border border-coral py-2.25 px-4.5 rounded-full transition-colors duration-150"
-          >
-            Sign up
-          </button>
+          {me ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(v => !v)}
+                className="flex items-center gap-2.5 cursor-pointer bg-transparent border-none p-0"
+              >
+                <Avatar me={me} size={32} />
+                <span className="font-sans text-[13.5px] font-semibold text-ink truncate max-w-36">
+                  {me.display_name.split(' ')[0]}
+                </span>
+              </button>
+              {dropdownOpen && (
+                <UserDropdown me={me} onClose={() => setDropdownOpen(false)} />
+              )}
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => go('login')}
+                className="font-sans text-[13.5px] font-semibold cursor-pointer text-ink bg-transparent border-none py-2.25 px-3.5"
+              >
+                Log in
+              </button>
+              <button
+                onClick={() => go('signup')}
+                className="font-sans text-[13.5px] font-semibold cursor-pointer text-white bg-coral border border-coral py-2.25 px-4.5 rounded-full transition-colors duration-150"
+              >
+                Sign up
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Mobile: Sign up + hamburger */}
+        {/* Mobile: avatar/name or Sign up + hamburger */}
         <div className="flex min-[1080px]:hidden items-center gap-2">
-          <button
-            onClick={() => go('signup')}
-            className="font-sans text-[13px] font-semibold cursor-pointer text-white bg-coral border border-coral py-2 px-4 rounded-full transition-colors duration-150"
-          >
-            Sign up
-          </button>
+          {me ? (
+            <div className="flex items-center gap-1.5">
+              <Avatar me={me} size={28} />
+              <span className="font-sans text-[12.5px] font-semibold text-ink max-w-24 truncate">
+                {me.display_name.split(' ')[0]}
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={() => go('signup')}
+              className="font-sans text-[13px] font-semibold cursor-pointer text-white bg-coral border border-coral py-2 px-4 rounded-full transition-colors duration-150"
+            >
+              Sign up
+            </button>
+          )}
           <button
             onClick={() => setOpen(v => !v)}
             className="cursor-pointer bg-transparent border-none p-1.5 text-ink flex items-center"
@@ -105,12 +219,39 @@ export default function Navbar() {
             )
           })}
           <div className="h-px bg-line my-2" />
-          <button
-            onClick={() => { go('login'); setOpen(false) }}
-            className="font-sans text-sm font-semibold cursor-pointer text-ink bg-transparent border border-line py-3 px-4 rounded-xl text-left mb-2"
-          >
-            Log in
-          </button>
+          {me ? (
+            <>
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-paper2 mb-1">
+                <Avatar me={me} size={32} />
+                <div>
+                  <div className="font-sans text-[13.5px] font-semibold text-ink leading-tight">{me.display_name}</div>
+                  <div className="font-sans text-[11.5px] text-ink2">{me.email}</div>
+                </div>
+              </div>
+              <a
+                href={DASHBOARD_URL}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-ink hover:bg-paper2 transition-colors font-sans"
+              >
+                <LayoutDashboard size={15} className="text-ink2" />
+                Dashboard
+              </a>
+              <button
+                onClick={handleMobileLogout}
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-coral hover:bg-paper2 transition-colors cursor-pointer bg-transparent border-none font-sans text-left mb-1"
+              >
+                <LogOut size={15} className="text-coral" />
+                Log out
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => { go('login'); setOpen(false) }}
+              className="font-sans text-sm font-semibold cursor-pointer text-ink bg-transparent border border-line py-3 px-4 rounded-xl text-left mb-2"
+            >
+              Log in
+            </button>
+          )}
         </div>
       )}
     </div>

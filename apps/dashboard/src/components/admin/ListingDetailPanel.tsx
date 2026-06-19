@@ -5,7 +5,7 @@ import {
   Pencil, Archive, User, UserCheck, Eye,
   CircleDollarSign, ArrowLeftRight, Calendar, BedDouble, Bath,
   Ruler, Maximize2, TrendingUp, Wallet, CheckCircle2,
-  Video, Box, Building2,
+  Video, Box, Building2, Sparkles,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { AdminListing } from '../../api/admin'
@@ -61,15 +61,34 @@ interface Props {
   onApprove: () => void
   onReject: (reason: string) => void
   onArchive: () => void
+  onSetDeal?: (value: number | null, type: 'pct' | 'fixed') => Promise<void>
+  onClearDeal?: () => void
   working: boolean
 }
 
 export function ListingDetailPanel({
-  listing, onClose, onEdit, onApprove, onReject, onArchive, working,
+  listing, onClose, onEdit, onApprove, onReject, onArchive, onSetDeal, onClearDeal, working,
 }: Props) {
-  const [imgIdx,      setImgIdx]      = useState(0)
-  const [rejectOpen,  setRejectOpen]  = useState(false)
-  const [reason,      setReason]      = useState('')
+  const [imgIdx,        setImgIdx]        = useState(0)
+  const [rejectOpen,    setRejectOpen]    = useState(false)
+  const [reason,        setReason]        = useState('')
+  const [dealOpen,      setDealOpen]      = useState(false)
+  const [discountType,  setDiscountType]  = useState<'pct' | 'fixed'>('pct')
+  const [discountValue, setDiscountValue] = useState('')
+  const [dealWorking,   setDealWorking]   = useState(false)
+
+  async function handleSetDeal() {
+    if (!onSetDeal) return
+    const val = discountValue.trim() ? parseFloat(discountValue) : null
+    setDealWorking(true)
+    try {
+      await onSetDeal(val, discountType)
+      setDealOpen(false)
+      setDiscountValue('')
+    } finally {
+      setDealWorking(false)
+    }
+  }
 
   const isPending = listing.status === 'pending_approval'
   const imgs      = listing.images ?? []
@@ -174,10 +193,28 @@ export function ListingDetailPanel({
             </div>
 
             {/* Location */}
-            <div className="flex items-center gap-1.5 text-[12px] mb-5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            <div className="flex items-center gap-1.5 text-[12px] mb-3" style={{ color: 'rgba(255,255,255,0.55)' }}>
               <MapPin size={12} />
               {listing.location}
             </div>
+
+            {/* Deal of the Week badge */}
+            {listing.is_deal && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4"
+                style={{ background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.35)' }}>
+                <Sparkles size={13} style={{ color: '#fbbf24' }} className="shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-[12px] font-bold" style={{ color: '#fbbf24' }}>Deal of the Week</span>
+                  {listing.deal_discount_value != null && (
+                    <span className="ml-2 text-[11px] font-semibold" style={{ color: 'rgba(251,191,36,0.75)' }}>
+                      {listing.deal_discount_type === 'pct'
+                        ? `−${listing.deal_discount_value}%`
+                        : `−$${Number(listing.deal_discount_value).toLocaleString('en-US')}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Divider */}
             <div className="border-t mb-5" style={{ borderColor: 'rgba(255,255,255,0.15)' }} />
@@ -491,6 +528,67 @@ export function ListingDetailPanel({
           </div>
         </div>
 
+        {/* ── Set as Deal inline form ───────────────────────────────────── */}
+        {onSetDeal && dealOpen && (
+          <div className="border-t border-amber-200 bg-amber-50/80 px-5 py-4 shrink-0 space-y-3">
+            <div className="text-[12px] font-semibold" style={{ color: '#c07800' }}>Set as Deal of the Week</div>
+
+            {/* Discount type toggle */}
+            <div className="flex rounded-lg border border-line overflow-hidden text-[12px] font-semibold bg-white">
+              {(['pct', 'fixed'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setDiscountType(t)}
+                  className="flex-1 py-2 cursor-pointer border-0 transition-colors"
+                  style={discountType === t
+                    ? { background: '#f0a800', color: 'white' }
+                    : { background: 'white', color: '#6b7280' }}
+                >
+                  {t === 'pct' ? '% Discount' : '$ Off'}
+                </button>
+              ))}
+            </div>
+
+            {/* Discount value */}
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-bold text-amber-700">{discountType === 'pct' ? '%' : '$'}</span>
+              <input
+                type="text"
+                inputMode={discountType === 'pct' ? 'decimal' : 'numeric'}
+                value={discountType === 'fixed' && discountValue
+                  ? Number(discountValue.replace(/,/g, '')).toLocaleString('en-US')
+                  : discountValue}
+                onChange={e => {
+                  const raw = discountType === 'fixed'
+                    ? e.target.value.replace(/[^0-9]/g, '')
+                    : e.target.value.replace(/[^0-9.]/g, '')
+                  setDiscountValue(raw)
+                }}
+                placeholder="Optional — leave blank for no discount"
+                className="flex-1 px-3 py-2 rounded-lg border border-amber-200 bg-white text-[13px] text-ink outline-none focus:border-amber-400"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSetDeal}
+                disabled={dealWorking}
+                className="flex-1 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 border-0"
+                style={{ background: '#f59e0b' }}
+              >
+                {dealWorking ? 'Setting…' : 'Confirm Deal'}
+              </button>
+              <button
+                onClick={() => { setDealOpen(false); setDiscountValue('') }}
+                className="px-4 py-2 rounded-lg text-[12px] font-semibold border border-line bg-white text-ink cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── Footer ────────────────────────────────────────────────────── */}
         <div className="border-t border-line px-5 py-4 flex items-center gap-2.5 shrink-0 bg-paper">
           {isPending ? (
@@ -528,6 +626,29 @@ export function ListingDetailPanel({
               className="w-10 h-10 flex items-center justify-center rounded-xl border border-line bg-paper text-dim hover:text-ink hover:bg-line-soft cursor-pointer transition-colors"
             >
               <Pencil size={15} />
+            </button>
+          )}
+          {onSetDeal && (
+            <button
+              onClick={() => { setDealOpen(v => !v); setDiscountValue('') }}
+              title="Set as Deal of the Week"
+              disabled={working}
+              className="w-10 h-10 flex items-center justify-center rounded-xl border cursor-pointer disabled:opacity-50 transition-colors"
+              style={dealOpen
+                ? { background: '#f59e0b', borderColor: '#f59e0b', color: 'white' }
+                : { background: '#fffbeb', borderColor: '#fcd34d', color: '#d97706' }}
+            >
+              <Sparkles size={15} />
+            </button>
+          )}
+          {onClearDeal && (
+            <button
+              onClick={onClearDeal}
+              title="Clear Deal of the Week"
+              disabled={working}
+              className="w-10 h-10 flex items-center justify-center rounded-xl border border-amber-300 bg-amber-50 text-amber-500 hover:bg-amber-100 cursor-pointer disabled:opacity-50 transition-colors"
+            >
+              <X size={15} />
             </button>
           )}
           <button
