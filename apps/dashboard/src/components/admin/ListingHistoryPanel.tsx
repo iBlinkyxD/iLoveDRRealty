@@ -101,8 +101,8 @@ function InlineDiff({ before, after }: { before: Record<string, unknown>; after:
         {changed.map(key => (
           <div key={key} className="grid grid-cols-[1fr_1fr_1fr] px-3 py-2 items-start">
             <div className="text-[11.5px] font-semibold text-ink">{DIFF_LABELS[key]}</div>
-            <div className="text-[11.5px] text-dim line-clamp-2 break-words">{formatVal(key, before[key])}</div>
-            <div className="text-[11.5px] font-medium line-clamp-2 break-words" style={{ color: '#d97706' }}>{formatVal(key, after[key])}</div>
+            <div className="text-[11.5px] text-dim line-clamp-2 wrap-break-words">{formatVal(key, before[key])}</div>
+            <div className="text-[11.5px] font-medium line-clamp-2 wrap-break-words" style={{ color: '#d97706' }}>{formatVal(key, after[key])}</div>
           </div>
         ))}
       </div>

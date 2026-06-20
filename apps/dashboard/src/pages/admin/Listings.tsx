@@ -396,15 +396,15 @@ export function AdminListings() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {loading
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-paper border border-line rounded-xl px-4 py-4 animate-pulse space-y-2">
+                <div key={i} className="bg-paper border border-line rounded-xl px-4 py-4 animate-pulse space-y-2 min-w-0 overflow-hidden">
                   <div className="h-2.5 bg-line-soft rounded w-2/3" />
                   <div className="h-7 bg-line-soft rounded w-1/2" />
                   <div className="h-2.5 bg-line-soft rounded w-3/4" />
                 </div>
               ))
             : kpis.map(k => (
-                <div key={k.label} className="bg-paper border border-line rounded-xl px-4 py-4">
-                  <div className="text-[11px] font-bold uppercase tracking-[.07em] text-dim mb-2">{k.label}</div>
+                <div key={k.label} className="bg-paper border border-line rounded-xl px-4 py-4 min-w-0 overflow-hidden">
+                  <div className="text-[11px] font-bold uppercase tracking-[.07em] text-dim mb-2 truncate">{k.label}</div>
                   <div
                     className="text-[28px] font-bold leading-none"
                     style={{ color: k.accent ?? 'var(--ink, #1a1e2e)' }}
@@ -427,8 +427,8 @@ export function AdminListings() {
               {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({visible.length})</span>}
             </div>
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line bg-white w-55">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line bg-white flex-1 sm:w-55">
                   <Search size={13} className="text-dim" />
                   <input
                     value={query}
@@ -452,7 +452,7 @@ export function AdminListings() {
           {/* ── Pending Approval section ─────────────────────────────── */}
           {!loading && pending.length > 0 && (
             <div className="border-b border-line">
-              <div className="px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+              <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
                   Pending Approval ({pending.length})
@@ -460,38 +460,37 @@ export function AdminListings() {
               </div>
               <div className="divide-y divide-line-soft">
                 {pending.map(l => (
-                  <div key={l.id} className="px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/70 transition-colors cursor-pointer" onClick={() => setSelected(l)}>
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {l.images?.[0] ? (
-                        <img src={l.images[0]} alt="" className="w-14 h-9 rounded-lg object-cover shrink-0" />
-                      ) : (
-                        <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TONE}18` }}>
-                          <Home size={14} style={{ color: TONE }} />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
-                        <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
+                  <div key={l.id} className="px-4 sm:px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/70 transition-colors cursor-pointer" onClick={() => setSelected(l)}>
+                    {l.images?.[0] ? (
+                      <img src={l.images[0]} alt="" className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TONE}18` }}>
+                        <Home size={14} style={{ color: TONE }} />
                       </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                      <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
                     </div>
                     <div className="text-[12px] text-dim shrink-0 hidden sm:block">
                       {l.submitted_by_name ?? '—'} · {fmtRelative(l.updated_at)}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => handleApprove(l.id)}
-                        disabled={working}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0"
-                        style={{ background: '#1f7a3d' }}
-                      >
+                    {/* Desktop: text buttons */}
+                    <div className="hidden sm:flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => handleApprove(l.id)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#1f7a3d' }}>
                         <Check size={11} /> Approve
                       </button>
-                      <button
-                        onClick={() => setSelected(l)}
-                        disabled={working}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50"
-                      >
+                      <button onClick={() => setSelected(l)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50">
                         <X size={11} /> Reject
+                      </button>
+                    </div>
+                    {/* Mobile: icon-only buttons */}
+                    <div className="sm:hidden flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => handleApprove(l.id)} disabled={working} className="w-8 h-8 rounded-full flex items-center justify-center border-0 cursor-pointer disabled:opacity-50 shrink-0" style={{ background: '#1f7a3d' }}>
+                        <Check size={14} color="white" />
+                      </button>
+                      <button onClick={() => setSelected(l)} disabled={working} className="w-8 h-8 rounded-full flex items-center justify-center border border-line bg-paper cursor-pointer disabled:opacity-50 shrink-0">
+                        <X size={14} className="text-ink" />
                       </button>
                     </div>
                   </div>
@@ -503,7 +502,7 @@ export function AdminListings() {
           {/* ── Pending Edits section ────────────────────────────────── */}
           {!loading && edits.length > 0 && (
             <div className="border-b border-line">
-              <div className="px-5.5 py-2.5 bg-violet-50 border-b border-violet-100 flex items-center gap-2">
+              <div className="px-4 sm:px-5.5 py-2.5 bg-violet-50 border-b border-violet-100 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-violet-700">
                   Pending Edits ({edits.length})
@@ -511,38 +510,37 @@ export function AdminListings() {
               </div>
               <div className="divide-y divide-line-soft">
                 {edits.map(edit => (
-                  <div key={edit.id} className="px-5.5 py-3 flex items-center gap-3 hover:bg-violet-50/70 transition-colors cursor-pointer" onClick={() => setSelectedEdit(edit)}>
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {edit.listing_thumbnail ? (
-                        <img src={edit.listing_thumbnail} alt="" className="w-14 h-9 rounded-lg object-cover shrink-0" />
-                      ) : (
-                        <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#7c3aed18' }}>
-                          <GitCompare size={14} style={{ color: '#7c3aed' }} />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(edit.listing_title)}</div>
-                        <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{edit.listing_location}</div>
+                  <div key={edit.id} className="px-4 sm:px-5.5 py-3 flex items-center gap-3 hover:bg-violet-50/70 transition-colors cursor-pointer" onClick={() => setSelectedEdit(edit)}>
+                    {edit.listing_thumbnail ? (
+                      <img src={edit.listing_thumbnail} alt="" className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#7c3aed18' }}>
+                        <GitCompare size={14} style={{ color: '#7c3aed' }} />
                       </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-semibold text-ink truncate">{titleCase(edit.listing_title)}</div>
+                      <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{edit.listing_location}</div>
                     </div>
                     <div className="text-[12px] text-dim shrink-0 hidden sm:block">
                       {edit.submitted_by_name ?? '—'} · {fmtRelative(edit.submitted_at)}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => handleApproveEdit(edit.id)}
-                        disabled={working}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0"
-                        style={{ background: '#1f7a3d' }}
-                      >
+                    {/* Desktop: text buttons */}
+                    <div className="hidden sm:flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => handleApproveEdit(edit.id)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#1f7a3d' }}>
                         <Check size={11} /> Approve
                       </button>
-                      <button
-                        onClick={() => setSelectedEdit(edit)}
-                        disabled={working}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50"
-                      >
+                      <button onClick={() => setSelectedEdit(edit)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50">
                         <GitCompare size={11} /> Review
+                      </button>
+                    </div>
+                    {/* Mobile: icon-only buttons */}
+                    <div className="sm:hidden flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => handleApproveEdit(edit.id)} disabled={working} className="w-8 h-8 rounded-full flex items-center justify-center border-0 cursor-pointer disabled:opacity-50 shrink-0" style={{ background: '#1f7a3d' }}>
+                        <Check size={14} color="white" />
+                      </button>
+                      <button onClick={() => setSelectedEdit(edit)} disabled={working} className="w-8 h-8 rounded-full flex items-center justify-center border border-violet-200 bg-violet-50 cursor-pointer disabled:opacity-50 shrink-0">
+                        <GitCompare size={13} color="#7c3aed" />
                       </button>
                     </div>
                   </div>
@@ -554,41 +552,41 @@ export function AdminListings() {
           {/* ── Active Deals section ─────────────────────────────────── */}
           {!loading && all.some(l => l.is_deal) && (
             <div className="border-b border-line">
-              <div className="px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+              <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <Star size={11} fill="#f59e0b" style={{ color: '#f59e0b' }} />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
                   Active Deals ({all.filter(l => l.is_deal).length})
                 </span>
               </div>
+
               <div className="divide-y divide-line-soft">
                 {all.filter(l => l.is_deal).map(l => (
-                  <div key={l.id} className="px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/50 transition-colors">
-                    <div className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer" onClick={() => setSelected(l)}>
-                      {l.images?.[0] ? (
-                        <img src={l.images[0]} alt="" className="w-14 h-9 rounded-lg object-cover shrink-0" />
-                      ) : (
-                        <div className="w-14 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#f0a80018' }}>
-                          <Star size={14} style={{ color: '#f0a800' }} />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
-                        <div className="text-[11px] text-dim flex items-center gap-1 truncate">
-                          <MapPin size={9} />{l.location}
-                          {l.deal_discount_value && (
-                            <span className="ml-1 font-semibold" style={{ color: '#c07800' }}>
-                              · {l.deal_discount_type === 'fixed' ? `−$${Number(l.deal_discount_value).toLocaleString()} off` : `−${l.deal_discount_value}% off`}
-                            </span>
-                          )}
-                        </div>
+                  <div key={l.id} className="px-4 sm:px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/50 transition-colors cursor-pointer" onClick={() => setSelected(l)}>
+                    {l.images?.[0] ? (
+                      <img src={l.images[0]} alt="" className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg object-cover shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#f0a80018' }}>
+                        <Star size={14} style={{ color: '#f0a800' }} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                      <div className="text-[11px] text-dim flex items-center gap-1 truncate">
+                        <MapPin size={9} />{l.location}
+                        {l.deal_discount_value && (
+                          <span className="ml-1 font-semibold" style={{ color: '#c07800' }}>
+                            · {l.deal_discount_type === 'fixed' ? `−$${Number(l.deal_discount_value).toLocaleString()} off` : `−${l.deal_discount_value}% off`}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <button
-                      onClick={() => setConfirmClearDealId(l.id)}
-                      disabled={working}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-red-500 bg-paper hover:bg-red-50 cursor-pointer disabled:opacity-50 shrink-0"
-                    >
+                    {/* Desktop: text button */}
+                    <button onClick={e => { e.stopPropagation(); setConfirmClearDealId(l.id) }} disabled={working} className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-red-500 bg-paper hover:bg-red-50 cursor-pointer disabled:opacity-50 shrink-0">
                       <X size={11} /> Clear Deal
+                    </button>
+                    {/* Mobile: icon button */}
+                    <button onClick={e => { e.stopPropagation(); setConfirmClearDealId(l.id) }} disabled={working} className="sm:hidden w-8 h-8 rounded-full flex items-center justify-center border border-red-200 bg-red-50 cursor-pointer disabled:opacity-50 shrink-0">
+                      <X size={14} color="#ef4444" />
                     </button>
                   </div>
                 ))}
@@ -599,7 +597,7 @@ export function AdminListings() {
           {/* ── Deal Requests section ────────────────────────────────── */}
           {!loading && dealRequests.length > 0 && (
             <div className="border-b border-line">
-              <div className="px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+              <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <Star size={11} fill="#f59e0b" style={{ color: '#f59e0b' }} />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
                   Deal Requests ({dealRequests.length})
@@ -609,17 +607,15 @@ export function AdminListings() {
                 {dealRequests.map(req => {
                   const isRejectOpen = rejectingDealId === req.id
                   return (
-                    <div key={req.id} className="px-5.5 py-3 hover:bg-amber-50/50 transition-colors">
+                    <div key={req.id} className="px-4 sm:px-5.5 py-3 hover:bg-amber-50/50 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="shrink-0">
-                          {req.listing_thumbnail ? (
-                            <img src={req.listing_thumbnail} alt="" className="w-14 h-9 rounded-lg object-cover" />
-                          ) : (
-                            <div className="w-14 h-9 rounded-lg flex items-center justify-center" style={{ background: '#f0a80018' }}>
-                              <Star size={14} style={{ color: '#f0a800' }} />
-                            </div>
-                          )}
-                        </div>
+                        {req.listing_thumbnail ? (
+                          <img src={req.listing_thumbnail} alt="" className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg object-cover shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#f0a80018' }}>
+                            <Star size={14} style={{ color: '#f0a800' }} />
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="text-[13px] font-semibold text-ink truncate">{titleCase(req.listing_title)}</div>
                           <div className="text-[11px] text-dim flex items-center gap-1 truncate">
@@ -630,46 +626,34 @@ export function AdminListings() {
                                 ? `−$${Number(req.discount_value).toLocaleString()} off`
                                 : `−${req.discount_value}% off`}
                             </span>
-                            {req.message && <span className="hidden sm:inline"> · "{req.message}"</span>}
                           </div>
                         </div>
                         <div className="text-[11px] text-dim shrink-0 hidden sm:block">
                           {req.requested_by_name ?? req.requested_by_email} · {fmtRelative(req.created_at)}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-                          <button
-                            onClick={() => handleApproveDeal(req.id)}
-                            disabled={working}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0"
-                            style={{ background: '#f0a800' }}
-                          >
+                        {/* Desktop: text buttons */}
+                        <div className="hidden sm:flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                          <button onClick={() => handleApproveDeal(req.id)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#f0a800' }}>
                             <Check size={11} /> Approve
                           </button>
-                          <button
-                            onClick={() => { setRejectingDealId(isRejectOpen ? null : req.id); setDealRejectReason('') }}
-                            disabled={working}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50"
-                          >
+                          <button onClick={() => { setRejectingDealId(isRejectOpen ? null : req.id); setDealRejectReason('') }} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50">
                             <X size={11} /> Reject
+                          </button>
+                        </div>
+                        {/* Mobile: icon buttons */}
+                        <div className="sm:hidden flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                          <button onClick={() => handleApproveDeal(req.id)} disabled={working} className="w-8 h-8 rounded-full flex items-center justify-center border-0 cursor-pointer disabled:opacity-50 shrink-0" style={{ background: '#f0a800' }}>
+                            <Check size={14} color="white" />
+                          </button>
+                          <button onClick={() => { setRejectingDealId(isRejectOpen ? null : req.id); setDealRejectReason('') }} disabled={working} className="w-8 h-8 rounded-full flex items-center justify-center border border-line bg-paper cursor-pointer disabled:opacity-50 shrink-0">
+                            <X size={14} className="text-ink" />
                           </button>
                         </div>
                       </div>
                       {isRejectOpen && (
-                        <div className="mt-2.5 flex gap-2 pl-17">
-                          <input
-                            type="text"
-                            value={dealRejectReason}
-                            onChange={e => setDealRejectReason(e.target.value)}
-                            placeholder="Reason for rejection…"
-                            className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[12.5px] text-ink outline-none focus:border-amber-400"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => handleRejectDeal(req.id, dealRejectReason)}
-                            disabled={!dealRejectReason.trim() || working}
-                            className="px-4 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 border-0"
-                            style={{ background: '#e10f1f' }}
-                          >
+                        <div className="mt-2.5 flex gap-2">
+                          <input type="text" value={dealRejectReason} onChange={e => setDealRejectReason(e.target.value)} placeholder="Reason for rejection…" className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[12.5px] text-ink outline-none focus:border-amber-400" autoFocus />
+                          <button onClick={() => handleRejectDeal(req.id, dealRejectReason)} disabled={!dealRejectReason.trim() || working} className="px-4 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#e10f1f' }}>
                             Confirm
                           </button>
                         </div>

@@ -28,7 +28,12 @@ function DashboardPage() {
     }
   }, [loading, user, error])
 
-  if (loading || !user) return null
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen bg-paper">
+      <div className="w-8 h-8 border-4 border-sea border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+  if (!user) return null
 
   const role: Role = ROLE_MAP[user.role] ?? 'Buyer'
   const go = (v: string, openId?: string) => {

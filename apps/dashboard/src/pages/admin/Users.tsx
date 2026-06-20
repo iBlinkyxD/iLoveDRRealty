@@ -266,9 +266,9 @@ export function AdminUsers() {
                 <UserPlus size={13} /> Add User
               </button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <FilterPills options={ROLE_PILLS}   value={roleFilter}   onChange={setRoleFilter} />
-              <div className="w-px h-4 bg-line-soft shrink-0" />
+              <div className="w-px h-4 bg-line-soft shrink-0 hidden sm:block" />
               <FilterPills options={STATUS_PILLS} value={statusFilter} onChange={setStatusFilter} />
             </div>
           </div>

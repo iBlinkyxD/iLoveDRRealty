@@ -96,7 +96,7 @@ export const STATUS_STYLE: Record<string, { bg: string; color: string; label: st
 
 export function FilterPills({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
-    <div className="flex gap-1.5">
+    <div className="flex flex-wrap gap-1.5">
       {options.map(f => (
         <button
           key={f}
