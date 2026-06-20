@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   },
   description: "The Dominican Republic's real estate marketplace — verified listings, ROI tools, and a bilingual team that's lived the process.",
   metadataBase: new URL('https://ilovedrrealty.com'),
+  verification: {
+    google: 'S3EIpQJJdhwuPlDSYyaMHYMxB2sMVmiZmmLwXNRLYAc',
+  },
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
