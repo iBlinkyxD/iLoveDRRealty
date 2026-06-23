@@ -50,8 +50,9 @@ export async function generateMetadata({
       : `$${Number(listing.price).toLocaleString()}`
 
   const rawDesc = listing.description ?? ''
-  const description = rawDesc
-    ? `${rawDesc.slice(0, 150)}${rawDesc.length > 150 ? '…' : ''}`
+  const plainDesc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  const description = plainDesc
+    ? `${plainDesc.slice(0, 150)}${plainDesc.length > 150 ? '…' : ''}`
     : `${listing.type} in ${listing.location} — ${priceStr}.`
 
   const image =
@@ -91,7 +92,7 @@ export default async function ListingPage({
         '@context': 'https://schema.org',
         '@type': listing.transaction === 'rent' ? 'Accommodation' : 'Product',
         name: listing.title,
-        description: listing.description ?? '',
+        description: (listing.description ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
         image: listing.images ?? [],
         url: `https://ilovedrrealty.com/listing/${id}/`,
         offers: {
