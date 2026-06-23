@@ -22,6 +22,7 @@ export interface Lead {
   assigned_at: string | null
   contacted_at: string | null
   closed_at: string | null
+  ghl_contact_url: string | null
 }
 
 export interface LeadCreate {

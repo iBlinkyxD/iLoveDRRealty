@@ -563,10 +563,21 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
         </div>
 
         {/* ── Footer ── */}
-        <div className="bg-paper border-t border-line px-5 py-4 shrink-0">
+        <div className="bg-paper border-t border-line px-5 py-4 shrink-0 flex gap-2">
+          {lead.ghl_contact_url && (
+            <a
+              href={lead.ghl_contact_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 hover:bg-line-soft no-underline"
+            >
+              <ExternalLink size={13} />
+              Open in GHL
+            </a>
+          )}
           <button
             onClick={onClose}
-            className="w-full px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
+            className={`px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent ${lead.ghl_contact_url ? '' : 'w-full'}`}
           >
             Close
           </button>
