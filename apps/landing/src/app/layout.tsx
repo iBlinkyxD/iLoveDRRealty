@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   description: "The Dominican Republic's real estate marketplace — verified listings, ROI tools, and a bilingual team that's lived the process.",
   metadataBase: new URL('https://ilovedrrealty.com'),
   verification: {
-    google: 'S3EIpQJJdhwuPlDSYyaMHYMxB2sMVmiZmmLwXNRLYAc',
+    google: 'a-IQl9jyqfB7NS0m3pHHdnlGBQdf5vxX0Kd_md7dq10',
   },
   icons: {
     icon: '/favicon.ico',
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
           </LeadCaptureProvider>
         </GoogleAuthProvider>
+        <Script src="//code.tidio.co/31bscsjpyxzsm0q0fxc65bs1aba5dsf1.js" strategy="lazyOnload" />
       </body>
     </html>
   )

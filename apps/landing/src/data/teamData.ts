@@ -1,6 +1,6 @@
 export interface Principal {
   id: string; name: string; role: string; team: string | null
-  bio: string; langs: string; region: string; v: number; img: string
+  bio: string; langs: string; region: string; v: number; img: string; bgPos?: string
 }
 
 export interface Agent {
@@ -9,22 +9,18 @@ export interface Agent {
 }
 
 export const PRINCIPALS: Principal[] = [
-  { id: 'emil',   name: 'Emil Rodríguez', role: 'Co-Founder · Principal Broker',   team: 'Rodríguez Realty Group',
-    bio: "Born and raised in Santo Domingo, Emil brings two decades of local market knowledge and a deep network across the DR's brokerage community. He leads listings quality and seller relationships.",
+  { id: 'amiel',  name: 'Amiel Ibrahim',   role: 'Co-Founder · Principal Broker',   team: 'Ibrahim Realty Group',
+    bio: "Co-founder of I Love DR Realty. Amiel and his brothers have invested and developed real estate across the DR and the US, building rental portfolios along the way. He guides clients with honest advice, real investor experience, and a family-first approach.",
     langs: 'ES · EN',      region: 'Santo Domingo · Nationwide',             v: 0,
-    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80&auto=format&fit=crop' },
-  { id: 'siam',   name: 'Siam Castillo',  role: 'Co-Founder · Principal Broker',   team: 'Castillo & Co.',
-    bio: 'Siam focuses on growth, brand, and the buyer experience — making sure every visitor, whether local or from the diaspora, finds a platform they trust and enjoy using.',
+    img: '/team/amiel.jpeg', bgPos: 'center 30%' },
+  { id: 'sammy',  name: 'Sayam Ibrahim',   role: 'Co-Founder · Principal Broker',   team: 'Dominguez Realty Group',
+    bio: 'Co-founder of I Love DR Realty with 15+ years acquiring, renovating, and developing properties. Sayam helps clients navigate the DR market with firsthand ownership experience — spotting opportunities and avoiding costly mistakes.',
     langs: 'ES · EN',      region: 'Punta Cana · Cap Cana',                  v: 1,
-    img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80&auto=format&fit=crop' },
-  { id: 'xavier', name: 'Xavier Pérez',   role: 'Co-Founder · Principal Broker',   team: 'Pérez Relocation Partners',
-    bio: 'An investor and relocation specialist, Xavier personally vets the realtors on the platform and guides international buyers through residency, tax, and the realities of owning in the DR.',
+    img: '/team/sammy.jpeg', bgPos: 'center 20%' },
+  { id: 'xavier', name: 'Xavier Ibrahim', role: 'Co-Founder · Principal Broker',   team: 'Pérez Relocation Partners',
+    bio: 'South Florida-based investor and acquisitions specialist with 15+ years and 1,000+ transactions across multiple markets. Xavier helps investors build wealth through strategic property opportunities and portfolio growth. Also associated with Hero Homes, driving acquisitions and investment strategy.',
     langs: 'ES · EN · FR', region: 'Las Terrenas · Samaná · Cabarete',      v: 2,
-    img: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&q=80&auto=format&fit=crop' },
-  { id: 'steve',  name: 'Steve Mitchell', role: 'Co-Founder · Operations & Tech',  team: null,
-    bio: "Steve oversees product and partnerships, connecting the platform's technology with the on-the-ground expertise that makes buying and selling in the DR straightforward.",
-    langs: 'EN · ES',      region: 'Platform-wide',                          v: 3,
-    img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80&auto=format&fit=crop' },
+    img: '/team/xavier.jpeg', bgPos: 'center 15%' },
 ]
 
 export const AGENTS: Agent[] = [
@@ -68,8 +64,7 @@ export const AGENTS: Agent[] = [
 ]
 
 export const TEAM_STATS: [string, string, string][] = [
-  ['4',   'Principals', '#f0a800'],
-  ['8',   'Agents',     '#e10f1f'],
+  ['3',   'Principals', '#f0a800'],
   ['10+', 'Regions',    '#0b63ab'],
-  ['5',   'Languages',  '#1f7a3d'],
+  ['3',   'Languages',  '#1f7a3d'],
 ]
