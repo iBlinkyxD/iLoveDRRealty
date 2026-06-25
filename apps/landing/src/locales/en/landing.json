@@ -1,0 +1,124 @@
+{
+  "hero": {
+    "eyebrow": "Discover · Invest · Live",
+    "heading": "Discover, Invest, and Live in Paradise.",
+    "sub": "The Dominican Republic's real estate ecosystem — luxury properties, investing tools, and AI-powered guidance — in one trusted platform.",
+    "search": {
+      "location_label": "Location",
+      "location_any": "Anywhere",
+      "type_label": "Type",
+      "type_all": "All properties",
+      "type_villa": "Villa",
+      "type_apartment": "Apartment",
+      "type_condo": "Condo",
+      "type_land": "Land",
+      "type_commercial": "Commercial",
+      "budget_label": "Budget",
+      "budget_any": "Any price",
+      "budget_500k": "Under $500K",
+      "budget_1m": "Under $1M",
+      "budget_3m": "Under $3M",
+      "button": "Search"
+    },
+    "badges": {
+      "verified": "Admin-verified listings",
+      "bilingual": "English & Spanish",
+      "roi": "Live ROI analysis",
+      "whatsapp": "WhatsApp concierge"
+    },
+    "empty": {
+      "title": "Inventory coming soon",
+      "sub": "New properties are being verified and will appear here shortly.",
+      "cta": "Browse all →"
+    },
+    "explore": {
+      "title": "Explore more",
+      "sub": "Browse all active listings →"
+    }
+  },
+  "stats": {
+    "active_listings": "Active listings",
+    "properties_listed": "Properties listed",
+    "verified_realtors": "Verified realtors",
+    "registered_buyers": "Registered buyers"
+  },
+  "deal": {
+    "badge": "★ Deal of the Week",
+    "sub": "Handpicked by our team",
+    "pick_label": "This week's pick",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "area": "Total area",
+    "view_cta": "View this property",
+    "roi_cta": "Run ROI numbers",
+    "disclaimer": "How we pick: each week our team selects one property where location, lifestyle, and price-per-m² genuinely stand out. <strong>Owners and realtors can submit a property for consideration</strong> — our team reviews every submission for value and quality before featuring it."
+  },
+  "founder": {
+    "eyebrow": "★ Why we built this",
+    "heading": "We were once where <em>you are now.</em>",
+    "para1": "We're Americans who moved to the Dominican Republic for the same reasons most of you are considering it — the climate, the cost of living, the pace, the long-term opportunity, and a Caribbean lifestyle that doesn't require a passport stamp every six months.",
+    "para2": "Like most expats, we thought we'd done our homework. We hadn't. We <strong>overpaid on our first property</strong>, because the listing price in the DR isn't really the price. We <strong>lost a deposit on a deal that never closed</strong>, because nobody told us what to check before wiring funds. We hired the wrong attorney, took the wrong recommendations, and learned — slowly and expensively — that the DR rewards people who know the local rules and punishes everyone else.",
+    "para3": "That's why I♥DR Realty exists. We built the platform we wished we'd had when we started: verified listings, transparent pricing, a bilingual team that's lived through the process, and the practical answers that don't appear in any guidebook.",
+    "cta_guide": "Start the buying guide",
+    "cta_team": "Meet the team",
+    "photo_caption": "The Founders · Las Terrenas, 2019",
+    "badge": "Made the move in 2019",
+    "mistakes_eyebrow": "★ Lessons we paid for, so you don't have to",
+    "mistakes_heading": "Six mistakes we made — and how we help you skip them",
+    "mistake_label": "The mistake",
+    "lesson_label": "How we fixed it",
+    "mistakes": [
+      {
+        "mistake": "We trusted a single-language contract.",
+        "lesson": "Every contract is now reviewed in both English and Spanish — and we flag the clauses Americans typically miss."
+      },
+      {
+        "mistake": "We put down a deposit before the title search.",
+        "lesson": "We never let a client place earnest money until the Conservaduría record comes back clean."
+      },
+      {
+        "mistake": "We hired the cheapest attorney we could find.",
+        "lesson": "Our network of vetted DR attorneys has handled hundreds of foreign-buyer closings — we'll introduce you to two or three."
+      },
+      {
+        "mistake": "We assumed CONFOTUR savings were automatic.",
+        "lesson": "It isn't. We verify CONFOTUR eligibility before you buy and walk you through the paperwork after."
+      },
+      {
+        "mistake": "We didn't budget for the closing costs nobody mentioned.",
+        "lesson": "Our ROI calculator includes the 3% transfer tax, 1% IPI, notary fees, and every line item we got surprised by."
+      },
+      {
+        "mistake": "We took recommendations from people who'd never bought property.",
+        "lesson": "Every team member here owns property in the DR or has helped a family member buy. No exceptions."
+      }
+    ],
+    "quote": "\"If we'd had a team like ours when we started, we'd have closed our first DR property six months sooner — and paid forty thousand dollars less.\"",
+    "quote_author": "— The Founders, I♥DR Realty"
+  },
+  "roles": {
+    "eyebrow": "Built for everyone",
+    "heading": "One platform. Three powerful experiences.",
+    "sub": "Whether you're buying a dream home, growing a portfolio, or closing deals as a professional — every workflow runs through one admin-verified marketplace.",
+    "buyer": {
+      "label": "Buyers & Renters",
+      "sub": "Immersive browsing, smart filters, and a seamless inquiry flow to find your place in paradise — every listing admin-verified.",
+      "perks": ["Advanced filter search", "Wishlist & saved homes", "Rental booking calendar", "AI concierge guidance"]
+    },
+    "investor": {
+      "label": "Investors",
+      "sub": "ROI-focused discovery with professional deal analysis and live market intelligence built into every property.",
+      "perks": ["Deal profit estimator", "Break-even modeling", "Buyer request marketplace", "Regional yield data"]
+    },
+    "realtor": {
+      "label": "Realtors & Owners",
+      "sub": "List once, reach international buyers, and manage leads, calendars, and commissions from one professional portal.",
+      "perks": ["Listing & lead manager", "Pipeline & CRM sync", "Co-listing & referrals", "Social share kit"]
+    }
+  },
+  "featured": {
+    "eyebrow": "Hand-picked",
+    "heading": "Featured properties",
+    "view_all": "View all"
+  }
+}

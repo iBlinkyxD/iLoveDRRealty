@@ -2,6 +2,7 @@
 import { useNav } from '../hooks/useNav'
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { verify, resendCode } from '../api/auth'
 
@@ -25,6 +26,7 @@ export default function Verify() {
   const [loading, setLoading] = useState(false)
   const [resendSent, setResendSent] = useState(false)
   const digitRefs = useRef<(HTMLInputElement | null)[]>([])
+  const { t } = useTranslation('verify')
 
   useEffect(() => {
     if (codeFromQuery.length === 6 && params.get('email')) {
@@ -91,13 +93,13 @@ export default function Verify() {
 
   async function handleVerify(overrideCode?: string) {
     const code = overrideCode ?? digits.join('')
-    if (code.length < 6) { setVerifyError('Enter all 6 digits'); return }
-    if (!email) { setVerifyError('Email missing — please sign up again'); return }
+    if (code.length < 6) { setVerifyError(t('err_digits')); return }
+    if (!email) { setVerifyError(t('err_email')); return }
     setVerifyError('')
     setLoading(true)
     try {
       const res = await verify({ email, code })
-      toast.success('Email verified! Redirecting to your dashboard…')
+      toast.success(t('toast_success'))
       setTimeout(() => { window.location.href = DASHBOARD_URL }, 1500)
     } catch (e: unknown) {
       setVerifyError(e instanceof Error ? e.message : 'Verification failed')
@@ -128,8 +130,8 @@ export default function Verify() {
             </svg>
           </div>
 
-          <h1 className="font-sans text-6.5 font-bold text-ink mb-2 tracking-[-.02em]">Check your email</h1>
-          <p className="text-[13.5px] text-ink2 leading-[1.6] mb-2">We sent a 6-digit code to</p>
+          <h1 className="font-sans text-6.5 font-bold text-ink mb-2 tracking-[-.02em]">{t('heading')}</h1>
+          <p className="text-[13.5px] text-ink2 leading-[1.6] mb-2">{t('sent_to')}</p>
 
           {/* Email display / edit */}
           {editingEmail ? (
@@ -149,18 +151,18 @@ export default function Verify() {
                 onClick={confirmEmailEdit}
                 className="px-3 py-2 rounded-xl bg-coral text-white text-xs font-bold font-sans border-0 cursor-pointer"
               >
-                Send
+                {t('send')}
               </button>
               <button
                 onClick={cancelEmailEdit}
                 className="px-3 py-2 rounded-xl bg-paper border border-line text-ink2 text-xs font-bold font-sans cursor-pointer"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2 mb-7">
-              <span className="text-[13.5px] font-semibold text-ink">{email || 'your email address'}</span>
+              <span className="text-[13.5px] font-semibold text-ink">{email || t('email_fallback')}</span>
               <button
                 onClick={startEditEmail}
                 title="Edit email"
@@ -170,7 +172,7 @@ export default function Verify() {
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                 </svg>
-                Wrong email?
+                {t('wrong_email')}
               </button>
             </div>
           )}
@@ -199,29 +201,29 @@ export default function Verify() {
             disabled={loading || digits.join('').length < 6}
             className="w-full py-3.25 rounded-full border-none font-sans text-3.75 font-bold bg-coral text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-150 mb-5"
           >
-            {loading ? 'Verifying…' : 'Verify email'}
+            {loading ? t('verifying') : t('verify_btn')}
           </button>
 
           <div className="border-t border-line pt-5 flex flex-col gap-2.5">
             <p className="text-xs text-ink2">
-              Didn't receive it?{' '}
+              {t('no_code')}{' '}
               {email ? (
                 <button
                   onClick={handleResend}
                   className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-xs p-0"
                 >
-                  Resend code
+                  {t('resend')}
                 </button>
               ) : (
                 <button
                   onClick={() => go('signup')}
                   className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-xs p-0"
                 >
-                  Go back to sign up
+                  {t('back_signup')}
                 </button>
               )}
             </p>
-            {resendSent && <p className="text-xs text-brand font-medium">Code resent — check your inbox.</p>}
+            {resendSent && <p className="text-xs text-brand font-medium">{t('resent')}</p>}
           </div>
 
         </div>

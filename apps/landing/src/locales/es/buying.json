@@ -1,0 +1,75 @@
+{
+  "hero": {
+    "eyebrow": "Para compradores e inversores",
+    "heading": "Comprar en la RD no tiene que ser un salto de fe.",
+    "sub": "No existe un MLS en la República Dominicana. Los listados están dispersos en grupos de WhatsApp, sitios de agentes y publicaciones de Facebook. Construimos I♥DR Realty para que tengas un lugar confiable donde empezar — propiedades verificadas, datos reales y un equipo que vive donde tú estás comprando.",
+    "browse": "Ver propiedades",
+    "book": "Reservar una llamada"
+  },
+  "problem": {
+    "eyebrow": "Por qué importa",
+    "heading": "El mercado de la RD está fragmentado. La experiencia local marca la diferencia.",
+    "body": "La mayoría de los países tienen un servicio central de listados que mantiene la honestidad. La RD no. Eso significa que la misma propiedad puede estar listada a tres precios diferentes, los negocios fuera del mercado circulan entre agentes, y los compradores extranjeros frecuentemente pagan de más porque no tienen forma de comparar. Trabajar con un equipo que vive aquí, ve cada nuevo listado y tiene un historial verificable no es un lujo — es el factor decisivo.",
+    "body_strong": "Trabajar con un equipo que vive aquí, ve cada nuevo listado y tiene un historial verificable no es un lujo — es el factor decisivo."
+  },
+  "pillars": {
+    "eyebrow": "Por qué los compradores trabajan con nosotros",
+    "heading": "Lo que obtienes con I♥DR Realty",
+    "items": [
+      { "title": "Solo propiedades verificadas", "desc": "Nuestro equipo revisa cada propiedad antes de publicarla — fotos, precio, titularidad y todo lo demás. Sin listados fantasma ni engaños." },
+      { "title": "Diseñado para compradores internacionales", "desc": "Completamente bilingüe ES/EN, selector USD/DOP, notas sobre propiedad extranjera en cada listado y un equipo acostumbrado a cerrar tratos en distintas zonas horarias." },
+      { "title": "Números, no intuición", "desc": "Calculadora de ROI, datos de rendimiento regional y tarifas transparentes en cada página de oferta. Decide con los números delante, no después." },
+      { "title": "Proceso rápido y transparente", "desc": "Desde la primera consulta hasta la transferencia de título, cada paso está detallado — qué ocurre, quién lo hace, cuánto cuesta. Sin sorpresas." }
+    ]
+  },
+  "services": {
+    "eyebrow": "Más que un \"agente inmobiliario\"",
+    "heading": "Lo que nuestro equipo realmente hace por ti",
+    "sub": "El agente adecuado desempeña seis roles. Cada uno importa en un mercado como la RD.",
+    "items": [
+      { "title": "Buscador de propiedades", "desc": "Aprendemos lo que buscas — playa, montaña, rentabilidad, segunda residencia — y solo te mostramos propiedades que encajan." },
+      { "title": "Negociador experto", "desc": "Conocimiento de precios locales, ventas comparables y relaciones con vendedores que consiguen un precio justo — sin dejar dinero sobre la mesa." },
+      { "title": "Especialista de mercado", "desc": "Amplio conocimiento de Punta Cana, Cap Cana, Las Terrenas, Santo Domingo y las zonas emergentes que la mayoría de compradores extranjeros aún no conocen." },
+      { "title": "Coordinador de transacciones", "desc": "Búsqueda de título, coordinación de abogado, garantía en custodia, documentación CONFOTUR, registro IPI — gestionado, rastreado y explicado en cada paso." },
+      { "title": "Asesor de confianza", "desc": "Te diremos cuándo no comprar. La retroalimentación honesta es el objetivo de tener a alguien local de tu lado." },
+      { "title": "Apoyo a largo plazo", "desc": "Después del cierre: administradores de propiedades, contratistas, banca, referencias de residencia — las conexiones que realmente necesitas para vivir o invertir aquí." }
+    ]
+  },
+  "process": {
+    "eyebrow": "El proceso",
+    "heading": "Desde la primera llamada hasta las llaves en mano",
+    "sub": "El recorrido completo suele durar 60–120 días. Así es exactamente como funciona.",
+    "steps": [
+      { "title": "Llamada de descubrimiento", "desc": "Cuéntanos qué buscas, tu cronograma y cómo usarías la propiedad. 30 minutos, sin presión, en inglés o español." },
+      { "title": "Lista personalizada", "desc": "Te enviamos 5–10 propiedades que realmente encajan — con datos completos, cifras de ROI y nuestra opinión honesta sobre cada una." },
+      { "title": "Visita a la propiedad", "desc": "En la isla o por videoconferencia en vivo. Recorremos los barrios, señalamos lo que las fotos no muestran y respondemos todo." },
+      { "title": "Oferta y negociación", "desc": "Te ayudamos a redactar una oferta competitiva y negociamos en tu nombre. La mayoría de los tratos cierran un 4–8% por debajo del precio pedido." },
+      { "title": "Debida diligencia", "desc": "Búsqueda de título, peritaje, inspección del edificio, historial de la HOA — coordinado con un abogado dominicano de confianza." },
+      { "title": "Cierre y entrega", "desc": "Firma ante el notario, registro en la oficina de títulos, recibe las llaves. Estamos contigo en la sala o en la llamada." }
+    ]
+  },
+  "trust": {
+    "eyebrow": "Encuentra un socio de confianza",
+    "heading": "Lo que trabajar con I♥DR Realty realmente significa",
+    "items": [
+      "Cada listado revisado y verificado antes de publicarse",
+      "Equipo bilingüe — inglés, español y creciendo",
+      "Cifras reales de ROI en cada propiedad de inversión",
+      "Búsqueda personalizada según objetivos, no solo presupuesto",
+      "Agentes que realmente viven en los mercados donde compras",
+      "Conexiones con abogados, bancos, administradores de propiedades, contratistas",
+      "Retroalimentación honesta cuando un trato no tiene sentido"
+    ]
+  },
+  "quote": {
+    "eyebrow": "Lo que creemos",
+    "text": "\"Comprar una propiedad en el extranjero no debería sentirse como una apuesta. Debería sentirse como tomar una decisión informada — con alguien de tu lado que conoce el país, la ley y el mercado mejor que tú, y que está dispuesto a decirte la verdad.\"",
+    "author": "— El equipo de I♥DR Realty"
+  },
+  "cta": {
+    "heading": "¿Listo para encontrar tu lugar en el paraíso?",
+    "sub": "Explora propiedades o reserva una llamada de 30 minutos — sin compromiso, sin presión.",
+    "browse": "Ver propiedades",
+    "talk": "Hablar con nuestro equipo"
+  }
+}

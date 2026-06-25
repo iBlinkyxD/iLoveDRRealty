@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "eyebrow": "Get in touch",
+    "heading": "Let's find your place in paradise",
+    "sub": "Whether you're buying, renting, listing, or just exploring — our bilingual team is here to help."
+  },
+  "channels": {
+    "eyebrow": "Reach us directly",
+    "heading": "Multiple ways to connect",
+    "sub": "We're a bilingual team based in the DR. Pick whichever channel works best for you.",
+    "items": [
+      { "title": "WhatsApp", "desc": "Fastest reply — chat with our team", "value": "+1 (809) 555-0147" },
+      { "title": "Book a call", "desc": "Free 15-min discovery call", "value": "Schedule now →" },
+      { "title": "Office", "desc": "Av. Winston Churchill, Santo Domingo", "value": "Mon–Sat · 9am–6pm" }
+    ]
+  },
+  "map": {
+    "placeholder": "Map placeholder",
+    "north_label": "North coast:",
+    "north_val": "Sosúa, Puerto Plata",
+    "capital_label": "Capital:",
+    "capital_val": "Santo Domingo"
+  },
+  "form": {
+    "heading": "Send us a message",
+    "name_label": "Full name",
+    "name_placeholder": "Your full name",
+    "email_label": "Email",
+    "phone_label": "Phone / WhatsApp",
+    "phone_valid": "✓ Valid",
+    "interest_label": "I'm interested in",
+    "interest_options": [
+      "Buying a property",
+      "Renting a property",
+      "Listing my property",
+      "Investment advice",
+      "Relocation help",
+      "General inquiry"
+    ],
+    "message_label": "Message",
+    "message_placeholder": "Tell us what you're looking for…",
+    "consent": "I agree to be contacted about my inquiry and accept the privacy policy.",
+    "submit": "Send message"
+  },
+  "success": {
+    "heading": "Message sent!",
+    "sub": "We'll get back to you within a few hours. In the meantime, feel free to browse listings.",
+    "browse": "Browse listings"
+  },
+  "bottom": {
+    "eyebrow": "Not sure where to start?",
+    "heading": "Explore our resources first",
+    "sub": "From buying guides to ROI calculators — everything you need to make a confident decision.",
+    "buying": "Buying guide",
+    "calculator": "ROI Calculator"
+  }
+}

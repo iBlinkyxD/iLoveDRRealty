@@ -1,0 +1,24 @@
+{
+  "brand_desc": "El mercado inmobiliario de la República Dominicana — propiedades verificadas, herramientas de ROI y un equipo bilingüe que ha vivido el proceso.",
+  "groups": {
+    "discover": "Descubrir",
+    "company": "Compañía"
+  },
+  "links": {
+    "search": "Buscar propiedades",
+    "buying": "Guía de compra",
+    "selling": "Vender una propiedad",
+    "calculator": "Calculadora ROI",
+    "team": "Nuestro equipo",
+    "blog": "Recursos",
+    "contact": "Contáctanos"
+  },
+  "contact": {
+    "heading": "Contáctanos",
+    "cta": "Envíanos un mensaje"
+  },
+  "copyright": "© {{year}} I Love DR Realty · Todos los derechos reservados",
+  "tagline": "Sueña · Invierte · Vive",
+  "privacy": "Política de privacidad",
+  "terms": "Términos de servicio"
+}

@@ -1,0 +1,130 @@
+{
+  "hero": {
+    "eyebrow": "DR Real Estate · ROI Calculator",
+    "h1_pre": "Run the numbers before you",
+    "h1_em": "buy",
+    "sub": "Professional-grade deal analysis for Dominican Republic properties. Model scenarios, compare financing options, and stress-test your returns.",
+    "badges": ["Live scenario modeling", "10-year projections", "Financing comparison", "CONFOTUR tax analysis"]
+  },
+  "scenario": {
+    "title": "Scenario",
+    "rent": "Buy & Rent",
+    "flip": "Fix & Flip",
+    "vacation": "Vacation Rental"
+  },
+  "property": {
+    "title": "Property Details",
+    "purchase_price": "Purchase Price",
+    "down_payment": "Down Payment",
+    "closing_costs": "Closing Costs",
+    "reno_flip": "Renovation Budget",
+    "reno_rent": "Renovation / Furnishing",
+    "usd": "USD",
+    "optional": "optional",
+    "price_min": "$50K",
+    "price_max": "$5M"
+  },
+  "financing": {
+    "title": "Financing",
+    "interest_rate": "Interest Rate",
+    "loan_term": "Loan Term",
+    "type_label": "Financing Type",
+    "mortgage": "Traditional Mortgage",
+    "cash": "All Cash (No Financing)",
+    "hard": "Hard Money Loan (+4% rate)",
+    "seller": "Seller Financing"
+  },
+  "income": {
+    "title": "Income Assumptions",
+    "monthly_rent": "Monthly Rent / Rental Revenue",
+    "occupancy": "Occupancy Rate",
+    "rent_growth": "Annual Rent Growth",
+    "rent_min": "$300",
+    "rent_max": "$30K"
+  },
+  "expenses": {
+    "title": "Annual Expenses",
+    "prop_tax": "Property Tax (IPI)",
+    "mgmt": "Management Fee",
+    "maint": "Maintenance",
+    "insurance": "Insurance",
+    "confotur_label": "CONFOTUR Tax Exemption",
+    "confotur_hint": "Tourism Law 158-01",
+    "confotur_yes": "Yes — 10-year exemption (recommended)",
+    "confotur_no": "No exemption",
+    "appreciation": "Annual Appreciation"
+  },
+  "kpis": {
+    "title": "Deal Summary",
+    "flip_profit_label": "Total Flip Profit",
+    "flip_profit_sub": "After all costs",
+    "roc_label": "Return on Cash",
+    "roc_sub": "On total investment",
+    "hold_label": "Hold Period",
+    "hold_sub": "Typical buy → resell",
+    "resale_label": "Est. Resale",
+    "resale_sub": "+32% uplift assumed",
+    "invest_label": "Total Investment",
+    "invest_sub": "Down + closing + reno",
+    "sell_cost_label": "Selling Cost",
+    "sell_cost_sub": "3% of resale",
+    "hold_cost_label": "Holding Cost",
+    "hold_cost_sub": "{{mo}} months carry",
+    "mort_label": "Monthly Mortgage",
+    "mort_sub": "Principal + interest",
+    "roi_label": "Annual Net ROI",
+    "roi_sub": "After all expenses & financing",
+    "cf_label": "Monthly Cash Flow",
+    "cf_sub": "Net after mortgage",
+    "be_label": "Break-even",
+    "be_sub": "Based on cash-on-cash",
+    "yield_label": "Annual Yield",
+    "yield_sub": "Gross rental yield",
+    "cap_label": "Cap Rate",
+    "cap_sub": "NOI / purchase price",
+    "return10_label": "10-Year Return",
+    "return10_sub": "Cash flow + appreciation"
+  },
+  "chart": {
+    "title": "5-Year Cash Flow Projection",
+    "income": "Income",
+    "expenses": "Expenses",
+    "net": "Net",
+    "year": "Year {{n}}"
+  },
+  "breakeven": {
+    "title": "Break-even Timeline",
+    "sub": "Time to recover your initial cash investment:",
+    "today": "Today",
+    "yr5": "5 yrs",
+    "yr20": "20 yrs",
+    "yr30": "30 yrs",
+    "no_profit": "No profit",
+    "yrs_done": "yrs ✓"
+  },
+  "comparison": {
+    "title": "Scenario Comparison",
+    "col_scenario": "Scenario",
+    "col_roi": "Annual ROI",
+    "col_cf": "Monthly Cash Flow",
+    "col_be": "Break-even",
+    "current_label": "Buy & Rent (Current)",
+    "all_cash_label": "All Cash Purchase",
+    "leverage_label": "20% Down / Higher Leverage",
+    "confotur_label": "With CONFOTUR Exemption"
+  },
+  "export": {
+    "title": "Export & Share",
+    "pdf": "📄 PDF Report",
+    "link": "🔗 Copy Link",
+    "whatsapp": "💬 WhatsApp",
+    "note": "Note:",
+    "disclaimer": "figures are illustrative based on the inputs above. Not financial advice."
+  },
+  "cta": {
+    "heading": "Ready to move forward?",
+    "sub": "Our team can validate these numbers against real listings and current market data.",
+    "talk": "Talk to our team",
+    "browse": "Browse listings"
+  }
+}

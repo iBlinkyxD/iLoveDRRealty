@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "eyebrow": "Nuestro equipo",
+    "heading_pre": "Las personas detrás de",
+    "heading_em": "I♥DR Realty",
+    "sub": "Tres brokers principales — dominicanos, inversores y expertos en reubicación que realmente viven el mercado que venden."
+  },
+  "stats": ["Principales", "Regiones", "Idiomas"],
+  "principals": {
+    "eyebrow": "★ Los principales",
+    "heading": "Líderes de corretaje",
+    "sub": "Cada principal dirige una correduría independiente en la plataforma. Vea los agentes que lideran en la sección siguiente.",
+    "badge": "★ Principal",
+    "bios": [
+      {
+        "role": "Co-Fundador · Broker Principal",
+        "bio": "Cofundador de I Love DR Realty. Amiel y sus hermanos han invertido y desarrollado bienes raíces en la RD y los EE.UU., construyendo portafolios de alquiler. Guía a sus clientes con consejos honestos, experiencia real como inversor y un enfoque familiar."
+      },
+      {
+        "role": "Co-Fundador · Broker Principal",
+        "bio": "Cofundador de I Love DR Realty con más de 15 años adquiriendo, renovando y desarrollando propiedades. Sayam ayuda a los clientes a navegar el mercado de la RD con experiencia de propietario — detectando oportunidades y evitando errores costosos."
+      },
+      {
+        "role": "Co-Fundador · Broker Principal",
+        "bio": "Inversor con base en el sur de Florida y especialista en adquisiciones con más de 15 años y más de 1,000 transacciones. Xavier ayuda a los inversores a crear riqueza a través de oportunidades estratégicas de propiedades y crecimiento de portafolio."
+      }
+    ]
+  },
+  "cta": {
+    "heading": "¿Listo para comenzar tu viaje en la RD?",
+    "sub": "Conéctate con el agente adecuado para tus objetivos — ya sea que estés comprando, invirtiendo o reubicándote.",
+    "talk": "Hablar con el equipo",
+    "browse": "Ver propiedades"
+  }
+}

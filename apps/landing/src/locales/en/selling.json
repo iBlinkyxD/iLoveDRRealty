@@ -1,0 +1,77 @@
+{
+  "hero": {
+    "eyebrow": "For owners, sellers & realtors",
+    "heading": "List once. Reach buyers across the world.",
+    "sub": "The Dominican diaspora is global. Your buyer might be in Miami, Madrid, Toronto, or New York. I♥DR Realty is built so a single listing reaches all of them — translated, verified, and optimized for the way serious buyers actually search in 2026.",
+    "list": "List your property",
+    "talk": "Talk to our team"
+  },
+  "problem": {
+    "eyebrow": "Why this matters",
+    "heading": "One listing should do the work of ten.",
+    "body": "Most DR sellers post the same property across five WhatsApp groups, three Facebook pages, two agent sites, and Marketplace — and somehow still miss most serious buyers. We built this platform so your listing only needs to live in one place to reach local buyers, the diaspora, foreign investors, and the AI tools they're increasingly using to research properties before they ever talk to a human.",
+    "body_strong": "local buyers, the diaspora, foreign investors, and the AI tools they're increasingly using to research properties before they ever talk to a human."
+  },
+  "pillars": {
+    "eyebrow": "Why sellers work with us",
+    "heading": "What I♥DR Realty does for your listing",
+    "items": [
+      { "title": "Global reach from day one", "desc": "Your listing appears across our platform, partner sites, AI search engines, and our social channels — reaching buyers in the diaspora and beyond, not just the local market." },
+      { "title": "Verified, trust-first", "desc": "Every listing on our platform is reviewed for accuracy. That gatekeeping protects buyers — which is exactly why serious buyers come here first." },
+      { "title": "Lead management built in", "desc": "Inquiries route to your dashboard and into GoHighLevel automatically. Hot leads tagged, follow-ups scheduled, nothing slips through." },
+      { "title": "Data-backed pricing", "desc": "We benchmark your property against recent comparable sales in your neighborhood — not aspirational asking prices, actual closings." }
+    ]
+  },
+  "reach": {
+    "eyebrow": "How your listing actually reaches buyers",
+    "heading": "The platform behind every listing",
+    "sub": "Built for the way serious buyers search today — across languages, currencies, devices, and increasingly, AI assistants.",
+    "items": [
+      { "num": "ES / EN", "label": "Bilingual listings translated automatically", "note": "DeepL-powered translation reviewed before publish" },
+      { "num": "USD + DOP", "label": "Dual-currency display on every listing", "note": "Daily FX update from DR Central Bank" },
+      { "num": "AI-ready", "label": "Schema markup for AI search engines", "note": "Designed to be cited by ChatGPT, Perplexity, Google AI" },
+      { "num": "WhatsApp", "label": "Direct deep-link on every listing", "note": "How DR buyers actually communicate" },
+      { "num": "Open Graph", "label": "Clean previews on FB, IG, LinkedIn shares", "note": "Tested on every social platform" },
+      { "num": "Real-time", "label": "Leads sync to GoHighLevel CRM", "note": "Plus dashboard view + email + Slack alerts" }
+    ],
+    "disclaimer_strong": "Track-record numbers",
+    "disclaimer_rest": " (deals closed, properties sold, marketing reach) will be added here as the platform gathers them. We don't believe in inflating early numbers — we'd rather tell you exactly what we've built, and let the results speak as they come."
+  },
+  "process": {
+    "eyebrow": "The process",
+    "heading": "From valuation to closing",
+    "sub": "Most listings close in 90–180 days. Here's exactly how we get you there.",
+    "steps": [
+      { "title": "Free home valuation", "desc": "Tell us about your property. We pull comparable sales, neighborhood trends, and current demand to give you a realistic price range — not an inflated number to win your listing." },
+      { "title": "Listing prep", "desc": "Professional-grade listing with optimized photos, bilingual copy, location map, amenities, and pricing strategy. Reviewed by our admin team before going live." },
+      { "title": "Marketing launch", "desc": "Listing pushed to our platform, partner sites, social channels, and the buyer-request database for instant matching with qualified leads." },
+      { "title": "Lead qualification", "desc": "Inquiries filtered. You only spend time on serious buyers — pre-approved, budget-confirmed, and matched to your property's profile." },
+      { "title": "Offers & negotiation", "desc": "We handle the back-and-forth, surface comparable closings to back your position, and protect your interests through the negotiation." },
+      { "title": "Closing support", "desc": "Attorney coordination, title transfer, escrow, deposit handling, and final handover — managed and tracked end to end." }
+    ]
+  },
+  "trust": {
+    "eyebrow": "Find a trusted partner",
+    "heading": "What selling with I♥DR Realty actually means",
+    "items": [
+      "Personalized marketing plan for every property",
+      "Bilingual ES/EN listing, auto-translated and human-reviewed",
+      "USD/DOP dual-currency on every page",
+      "Listing approval queue keeps the platform's standard high",
+      "Hot leads tagged and routed to you in real time",
+      "Co-listing and referral splits supported transparently",
+      "Commission tracker visible only to you and admins"
+    ]
+  },
+  "quote": {
+    "eyebrow": "What we believe",
+    "text": "\"A great listing isn't a property dump on five websites. It's a clear, honest, beautifully presented opportunity — sitting on a platform serious buyers actually trust. That's the standard we hold ourselves to.\"",
+    "author": "— The I♥DR Realty team"
+  },
+  "cta": {
+    "heading": "Ready to list your property?",
+    "sub": "Get a free, honest valuation. No commitment — just real numbers from a team that knows your market.",
+    "valuation": "Get free valuation",
+    "talk": "Talk to our team"
+  }
+}

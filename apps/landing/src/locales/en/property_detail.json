@@ -1,0 +1,100 @@
+{
+  "not_found": "Property not found.",
+  "loading": "Loading property…",
+  "back": "Back to search",
+  "share": "Share",
+  "share_heading": "Share this listing",
+  "copied": "Copied!",
+  "copy": "Copy",
+  "photos": "Photos",
+  "tour_3d": "3D Tour",
+  "photo_more": "+{{count}} photo",
+  "photo_more_plural": "+{{count}} photos",
+  "beds": "beds",
+  "baths": "baths",
+  "built": "Built {{year}}",
+  "sections": {
+    "details": "Property Details",
+    "features": "Property Features",
+    "resources": "Resources",
+    "utilities": "Utilities",
+    "included": "What is Included",
+    "location": "Location"
+  },
+  "details": {
+    "lot_size": "Lot Size",
+    "construction": "Construction",
+    "hoa_fee": "HOA Fee",
+    "est_roi": "Est. ROI",
+    "seller_financing": "Seller Financing",
+    "seller_financing_val": "Available",
+    "tax_exempt": "Tax Exemption",
+    "tax_exempt_val": "CONFOTUR Exempt",
+    "gated": "Gated Community",
+    "gated_val": "Private Access",
+    "hoa_community": "HOA Community",
+    "hoa_community_val": "Included"
+  },
+  "deposit": {
+    "label": "Security Deposit",
+    "first": "First month's rent",
+    "last": "Last month's rent",
+    "first_last": "First + Last month's rent",
+    "none": "No deposit required"
+  },
+  "mortgage": {
+    "title": "Mortgage Calculator",
+    "subtitle": "Estimate your monthly payment · Amounts in {{currency}}",
+    "purchase_price": "Purchase price",
+    "down_payment": "Down payment",
+    "interest_rate": "Interest rate",
+    "loan_term": "Loan term",
+    "monthly": "Monthly payment",
+    "loan_amount": "Loan amount",
+    "down_amount": "Down payment",
+    "total_interest": "Total interest",
+    "disclaimer": "Principal & interest only. Does not include taxes, insurance, or HOA fees. Illustrative only, not financial advice."
+  },
+  "location": {
+    "exact": "Exact location shared after inquiry.",
+    "open_maps": "Open in Google Maps"
+  },
+  "sidebar": {
+    "for_rent": "For Rent",
+    "for_sale": "For Sale",
+    "deal_badge": "★ Deal of the Week",
+    "off_fixed": "−${{amount}} off",
+    "off_pct": "−{{pct}}% off",
+    "original_price": "original price",
+    "est_roi": "Est. ROI",
+    "hoa_fee": "HOA Fee",
+    "tax_label": "Tax",
+    "tax_val": "CONFOTUR exempt (IPI waived)",
+    "analyze": "Analyze this deal",
+    "per_mo_dop": "DOP / mo",
+    "per_mo_usd": "USD / mo",
+    "assoc_fee": "Association Fee",
+    "deposit": "Deposit",
+    "request_book": "Request to book",
+    "listed_by": "Listed by",
+    "message_agent": "Message Agent",
+    "cancel": "Cancel",
+    "request": "Request",
+    "sending": "Sending…",
+    "booking_sent": "Booking request sent!",
+    "inquiry_sent": "Message sent! We'll be in touch.",
+    "send": "Send"
+  },
+  "booking": {
+    "check_in": "Check-in",
+    "check_out": "Check-out",
+    "guests": "Guests",
+    "notes": "Notes (optional)"
+  },
+  "inquiry": {
+    "name": "Your name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "message": "Your message…"
+  }
+}

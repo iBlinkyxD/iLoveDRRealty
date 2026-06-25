@@ -1,0 +1,130 @@
+{
+  "hero": {
+    "eyebrow": "Bienes Raíces en RD · Calculadora de ROI",
+    "h1_pre": "Analiza los números antes de",
+    "h1_em": "comprar",
+    "sub": "Análisis profesional de inversiones para propiedades en República Dominicana. Modela escenarios, compara opciones de financiamiento y evalúa tus retornos.",
+    "badges": ["Modelado de escenarios en vivo", "Proyecciones a 10 años", "Comparación de financiamiento", "Análisis fiscal CONFOTUR"]
+  },
+  "scenario": {
+    "title": "Escenario",
+    "rent": "Comprar y Rentar",
+    "flip": "Comprar y Vender",
+    "vacation": "Alquiler Vacacional"
+  },
+  "property": {
+    "title": "Detalles de la Propiedad",
+    "purchase_price": "Precio de Compra",
+    "down_payment": "Pago Inicial",
+    "closing_costs": "Gastos de Cierre",
+    "reno_flip": "Presupuesto de Renovación",
+    "reno_rent": "Renovación / Amueblado",
+    "usd": "USD",
+    "optional": "opcional",
+    "price_min": "$50K",
+    "price_max": "$5M"
+  },
+  "financing": {
+    "title": "Financiamiento",
+    "interest_rate": "Tasa de Interés",
+    "loan_term": "Plazo del Préstamo",
+    "type_label": "Tipo de Financiamiento",
+    "mortgage": "Hipoteca Tradicional",
+    "cash": "Pago en Efectivo (Sin Financiamiento)",
+    "hard": "Préstamo Hard Money (+4% tasa)",
+    "seller": "Financiamiento del Vendedor"
+  },
+  "income": {
+    "title": "Supuestos de Ingresos",
+    "monthly_rent": "Renta Mensual / Ingresos por Alquiler",
+    "occupancy": "Tasa de Ocupación",
+    "rent_growth": "Crecimiento Anual del Alquiler",
+    "rent_min": "$300",
+    "rent_max": "$30K"
+  },
+  "expenses": {
+    "title": "Gastos Anuales",
+    "prop_tax": "Impuesto IPI",
+    "mgmt": "Comisión de Administración",
+    "maint": "Mantenimiento",
+    "insurance": "Seguro",
+    "confotur_label": "Exención Fiscal CONFOTUR",
+    "confotur_hint": "Ley de Turismo 158-01",
+    "confotur_yes": "Sí — exención de 10 años (recomendado)",
+    "confotur_no": "Sin exención",
+    "appreciation": "Apreciación Anual"
+  },
+  "kpis": {
+    "title": "Resumen del Negocio",
+    "flip_profit_label": "Ganancia Total del Flip",
+    "flip_profit_sub": "Después de todos los costos",
+    "roc_label": "Retorno sobre Efectivo",
+    "roc_sub": "Sobre la inversión total",
+    "hold_label": "Período de Tenencia",
+    "hold_sub": "Compra típica → reventa",
+    "resale_label": "Precio de Reventa Est.",
+    "resale_sub": "+32% de ganancia estimada",
+    "invest_label": "Inversión Total",
+    "invest_sub": "Inicial + cierre + reno",
+    "sell_cost_label": "Costo de Venta",
+    "sell_cost_sub": "3% de la reventa",
+    "hold_cost_label": "Costo de Mantenimiento",
+    "hold_cost_sub": "{{mo}} meses de carga",
+    "mort_label": "Hipoteca Mensual",
+    "mort_sub": "Capital + intereses",
+    "roi_label": "ROI Neto Anual",
+    "roi_sub": "Después de gastos y financiamiento",
+    "cf_label": "Flujo de Caja Mensual",
+    "cf_sub": "Neto después de hipoteca",
+    "be_label": "Punto de Equilibrio",
+    "be_sub": "Basado en retorno sobre efectivo",
+    "yield_label": "Rendimiento Anual",
+    "yield_sub": "Rendimiento bruto de alquiler",
+    "cap_label": "Cap Rate",
+    "cap_sub": "NOI / precio de compra",
+    "return10_label": "Retorno a 10 Años",
+    "return10_sub": "Flujo de caja + apreciación"
+  },
+  "chart": {
+    "title": "Proyección de Flujo de Caja a 5 Años",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "net": "Neto",
+    "year": "Año {{n}}"
+  },
+  "breakeven": {
+    "title": "Línea de Tiempo del Punto de Equilibrio",
+    "sub": "Tiempo para recuperar su inversión inicial en efectivo:",
+    "today": "Hoy",
+    "yr5": "5 años",
+    "yr20": "20 años",
+    "yr30": "30 años",
+    "no_profit": "Sin ganancias",
+    "yrs_done": "años ✓"
+  },
+  "comparison": {
+    "title": "Comparación de Escenarios",
+    "col_scenario": "Escenario",
+    "col_roi": "ROI Anual",
+    "col_cf": "Flujo de Caja Mensual",
+    "col_be": "Punto de Equilibrio",
+    "current_label": "Comprar y Rentar (Actual)",
+    "all_cash_label": "Compra en Efectivo",
+    "leverage_label": "20% Inicial / Mayor Apalancamiento",
+    "confotur_label": "Con Exención CONFOTUR"
+  },
+  "export": {
+    "title": "Exportar y Compartir",
+    "pdf": "📄 Informe PDF",
+    "link": "🔗 Copiar Enlace",
+    "whatsapp": "💬 WhatsApp",
+    "note": "Nota:",
+    "disclaimer": "las cifras son ilustrativas basadas en los datos ingresados. No constituyen asesoramiento financiero."
+  },
+  "cta": {
+    "heading": "¿Listo para avanzar?",
+    "sub": "Nuestro equipo puede validar estos números con listados reales y datos del mercado actual.",
+    "talk": "Habla con nuestro equipo",
+    "browse": "Ver propiedades"
+  }
+}

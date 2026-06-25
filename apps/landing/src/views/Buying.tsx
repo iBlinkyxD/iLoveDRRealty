@@ -1,5 +1,6 @@
 'use client'
 import { useNav } from '../hooks/useNav'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, Check } from 'lucide-react'
 import { I, PILLARS, SERVICES, STEPS, TRUST_ITEMS, HERO_BG } from '../data/buyingData'
 
@@ -14,6 +15,11 @@ function Icon({ d, size = 22 }: { d: string | string[]; size?: number }) {
 
 export default function Buying() {
   const go = useNav()
+  const { t } = useTranslation('buying')
+  const pillarsText = t('pillars.items', { returnObjects: true }) as Array<{ title: string; desc: string }>
+  const servicesText = t('services.items', { returnObjects: true }) as Array<{ title: string; desc: string }>
+  const stepsText = t('process.steps', { returnObjects: true }) as Array<{ title: string; desc: string }>
+  const trustItems = t('trust.items', { returnObjects: true }) as string[]
   return (
     <div className="bg-paper">
 
@@ -24,21 +30,21 @@ export default function Buying() {
           style={{ background: 'linear-gradient(90deg, rgba(0,16,46,.95) 0%, rgba(0,16,46,.7) 50%, rgba(0,16,46,.4) 100%)' }} />
         <div className="relative z-10 max-w-310 w-full mx-auto px-4 sm:px-7 py-16 sm:py-20 lg:py-0 lg:min-h-115 lg:flex lg:items-center">
           <div>
-            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">For buyers &amp; investors</div>
+            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">{t('hero.eyebrow')}</div>
             <h1 className="font-sans text-[clamp(28px,5.5vw,60px)] font-bold text-white leading-[1.04] tracking-[-.02em] mt-4 mb-4.5 max-w-190">
-              Buying in the DR doesn't have to be a leap of faith.
+              {t('hero.heading')}
             </h1>
             <p className="font-sans text-4 sm:text-4.5 text-white/78 leading-[1.6] max-w-140 mb-7">
-              There's no MLS in the Dominican Republic. Listings are scattered across WhatsApp groups, agent sites, and Facebook posts. We built I♥DR Realty so you have one trusted place to start — verified properties, real data, and a team that lives where you're buying.
+              {t('hero.sub')}
             </p>
             <div className="flex gap-3 flex-wrap">
               <button onClick={() => go('search')}
                 className="font-sans text-sm font-semibold cursor-pointer py-2.75 px-5.5 rounded-full inline-flex items-center gap-2 bg-coral text-white border border-coral">
-                Browse listings <ArrowRight size={16} />
+                {t('hero.browse')} <ArrowRight size={16} />
               </button>
               <button onClick={() => go('contact')}
                 className="font-sans text-sm font-semibold cursor-pointer py-2.75 px-5.5 rounded-full inline-flex items-center gap-2 bg-white/8 text-white border border-white/25">
-                Book a discovery call
+                {t('hero.book')}
               </button>
             </div>
           </div>
@@ -49,14 +55,13 @@ export default function Buying() {
       <div className="bg-paper2 py-14 px-4 sm:px-7">
         <div className="max-w-275 mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
-            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">Why this matters</div>
+            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">{t('problem.eyebrow')}</div>
             <h2 className="font-sans text-8 font-semibold text-ink mt-2.5 leading-[1.15]">
-              The DR market is fragmented. Local expertise is the whole difference.
+              {t('problem.heading')}
             </h2>
           </div>
           <div className="font-sans text-[15.5px] text-ink2 leading-[1.65]">
-            Most countries have a central listing service that keeps everyone honest. The DR doesn't. That means the same property can be listed at three different prices, "off-market" deals get passed around between agents, and foreign buyers regularly overpay because they have no way to compare.{' '}
-            <strong className="text-ink">Working with a team that lives here, sees every new listing, and has a track record you can verify isn't a nice-to-have — it's the entire game.</strong>
+            {t('problem.body')}
           </div>
         </div>
       </div>
@@ -64,9 +69,9 @@ export default function Buying() {
       {/* ── Four pillars ── */}
       <div className="max-w-310 mx-auto pt-14 sm:pt-17.5 px-4 sm:px-7 pb-12.5">
         <div className="text-center max-w-155 mx-auto mb-8 sm:mb-11">
-          <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-sea">Why buyers work with us</div>
+          <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-sea">{t('pillars.eyebrow')}</div>
           <h2 className="font-sans text-7 sm:text-9 font-semibold text-ink mt-2.5 tracking-[-.01em]">
-            What you get with I♥DR Realty
+            {t('pillars.heading')}
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -77,8 +82,8 @@ export default function Buying() {
                 <Icon d={p.icon} size={26} />
               </div>
               <div>
-                <h3 className="font-sans text-5 font-semibold text-ink mb-2">{p.title}</h3>
-                <p className="font-sans text-sm text-ink2 leading-[1.6]">{p.desc}</p>
+                <h3 className="font-sans text-5 font-semibold text-ink mb-2">{pillarsText[i]?.title ?? p.title}</h3>
+                <p className="font-sans text-sm text-ink2 leading-[1.6]">{pillarsText[i]?.desc ?? p.desc}</p>
               </div>
             </div>
           ))}
@@ -89,12 +94,12 @@ export default function Buying() {
       <div className="bg-ink py-14 sm:py-17.5 px-4 sm:px-7">
         <div className="max-w-310 mx-auto">
           <div className="text-center max-w-160 mx-auto mb-8 sm:mb-11">
-            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">More than a "real estate agent"</div>
+            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">{t('services.eyebrow')}</div>
             <h2 className="font-sans text-7 sm:text-9 font-semibold text-white mt-2.5 tracking-[-.01em]">
-              What our team actually does for you
+              {t('services.heading')}
             </h2>
             <p className="font-sans text-3.75 text-white/65 leading-[1.6] mt-3">
-              The right agent wears six hats. Each one matters in a market like the DR.
+              {t('services.sub')}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-4.5">
@@ -103,8 +108,8 @@ export default function Buying() {
                 <div className="w-10 h-10 rounded-lg bg-gold text-ink grid place-items-center mb-3.5">
                   <Icon d={s.icon} size={22} />
                 </div>
-                <h3 className="font-sans text-4.25 font-semibold text-white mb-2">{s.title}</h3>
-                <p className="font-sans text-[13.5px] text-white/70 leading-[1.6]">{s.desc}</p>
+                <h3 className="font-sans text-4.25 font-semibold text-white mb-2">{servicesText[i]?.title ?? s.title}</h3>
+                <p className="font-sans text-[13.5px] text-white/70 leading-[1.6]">{servicesText[i]?.desc ?? s.desc}</p>
               </div>
             ))}
           </div>
@@ -114,12 +119,12 @@ export default function Buying() {
       {/* ── Process steps ── */}
       <div className="max-w-275 mx-auto py-14 sm:py-17.5 px-4 sm:px-7">
         <div className="text-center max-w-155 mx-auto mb-11">
-          <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">The process</div>
+          <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">{t('process.eyebrow')}</div>
           <h2 className="font-sans text-9 font-semibold text-ink mt-2.5 tracking-[-.01em]">
-            From first call to keys in hand
+            {t('process.heading')}
           </h2>
           <p className="font-sans text-3.75 text-ink2 leading-[1.6] mt-3">
-            The whole journey is usually 60–120 days. Here's exactly how it goes.
+            {t('process.sub')}
           </p>
         </div>
         <div className="flex flex-col gap-3.5">
@@ -127,8 +132,8 @@ export default function Buying() {
             <div key={i} className="flex gap-5.5 p-5.5 bg-paper border border-line-soft rounded-2xl">
               <div className="font-sans text-8 font-bold text-coral leading-none min-w-12.5">{num}</div>
               <div>
-                <h3 className="font-sans text-4.75 font-semibold text-ink mb-1.5">{title}</h3>
-                <p className="font-sans text-sm text-ink2 leading-[1.6]">{desc}</p>
+                <h3 className="font-sans text-4.75 font-semibold text-ink mb-1.5">{stepsText[i]?.title ?? title}</h3>
+                <p className="font-sans text-sm text-ink2 leading-[1.6]">{stepsText[i]?.desc ?? desc}</p>
               </div>
             </div>
           ))}
@@ -141,12 +146,12 @@ export default function Buying() {
           <div className="rounded-2xl overflow-hidden h-64 sm:h-80 lg:h-90 shadow-[rgba(0,16,46,.3)_0px_30px_60px_-30px]"
             style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
           <div>
-            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-brand">Find a trusted partner</div>
+            <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-brand">{t('trust.eyebrow')}</div>
             <h2 className="font-sans text-8 font-semibold text-ink mt-2.5 tracking-[-.01em] mb-5">
-              What working with I♥DR Realty actually means
+              {t('trust.heading')}
             </h2>
             <ul className="list-none p-0 m-0">
-              {TRUST_ITEMS.map((item, i) => (
+              {trustItems.map((item, i) => (
                 <li key={i} className="font-sans flex items-start gap-2.5 py-2.5 text-sm text-ink2 leading-normal">
                   <span className="w-5 h-5 rounded-full bg-brand text-white grid place-items-center shrink-0 mt-px">
                     <Check size={12} strokeWidth={2.5} />
@@ -162,12 +167,12 @@ export default function Buying() {
       {/* ── What we believe ── */}
       <div className="bg-ink py-14 sm:py-17.5 px-4 sm:px-7">
         <div className="max-w-200 mx-auto text-center">
-          <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">What we believe</div>
+          <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-gold">{t('quote.eyebrow')}</div>
           <p className="font-sans text-xl sm:text-2xl font-medium italic text-white leading-normal mt-4.5">
-            "Buying property abroad shouldn't feel like a gamble. It should feel like making an informed decision — with someone in your corner who knows the country, the law, and the market better than you do, and is willing to tell you the truth."
+            {t('quote.text')}
           </p>
           <p className="font-sans text-3.25 text-white/55 mt-4.5 tracking-[.06em] uppercase font-bold">
-            — The I♥DR Realty team
+            {t('quote.author')}
           </p>
         </div>
       </div>
@@ -177,20 +182,20 @@ export default function Buying() {
         <div className="max-w-240 mx-auto flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
           <div>
             <h2 className="font-sans text-6 sm:text-7.5 font-semibold text-white mb-2">
-              Ready to find your place in paradise?
+              {t('cta.heading')}
             </h2>
             <p className="font-sans text-3.75 text-white/85 leading-normal">
-              Browse listings or book a 30-minute discovery call — no commitment, no pressure.
+              {t('cta.sub')}
             </p>
           </div>
           <div className="flex gap-2.5 flex-wrap shrink-0">
             <button onClick={() => go('search')}
               className="font-sans text-sm font-semibold cursor-pointer py-2.75 px-5.5 rounded-full inline-flex items-center gap-2 bg-white text-coral-deep border border-white">
-              Browse listings
+              {t('cta.browse')}
             </button>
             <button onClick={() => go('contact')}
               className="font-sans text-sm font-semibold cursor-pointer py-2.75 px-5.5 rounded-full inline-flex items-center gap-2 bg-transparent text-white border border-white/40">
-              Talk to our team
+              {t('cta.talk')}
             </button>
           </div>
         </div>

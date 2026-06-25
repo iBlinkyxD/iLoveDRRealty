@@ -1,4 +1,5 @@
 'use client'
+import { useTranslation } from 'react-i18next'
 import { useNav } from '../hooks/useNav'
 import { useState, type ChangeEvent } from 'react'
 import { I, CHANNELS } from '../data/contactData'
@@ -17,6 +18,19 @@ function Icon({ d, size = 20 }: { d: string; size?: number }) {
 
 export default function Contact() {
   const go = useNav()
+  const { t } = useTranslation('contact')
+  const channelsText = t('channels.items', { returnObjects: true }) as Array<{ title: string; desc: string; value: string }>
+  const interestOptions = t('form.interest_options', { returnObjects: true }) as string[]
+
+  const INTEREST_VALUES = [
+    'Buying a property',
+    'Renting a property',
+    'Listing my property',
+    'Investment advice',
+    'Relocation help',
+    'General inquiry',
+  ]
+
   const [form, setForm] = useState({ name: '', email: '', phone: '', interest: 'Buying a property', message: '' })
   const [agreed, setAgreed] = useState(false)
   const [sent, setSent] = useState(false)
@@ -63,12 +77,12 @@ export default function Contact() {
         <div className="absolute inset-0"
           style={{ backgroundImage: 'radial-gradient(circle at 70% 40%, rgba(11,99,171,.25) 0%, transparent 55%), radial-gradient(circle at 20% 80%, rgba(225,15,31,.1) 0%, transparent 45%)' }} />
         <div className="relative max-w-180 mx-auto text-center">
-          <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-coral mb-3">Get in touch</div>
+          <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-coral mb-3">{t('hero.eyebrow')}</div>
           <h1 className="font-sans text-[clamp(32px,5vw,52px)] font-extrabold text-white leading-[1.05] tracking-[-.02em] mb-4.5">
-            Let's find your place in paradise
+            {t('hero.heading')}
           </h1>
           <p className="text-4.25 text-white/72 leading-[1.65] max-w-135 mx-auto">
-            Whether you're buying, renting, listing, or just exploring — our bilingual team is here to help.
+            {t('hero.sub')}
           </p>
         </div>
       </div>
@@ -80,12 +94,12 @@ export default function Contact() {
           {/* Left — channels */}
           <div>
             <div className="mb-8">
-              <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea mb-3">Reach us directly</div>
+              <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea mb-3">{t('channels.eyebrow')}</div>
               <h2 className="font-sans text-7 font-bold text-ink mt-1 mb-2 tracking-[-.02em]">
-                Multiple ways to connect
+                {t('channels.heading')}
               </h2>
               <p className="text-[14.5px] text-ink2 leading-[1.6]">
-                We're a bilingual team based in the DR. Pick whichever channel works best for you.
+                {t('channels.sub')}
               </p>
             </div>
 
@@ -97,9 +111,9 @@ export default function Contact() {
                     <Icon d={ch.icon} size={22} />
                   </div>
                   <div>
-                    <div className="font-bold text-3.75 text-ink mb-0.5">{ch.title}</div>
-                    <div className="text-[12.5px] text-dim mb-1.5">{ch.desc}</div>
-                    <div className="text-[13.5px] font-semibold text-sea">{ch.value}</div>
+                    <div className="font-bold text-3.75 text-ink mb-0.5">{channelsText[i]?.title ?? ch.title}</div>
+                    <div className="text-[12.5px] text-dim mb-1.5">{channelsText[i]?.desc ?? ch.desc}</div>
+                    <div className="text-[13.5px] font-semibold text-sea">{channelsText[i]?.value ?? ch.value}</div>
                   </div>
                 </div>
               ))}
@@ -110,13 +124,13 @@ export default function Contact() {
               <div className="h-45 flex flex-col items-center justify-center gap-2 text-white relative overflow-hidden"
                 style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,58,115,.72) 0%, rgba(11,99,171,.6) 50%, rgba(26,122,191,.55) 100%)' }} />
-                <div className="relative text-white/50 text-2.75 tracking-widest uppercase">Map placeholder</div>
+                <div className="relative text-white/50 text-2.75 tracking-widest uppercase">{t('map.placeholder')}</div>
                 <div className="relative"><Icon d={I.map} size={28} /></div>
                 <div className="relative text-white/70 text-3.25 font-medium">Sosúa, Puerto Plata · Santo Domingo</div>
               </div>
               <div className="bg-paper2 py-3.5 px-4.5 flex flex-wrap gap-x-4.5 gap-y-2 text-3.25 text-ink2">
-                <span><Icon d={I.map} size={14} /> <strong>North coast:</strong> Sosúa, Puerto Plata</span>
-                <span><Icon d={I.map} size={14} /> <strong>Capital:</strong> Santo Domingo</span>
+                <span><Icon d={I.map} size={14} /> <strong>{t('map.north_label')}</strong> {t('map.north_val')}</span>
+                <span><Icon d={I.map} size={14} /> <strong>{t('map.capital_label')}</strong> {t('map.capital_val')}</span>
               </div>
             </div>
           </div>
@@ -126,30 +140,30 @@ export default function Contact() {
             {sent ? (
               <div className="text-center py-10 px-5">
                 <div className="text-5xl mb-4">✅</div>
-                <h3 className="font-sans text-2xl font-bold text-ink mb-2.5">Message sent!</h3>
-                <p className="text-[14.5px] text-ink2 leading-[1.6] mb-6">We'll get back to you within a few hours. In the meantime, feel free to browse listings.</p>
+                <h3 className="font-sans text-2xl font-bold text-ink mb-2.5">{t('success.heading')}</h3>
+                <p className="text-[14.5px] text-ink2 leading-[1.6] mb-6">{t('success.sub')}</p>
                 <button onClick={() => go('search')} className="font-sans text-sm font-semibold cursor-pointer py-3 px-7 rounded-full bg-coral text-white border-none">
-                  Browse listings
+                  {t('success.browse')}
                 </button>
               </div>
             ) : (
               <>
-                <h3 className="font-sans text-2xl font-bold text-ink mb-6">Send us a message</h3>
+                <h3 className="font-sans text-2xl font-bold text-ink mb-6">{t('form.heading')}</h3>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="text-xs font-semibold text-ink2 mb-1.5 block">Full name</label>
-                    <input value={form.name} onChange={set('name')} placeholder="Your full name" className={inputCls} />
+                    <label className="text-xs font-semibold text-ink2 mb-1.5 block">{t('form.name_label')}</label>
+                    <input value={form.name} onChange={set('name')} placeholder={t('form.name_placeholder')} className={inputCls} />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="text-xs font-semibold text-ink2 mb-1.5 block">Email</label>
+                    <label className="text-xs font-semibold text-ink2 mb-1.5 block">{t('form.email_label')}</label>
                     <input type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" className={inputCls} />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-semibold text-ink2">Phone / WhatsApp</label>
+                      <label className="text-xs font-semibold text-ink2">{t('form.phone_label')}</label>
                       {phoneValid && (
-                        <span className="text-[10.5px] font-semibold text-brand">✓ Valid</span>
+                        <span className="text-[10.5px] font-semibold text-brand">{t('form.phone_valid')}</span>
                       )}
                     </div>
                     <PhoneInput
@@ -164,34 +178,31 @@ export default function Contact() {
                 </div>
 
                 <div className="mt-4">
-                  <label className="text-xs font-semibold text-ink2 mb-1.5 block">I'm interested in</label>
+                  <label className="text-xs font-semibold text-ink2 mb-1.5 block">{t('form.interest_label')}</label>
                   <select value={form.interest} onChange={set('interest')} className={`${inputCls} cursor-pointer`}>
-                    <option>Buying a property</option>
-                    <option>Renting a property</option>
-                    <option>Listing my property</option>
-                    <option>Investment advice</option>
-                    <option>Relocation help</option>
-                    <option>General inquiry</option>
+                    {INTEREST_VALUES.map((val, i) => (
+                      <option key={val} value={val}>{interestOptions[i]}</option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="mt-4">
-                  <label className="text-xs font-semibold text-ink2 mb-1.5 block">Message</label>
+                  <label className="text-xs font-semibold text-ink2 mb-1.5 block">{t('form.message_label')}</label>
                   <textarea rows={4} value={form.message} onChange={set('message')}
-                    placeholder="Tell us what you're looking for…" className={`${inputCls} resize-y`} />
+                    placeholder={t('form.message_placeholder')} className={`${inputCls} resize-y`} />
                 </div>
 
                 <label className="flex items-start gap-2.5 my-4 text-[12.5px] text-ink2 leading-[1.55] cursor-pointer">
                   <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
                     className="w-3.75 h-3.75 mt-0.5 shrink-0 accent-coral" />
-                  I agree to be contacted about my inquiry and accept the privacy policy.
+                  {t('form.consent')}
                 </label>
 
                 <button
                   onClick={() => agreed && setSent(true)}
                   className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full border-none font-sans text-3.75 font-bold transition-colors duration-200 ${agreed ? 'bg-coral text-white cursor-pointer' : 'bg-line-soft text-dim cursor-not-allowed'}`}
                 >
-                  Send message <Icon d={I.arrow} size={16} />
+                  {t('form.submit')} <Icon d={I.arrow} size={16} />
                 </button>
               </>
             )}
@@ -202,19 +213,19 @@ export default function Contact() {
       {/* BOTTOM CTA */}
       <div className="bg-paper2 border-t border-line py-12 sm:py-14 px-4 sm:px-6">
         <div className="max-w-175 mx-auto text-center">
-          <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea mb-3">Not sure where to start?</div>
+          <div className="font-sans text-2.75 font-bold tracking-[.18em] uppercase text-sea mb-3">{t('bottom.eyebrow')}</div>
           <h2 className="font-sans text-[clamp(22px,3vw,34px)] font-bold text-ink mt-2 mb-3.5 tracking-[-.02em]">
-            Explore our resources first
+            {t('bottom.heading')}
           </h2>
           <p className="text-3.75 text-ink2 leading-[1.65] mb-7">
-            From buying guides to ROI calculators — everything you need to make a confident decision.
+            {t('bottom.sub')}
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <button onClick={() => go('buying')} className="font-sans text-sm font-semibold cursor-pointer py-3 px-6.5 rounded-full bg-coral text-white border-none">
-              Buying guide
+              {t('bottom.buying')}
             </button>
             <button onClick={() => go('calculator')} className="font-sans text-sm font-semibold cursor-pointer py-3 px-6.5 rounded-full bg-transparent text-sea border-[1.5px] border-sea">
-              ROI Calculator
+              {t('bottom.calculator')}
             </button>
           </div>
         </div>

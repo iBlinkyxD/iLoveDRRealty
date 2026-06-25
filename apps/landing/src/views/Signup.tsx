@@ -1,7 +1,7 @@
 'use client'
 import { useNav } from '../hooks/useNav'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
 import { isValidPhoneNumber } from 'libphonenumber-js'
@@ -9,21 +9,7 @@ import * as Yup from 'yup'
 import toast from 'react-hot-toast'
 import { register, googleAuth } from '../api/auth'
 import { useGoogleLogin } from '@react-oauth/google'
-
-const schema = Yup.object({
-  name:            Yup.string().required('Full name is required').min(2, 'Name must be at least 2 characters'),
-  phone:           Yup.string().required('Phone number is required').test('valid-phone', 'Enter a valid phone number', v => !!v && isValidPhoneNumber(v)),
-  email:           Yup.string().required('Email is required').email('Enter a valid email address'),
-  password:        Yup.string()
-    .min(8, 'Must be at least 8 characters long')
-    .matches(/[a-z]/, 'Must contain at least one lowercase letter')
-    .matches(/[A-Z]/, 'Must contain at least one uppercase letter')
-    .matches(/\d/, 'Must contain at least one number')
-    .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Must contain at least one special character')
-    .required('Password is required'),
-  confirmPassword: Yup.string().required('Please confirm your password').oneOf([Yup.ref('password')], "Passwords don't match"),
-  agreed:          Yup.boolean().oneOf([true], 'You must accept the terms to continue'),
-})
+import { useTranslation } from 'react-i18next'
 
 type Fields = { name: string; phone: string; email: string; password: string; confirmPassword: string; agreed: boolean }
 type FieldErrors = Partial<Record<keyof Fields, string>>
@@ -31,6 +17,22 @@ type FieldErrors = Partial<Record<keyof Fields, string>>
 export default function Signup() {
   const go = useNav()
   const router = useRouter()
+  const { t } = useTranslation('auth')
+
+  const schema = useMemo(() => Yup.object({
+    name:            Yup.string().required(t('signup.validation.name_required')).min(2, t('signup.validation.name_min')),
+    phone:           Yup.string().required(t('signup.validation.phone_required')).test('valid-phone', t('signup.validation.phone_invalid'), v => !!v && isValidPhoneNumber(v)),
+    email:           Yup.string().required(t('signup.validation.email_required')).email(t('signup.validation.email_invalid')),
+    password:        Yup.string()
+      .min(8, t('signup.validation.password_min'))
+      .matches(/[a-z]/, t('signup.validation.password_lowercase'))
+      .matches(/[A-Z]/, t('signup.validation.password_uppercase'))
+      .matches(/\d/, t('signup.validation.password_number'))
+      .matches(/[!@#$%^&*(),.?":{}|<>]/, t('signup.validation.password_special'))
+      .required(t('signup.validation.password_required')),
+    confirmPassword: Yup.string().required(t('signup.validation.confirm_required')).oneOf([Yup.ref('password')], t('signup.validation.confirm_match')),
+    agreed:          Yup.boolean().oneOf([true], t('signup.validation.terms_required')),
+  }), [t])
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -53,15 +55,15 @@ export default function Signup() {
       setGoogleLoading(true)
       try {
         await googleAuth(tokenResponse.access_token)
-        toast.success('Account ready! Redirecting…')
+        toast.success(t('signup.toast.success'))
         setTimeout(() => { window.location.href = DASHBOARD_URL }, 1500)
       } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Google sign-up failed')
+        toast.error(e instanceof Error ? e.message : t('signup.toast.google_error'))
       } finally {
         setGoogleLoading(false)
       }
     },
-    onError: () => toast.error('Google sign-up failed'),
+    onError: () => toast.error(t('signup.toast.google_error')),
   })
 
   function clearField(field: keyof FieldErrors) {
@@ -83,10 +85,10 @@ export default function Signup() {
     setLoading(true)
     try {
       await register({ display_name: name, email, password, phone: phone || undefined })
-      toast.success('Account created! Check your email for the verification code.')
+      toast.success(t('signup.toast.email_sent'))
       setTimeout(() => router.push(`/verify?email=${encodeURIComponent(email)}`), 1500)
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Signup failed')
+      toast.error(e instanceof Error ? e.message : t('signup.toast.signup_error'))
     } finally {
       setLoading(false)
     }
@@ -112,13 +114,13 @@ export default function Signup() {
             <img src="/iLoveDRRealty_White.png" alt="I Love DR Realty" className="h-10 w-auto block" />
           </button>
 
-          <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold mb-3.5">Create your account</div>
+          <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold mb-3.5">{t('signup.eyebrow')}</div>
           <h1 className="font-sans text-[clamp(26px,3vw,40px)] font-extrabold text-white leading-[1.1] tracking-[-.02em] mb-4.5 max-w-90">
-            Join{' '}
-            <span className="text-coral">12,000+</span> buyers, investors, and realtors
+            {t('signup.heading_pre')}{' '}
+            <span className="text-coral">{t('signup.heading_count')}</span> {t('signup.heading_post')}
           </h1>
           <p className="text-3.75 text-white/65 leading-[1.7] max-w-80 mb-10">
-            Free to join. Verified listings. A bilingual team that's lived the process.
+            {t('signup.sub')}
           </p>
         </div>
       </div>
@@ -127,12 +129,12 @@ export default function Signup() {
       <div className="bg-paper2 flex items-center justify-center py-10 sm:py-12 px-4 sm:px-7 overflow-y-auto">
         <div className="w-full max-w-110">
 
-          <h2 className="font-sans text-7 font-bold text-ink mb-1.5 tracking-[-.02em]">Create account</h2>
+          <h2 className="font-sans text-7 font-bold text-ink mb-1.5 tracking-[-.02em]">{t('signup.form.heading')}</h2>
           <p className="text-[14.5px] text-ink2 mb-7">
-            Already have an account?{' '}
+            {t('signup.form.has_account')}{' '}
             <button onClick={() => go('login')}
               className="bg-transparent border-0 cursor-pointer text-coral font-bold text-[14.5px] font-sans p-0">
-              Log in
+              {t('signup.form.login_cta')}
             </button>
           </p>
 
@@ -140,14 +142,14 @@ export default function Signup() {
 
             {/* Name */}
             <div className="mb-3.5">
-              <label className={labelCls}>Full name</label>
+              <label className={labelCls}>{t('signup.form.name_label')}</label>
               <input value={name} onChange={e => { setName(e.target.value); clearField('name') }} placeholder="Maria Rodríguez" className={inputCls('name')} />
               {fieldErrors.name && <p className={errCls}>{fieldErrors.name}</p>}
             </div>
 
             {/* Phone */}
             <div className="mb-3.5">
-              <label className={labelCls}>Phone / WhatsApp</label>
+              <label className={labelCls}>{t('signup.form.phone_label')}</label>
               <PhoneInput
                 defaultCountry="do"
                 value={phone}
@@ -176,20 +178,20 @@ export default function Signup() {
 
             {/* Email */}
             <div className="mb-3.5">
-              <label className={labelCls}>Email address</label>
+              <label className={labelCls}>{t('signup.form.email_label')}</label>
               <input type="email" value={email} onChange={e => { setEmail(e.target.value); clearField('email') }} placeholder="you@email.com" className={inputCls('email')} />
               {fieldErrors.email && <p className={errCls}>{fieldErrors.email}</p>}
             </div>
 
             {/* Password */}
             <div className="mb-3.5">
-              <label className={labelCls}>Password</label>
+              <label className={labelCls}>{t('signup.form.password_label')}</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => { setPassword(e.target.value); clearField('password') }}
-                  placeholder="At least 8 characters"
+                  placeholder={t('signup.form.password_placeholder')}
                   className={`${inputCls('password')} pr-10`}
                 />
                 <button
@@ -215,13 +217,13 @@ export default function Signup() {
 
             {/* Confirm password */}
             <div className="mb-5">
-              <label className={labelCls}>Confirm password</label>
+              <label className={labelCls}>{t('signup.form.confirm_label')}</label>
               <div className="relative">
                 <input
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={e => { setConfirmPassword(e.target.value); clearField('confirmPassword') }}
-                  placeholder="Re-enter password"
+                  placeholder={t('signup.form.confirm_placeholder')}
                   className={`${inputCls('confirmPassword')} pr-10`}
                 />
                 <button
@@ -251,10 +253,10 @@ export default function Signup() {
                 <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); clearField('agreed') }}
                   className="accent-coral w-3.75 h-3.75 mt-0.5 shrink-0" />
                 <span>
-                  I agree to the{' '}
-                  <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">Terms & Conditions</button>
-                  {' '}and{' '}
-                  <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">Privacy Policy</button>
+                  {t('signup.form.terms_pre')}{' '}
+                  <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">{t('signup.form.terms_link')}</button>
+                  {' '}{t('signup.form.terms_and')}{' '}
+                  <button className="bg-transparent border-0 cursor-pointer text-sea font-semibold font-sans text-[12.5px] p-0">{t('signup.form.privacy_link')}</button>
                   .
                 </span>
               </label>
@@ -267,12 +269,12 @@ export default function Signup() {
               disabled={loading}
               className="w-full py-3.25 rounded-full border-none font-sans text-3.75 font-bold transition-colors duration-150 bg-coral text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account…' : 'Create account'}
+              {loading ? t('signup.form.submitting') : t('signup.form.submit')}
             </button>
 
             <div className="flex items-center gap-3 mt-4.5 mb-3.5">
               <div className="flex-1 h-px bg-line" />
-              <span className="text-xs text-dim font-medium">or sign up with</span>
+              <span className="text-xs text-dim font-medium">{t('signup.form.or')}</span>
               <div className="flex-1 h-px bg-line" />
             </div>
 
@@ -292,7 +294,7 @@ export default function Signup() {
                   <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
                 </svg>
               )}
-              {googleLoading ? 'Signing up…' : 'Continue with Google'}
+              {googleLoading ? t('signup.form.google_loading') : t('signup.form.google')}
             </button>
           </div>
 

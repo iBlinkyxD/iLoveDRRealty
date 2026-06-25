@@ -5,19 +5,21 @@ import { Star, Home, Users, Handshake } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { login, getMe, googleAuth } from '../api/auth'
 import { useGoogleLogin } from '@react-oauth/google'
+import { useTranslation } from 'react-i18next'
 
 const _dashRaw = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://app.ilovedrrealty.com'
 const DASHBOARD_URL = _dashRaw.startsWith('http') ? _dashRaw : `https://${_dashRaw}`
 
 const STATS = [
-  { value: '4.9',    label: 'Rating',            Icon: Star,      iconCls: 'text-gold fill-gold' },
-  { value: '4,800+', label: 'Active Listings',   Icon: Home,      iconCls: 'text-white/80'       },
-  { value: '12K+',   label: 'Registered Buyers', Icon: Users,     iconCls: 'text-white/80'       },
-  { value: '$2.4B',  label: 'Closed Volume',     Icon: Handshake, iconCls: 'text-white/80'       },
+  { value: '4.9',    labelKey: 'login.stats.rating',  Icon: Star,      iconCls: 'text-gold fill-gold' },
+  { value: '4,800+', labelKey: 'login.stats.listings', Icon: Home,      iconCls: 'text-white/80'       },
+  { value: '12K+',   labelKey: 'login.stats.buyers',   Icon: Users,     iconCls: 'text-white/80'       },
+  { value: '$2.4B',  labelKey: 'login.stats.volume',   Icon: Handshake, iconCls: 'text-white/80'       },
 ]
 
 export default function Login() {
   const go = useNav()
+  const { t } = useTranslation('auth')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -31,15 +33,15 @@ export default function Login() {
       setGoogleLoading(true)
       try {
         await googleAuth(tokenResponse.access_token)
-        toast.success('Welcome back! Redirecting…')
+        toast.success(t('login.toast.success'))
         setTimeout(() => { window.location.href = DASHBOARD_URL }, 1500)
       } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Google sign-in failed')
+        toast.error(e instanceof Error ? e.message : t('login.toast.google_error'))
       } finally {
         setGoogleLoading(false)
       }
     },
-    onError: () => toast.error('Google sign-in failed'),
+    onError: () => toast.error(t('login.toast.google_error')),
   })
 
   useEffect(() => {
@@ -56,10 +58,10 @@ export default function Login() {
     setLoading(true)
     try {
       await login({ email, password })
-      toast.success('Welcome back! Redirecting…')
+      toast.success(t('login.toast.success'))
       setTimeout(() => { window.location.href = DASHBOARD_URL }, 1500)
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Login failed')
+      toast.error(e instanceof Error ? e.message : t('login.toast.login_error'))
     } finally {
       setLoading(false)
     }
@@ -82,12 +84,12 @@ export default function Login() {
             <img src="/iLoveDRRealty_White.png" alt="I Love DR Realty" className="h-10 w-auto block" />
           </button>
 
-          <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold mb-3.5">Welcome back</div>
+          <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold mb-3.5">{t('login.eyebrow')}</div>
           <h1 className="font-sans text-[clamp(28px,3vw,42px)] font-extrabold text-white leading-[1.1] tracking-[-.02em] mb-4.5 max-w-95">
-            Your place in paradise is waiting
+            {t('login.heading')}
           </h1>
           <p className="text-3.75 text-white/65 leading-[1.7] max-w-85">
-            Access saved searches, manage your listings, and run ROI models — all in one place.
+            {t('login.sub')}
           </p>
         </div>
 
@@ -98,7 +100,7 @@ export default function Login() {
               <s.Icon size={22} className={s.iconCls} />
               <div>
                 <div className="font-sans text-5.5 font-bold text-white leading-none">{s.value}</div>
-                <div className="text-xs text-white/55 mt-1.5 leading-none">{s.label}</div>
+                <div className="text-xs text-white/55 mt-1.5 leading-none">{t(s.labelKey)}</div>
               </div>
             </div>
           ))}
@@ -109,24 +111,24 @@ export default function Login() {
       <div className="bg-paper2 flex items-center justify-center py-10 sm:py-15 px-4 sm:px-7">
         <div className="w-full max-w-105">
 
-          <h2 className="font-sans text-7.5 font-bold text-ink mb-1.5 tracking-[-.02em]">Log in</h2>
+          <h2 className="font-sans text-7.5 font-bold text-ink mb-1.5 tracking-[-.02em]">{t('login.form.heading')}</h2>
           <p className="text-[14.5px] text-ink2 mb-8">
-            Don't have an account?{' '}
+            {t('login.form.no_account')}{' '}
             <button onClick={() => go('signup')} className="bg-transparent border-0 cursor-pointer text-coral font-bold text-[14.5px] font-sans p-0">
-              Sign up free
+              {t('login.form.signup_cta')}
             </button>
           </p>
 
           <div className="bg-paper border border-line rounded-2xl p-8">
             <div className="mb-4.5">
-              <label className="text-xs font-semibold text-ink2 block mb-1.75">Email address</label>
+              <label className="text-xs font-semibold text-ink2 block mb-1.75">{t('login.form.email_label')}</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com" className={inputCls} />
             </div>
 
             <div className="mb-5.5">
               <div className="flex justify-between items-center mb-1.75">
-                <label className="text-xs font-semibold text-ink2">Password</label>
-                <button className="bg-transparent border-0 cursor-pointer text-xs text-sea font-semibold font-sans p-0">Forgot password?</button>
+                <label className="text-xs font-semibold text-ink2">{t('login.form.password_label')}</label>
+                <button className="bg-transparent border-0 cursor-pointer text-xs text-sea font-semibold font-sans p-0">{t('login.form.forgot')}</button>
               </div>
               <div className="relative">
                 <input
@@ -161,12 +163,12 @@ export default function Login() {
               disabled={loading || !email || !password}
               className="w-full py-3.25 rounded-full border-none cursor-pointer bg-coral text-white font-sans text-3.75 font-bold transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Logging in…' : 'Log in'}
+              {loading ? t('login.form.submitting') : t('login.form.submit')}
             </button>
 
             <div className="flex items-center gap-3 my-5.5">
               <div className="flex-1 h-px bg-line" />
-              <span className="text-xs text-dim font-medium">or</span>
+              <span className="text-xs text-dim font-medium">{t('login.form.or')}</span>
               <div className="flex-1 h-px bg-line" />
             </div>
 
@@ -186,7 +188,7 @@ export default function Login() {
                   <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
                 </svg>
               )}
-              {googleLoading ? 'Signing in…' : 'Continue with Google'}
+              {googleLoading ? t('login.form.google_loading') : t('login.form.google')}
             </button>
           </div>
 

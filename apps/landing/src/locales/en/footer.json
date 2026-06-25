@@ -1,0 +1,24 @@
+{
+  "brand_desc": "The Dominican Republic's real estate marketplace — verified listings, ROI tools, and a bilingual team that's lived the process.",
+  "groups": {
+    "discover": "Discover",
+    "company": "Company"
+  },
+  "links": {
+    "search": "Search listings",
+    "buying": "Buying guide",
+    "selling": "Selling a property",
+    "calculator": "ROI Calculator",
+    "team": "Our Team",
+    "blog": "Resources",
+    "contact": "Contact us"
+  },
+  "contact": {
+    "heading": "Get in touch",
+    "cta": "Send us a message"
+  },
+  "copyright": "© {{year}} I Love DR Realty · All rights reserved",
+  "tagline": "Dream · Invest · Live",
+  "privacy": "Privacy Policy",
+  "terms": "Terms of Service"
+}

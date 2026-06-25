@@ -1,0 +1,17 @@
+{
+  "heading": "Check your email",
+  "sent_to": "We sent a 6-digit code to",
+  "email_fallback": "your email address",
+  "wrong_email": "Wrong email?",
+  "send": "Send",
+  "cancel": "Cancel",
+  "verify_btn": "Verify email",
+  "verifying": "Verifying…",
+  "resend": "Resend code",
+  "back_signup": "Go back to sign up",
+  "no_code": "Didn't receive it?",
+  "resent": "Code resent — check your inbox.",
+  "err_digits": "Enter all 6 digits",
+  "err_email": "Email missing — please sign up again",
+  "toast_success": "Email verified! Redirecting to your dashboard…"
+}

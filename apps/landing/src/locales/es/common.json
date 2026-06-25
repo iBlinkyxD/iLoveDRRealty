@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "search": "Buscar",
+    "buying": "Comprar",
+    "selling": "Vender",
+    "blog": "Recursos",
+    "team": "Nuestro Equipo",
+    "contact": "Contacto",
+    "calculator": "Calculadora ROI"
+  },
+  "auth": {
+    "login": "Ingresar",
+    "signup": "Registrarse",
+    "dashboard": "Panel",
+    "logout": "Cerrar sesión"
+  }
+}

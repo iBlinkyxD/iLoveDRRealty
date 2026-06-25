@@ -1,14 +1,19 @@
 'use client'
 import { useNav } from '../hooks/useNav'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   CATS, type CatKey, catInfo,
   STATS, STAT_COLORS, FEATURED, EDITOR_PICKS, GUIDES,
-  STEPS, STEP_COLORS, FAQS, FAQ_COLORS,
+  STEPS, STEP_COLORS, FAQ_COLORS,
 } from '../data/blogData'
 
 export default function Blog() {
   const go = useNav()
+  const { t } = useTranslation('blog')
+  const statsLabels = t('stats', { returnObjects: true }) as string[]
+  const processSteps = t('process.steps', { returnObjects: true }) as Array<{ title: string; desc: string }>
+  const faqItems = t('faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>
   const [cat, setCat] = useState<CatKey>('All')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [email, setEmail] = useState('')
@@ -34,24 +39,24 @@ export default function Blog() {
         <div className="relative max-w-310 mx-auto pt-14 sm:pt-17.5 px-4 sm:px-7 pb-12 sm:pb-15">
           <div className="max-w-180">
             <span className="inline-block py-1.5 px-3.5 rounded-full bg-gold text-ink text-2.75 font-extrabold tracking-[.14em] uppercase font-sans">
-              📚 Education &amp; Relocation Hub
+              {t('hero.tag')}
             </span>
             <h1 className="font-sans text-[clamp(28px,5.5vw,60px)] font-bold text-white mt-5 mb-4 tracking-[-.02em] leading-[1.02]">
-              Your guide to{' '}
+              {t('hero.heading_pre')}{' '}
               <span style={{ background: 'linear-gradient(135deg, #f0a800, #e10f1f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontStyle: 'italic' }}>
-                living &amp; investing
+                {t('hero.heading_em')}
               </span>
-              {' '}in the DR
+              {' '}{t('hero.heading_post')}
             </h1>
             <p className="text-white/78 text-4 sm:text-4.25 leading-[1.65] max-w-145 font-sans">
-              Expert-curated guides, market intelligence, and community wisdom — for first-time visitors, future residents, and serious investors.
+              {t('hero.sub')}
             </p>
             {/* Stats strip */}
             <div className="flex flex-wrap gap-7 sm:gap-9 mt-9.5">
               {STATS.map(([n, l], i) => (
                 <div key={i}>
                   <div className="font-sans text-7 font-bold" style={{ color: STAT_COLORS[i] }}>{n}</div>
-                  <div className="text-[11.5px] text-white/65 mt-0.5 tracking-[.02em] font-sans">{l}</div>
+                  <div className="text-[11.5px] text-white/65 mt-0.5 tracking-[.02em] font-sans">{statsLabels[i] ?? l}</div>
                 </div>
               ))}
             </div>
@@ -62,9 +67,9 @@ export default function Blog() {
       {/* ── Featured article ── */}
       <div className="bg-paper pt-12 sm:pt-15 px-4 sm:px-7 pb-7.5">
         <div className="max-w-310 mx-auto">
-          <div className="text-2.75 font-bold tracking-[.22em] uppercase text-coral font-sans">★ Featured this week</div>
+          <div className="text-2.75 font-bold tracking-[.22em] uppercase text-coral font-sans">{t('featured.eyebrow')}</div>
           <h2 className="font-sans text-6 sm:text-7 font-semibold text-ink mt-2 mb-5 sm:mb-6.5">
-            Where to start your Dominican journey
+            {t('featured.heading')}
           </h2>
           <div className="relative rounded-3xl overflow-hidden cursor-pointer shadow-[0_30px_80px_-30px_rgba(0,16,46,.35)] flex flex-col lg:grid lg:grid-cols-[1.1fr_1fr] lg:min-h-95">
             <div className="relative">
@@ -100,7 +105,7 @@ export default function Blog() {
                 onClick={() => go('article', FEATURED.slug)}
                 className="inline-flex items-center gap-1.75 bg-coral text-white border-none py-2.75 px-5.5 rounded-full font-sans font-bold text-[13.5px] cursor-pointer self-start"
               >
-                Read the guide →
+                {t('featured.read_cta')}
               </button>
             </div>
           </div>
@@ -123,10 +128,10 @@ export default function Blog() {
                 </div>
                 <div className="py-5 px-5.5">
                   <div className="text-2.5 font-extrabold tracking-[.14em] uppercase font-sans"
-                    style={{ color: info.a }}>{info.label}</div>
+                    style={{ color: info.a }}>{t('cats.' + p.cat)}</div>
                   <h3 className="font-sans text-4.75 font-semibold text-ink mt-2 mb-1.5 leading-[1.2]">{p.title}</h3>
                   <p className="text-3.25 text-ink2 leading-[1.55] font-sans">{p.desc}</p>
-                  <div className="text-[11.5px] text-dim mt-2.5 font-sans">{p.author} · {p.read} read</div>
+                  <div className="text-[11.5px] text-dim mt-2.5 font-sans">{p.author} · {p.read} {t('guides.read_suffix')}</div>
                 </div>
               </div>
             )
@@ -137,9 +142,9 @@ export default function Blog() {
       {/* ── Category navigator ── */}
       <div className="bg-paper2 py-12 sm:py-15 px-4 sm:px-7">
         <div className="max-w-310 mx-auto">
-          <div className="text-2.75 font-bold tracking-[.22em] uppercase text-sea font-sans">Browse by topic</div>
+          <div className="text-2.75 font-bold tracking-[.22em] uppercase text-sea font-sans">{t('browse.eyebrow')}</div>
           <h2 className="font-sans text-6 sm:text-7 font-semibold text-ink mt-2 mb-5 sm:mb-6.5">
-            What are you exploring?
+            {t('browse.heading')}
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
             {CATS.map(({ key, label, icon, a, b }) => {
@@ -157,7 +162,7 @@ export default function Blog() {
                   }}
                 >
                   <span className="text-6 sm:text-7">{icon}</span>
-                  <span className="text-[11px] sm:text-[12.5px] font-bold text-center leading-[1.2]">{label}</span>
+                  <span className="text-[11px] sm:text-[12.5px] font-bold text-center leading-[1.2]">{t('cats.' + key)}</span>
                 </button>
               )
             })}
@@ -170,10 +175,10 @@ export default function Blog() {
         <div className="flex justify-between items-end mb-5 sm:mb-6.5 flex-wrap gap-3">
           <div>
             <div className="text-2.75 font-bold tracking-[.22em] uppercase font-sans"
-              style={{ color: catInfo(cat).a }}>{cat === 'All' ? 'All guides' : catInfo(cat).label}</div>
-            <h2 className="font-sans text-6 sm:text-7 font-semibold text-ink mt-2">{shownGuides.length} guides</h2>
+              style={{ color: catInfo(cat).a }}>{cat === 'All' ? t('guides.all_label') : t('cats.' + cat)}</div>
+            <h2 className="font-sans text-6 sm:text-7 font-semibold text-ink mt-2">{shownGuides.length} {t('guides.count_suffix')}</h2>
           </div>
-          <span className="text-3.25 text-dim font-sans">Sorted by reader favorites</span>
+          <span className="text-3.25 text-dim font-sans">{t('guides.sorted')}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {shownGuides.map((g, i) => {
@@ -187,7 +192,7 @@ export default function Blog() {
                     style={{ background: 'linear-gradient(180deg, transparent 40%, rgba(0,16,46,.5))' }} />
                   <div className="absolute top-3 left-3 text-white rounded-full py-1 px-2.5 text-2.5 font-extrabold tracking-widest uppercase font-sans"
                     style={{ background: `linear-gradient(135deg, ${info.a}, ${info.b})` }}>
-                    {info.label}
+                    {t('cats.' + g.cat)}
                   </div>
                   <div className="absolute bottom-3 right-3 bg-white/95 rounded-lg py-1.5 px-2.5 text-5.5">
                     {g.icon}
@@ -197,8 +202,8 @@ export default function Blog() {
                   <h3 className="font-sans text-4.5 font-semibold text-ink leading-tight mb-2">{g.title}</h3>
                   <p className="text-3.25 text-ink2 leading-[1.55] mb-3.5 font-sans">{g.desc}</p>
                   <div className="flex justify-between items-center text-xs text-dim pt-3 border-t border-line-soft font-sans">
-                    <span>📖 {g.read} read</span>
-                    <span className="font-bold" style={{ color: info.a }}>Read guide →</span>
+                    <span>{`📖 ${g.read} ${t('guides.read_suffix')}`}</span>
+                    <span className="font-bold" style={{ color: info.a }}>{t('guides.read_cta')}</span>
                   </div>
                 </div>
               </div>
@@ -213,12 +218,12 @@ export default function Blog() {
         <div className="absolute inset-0"
           style={{ background: 'radial-gradient(ellipse at 80% 20%, rgba(240,168,0,.2) 0%, transparent 50%), radial-gradient(ellipse at 20% 80%, rgba(225,15,31,.18) 0%, transparent 50%)' }} />
         <div className="max-w-310 mx-auto relative">
-          <div className="text-2.75 font-bold tracking-[.22em] uppercase text-gold font-sans">Step-by-step</div>
+          <div className="text-2.75 font-bold tracking-[.22em] uppercase text-gold font-sans">{t('process.eyebrow')}</div>
           <h2 className="font-sans text-7 sm:text-8 font-semibold text-white mt-2.5 mb-2">
-            The Dominican buying process
+            {t('process.heading')}
           </h2>
           <p className="text-[15.5px] text-white/70 mb-9 max-w-150 font-sans">
-            From browsing to keys in hand — a clear, honest guide to buying property in the DR as a foreigner.
+            {t('process.sub')}
           </p>
           <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
             {/* Connecting line — only meaningful at 6-col layout */}
@@ -232,9 +237,9 @@ export default function Blog() {
                 </div>
                 <div className="text-center">
                   <div className="font-sans text-3.25 font-bold tracking-widest"
-                    style={{ color: STEP_COLORS[i] }}>STEP {n}</div>
-                  <h3 className="font-sans text-4 font-semibold text-white mt-1.5 mb-2 leading-[1.2]">{title}</h3>
-                  <p className="text-xs text-white/65 leading-normal font-sans">{desc}</p>
+                    style={{ color: STEP_COLORS[i] }}>{`${t('process.step_label')} ${n}`}</div>
+                  <h3 className="font-sans text-4 font-semibold text-white mt-1.5 mb-2 leading-[1.2]">{processSteps[i]?.title ?? title}</h3>
+                  <p className="text-xs text-white/65 leading-normal font-sans">{processSteps[i]?.desc ?? desc}</p>
                 </div>
               </div>
             ))}
@@ -246,16 +251,16 @@ export default function Blog() {
       <div className="bg-paper py-14 sm:py-17.5 px-4 sm:px-7">
         <div className="max-w-230 mx-auto">
           <div className="text-center mb-9">
-            <div className="text-2.75 font-bold tracking-[.22em] uppercase text-coral font-sans">❓ Frequently asked</div>
+            <div className="text-2.75 font-bold tracking-[.22em] uppercase text-coral font-sans">{t('faq.eyebrow')}</div>
             <h2 className="font-sans text-7 sm:text-8 font-semibold text-ink mt-2.5 mb-2">
-              Your questions, answered
+              {t('faq.heading')}
             </h2>
             <p className="text-3.75 text-ink2 max-w-135 mx-auto font-sans">
-              The six questions buyers ask us most, with honest answers from our team.
+              {t('faq.sub')}
             </p>
           </div>
           <div className="flex flex-col gap-3">
-            {FAQS.map(([q, a], i) => {
+            {faqItems.map(({ q, a }, i) => {
               const open = openFaq === i
               const accent = FAQ_COLORS[i]
               return (
@@ -296,27 +301,27 @@ export default function Blog() {
           style={{ background: 'radial-gradient(ellipse at 80% 20%, rgba(240,168,0,.3) 0%, transparent 50%), radial-gradient(ellipse at 20% 100%, rgba(255,255,255,.1) 0%, transparent 50%)' }} />
         <div className="relative max-w-230 mx-auto text-center">
           <span className="inline-block py-1.5 px-3.5 rounded-full bg-white/18 text-white text-2.75 font-extrabold tracking-[.14em] uppercase backdrop-blur-2.5 border border-white/25 font-sans">
-            ✉️ Weekly briefing
+            {t('newsletter.tag')}
           </span>
           <h2 className="font-sans text-7 sm:text-9 font-semibold text-white mt-4.5 mb-3 leading-[1.1] tracking-[-.01em]">
-            DR real estate intelligence, every Friday
+            {t('newsletter.heading')}
           </h2>
           <p className="text-4 text-white/88 leading-[1.6] max-w-135 mx-auto mb-7 font-sans">
-            Market updates, new listings, and community stories — curated for buyers, investors, and DR-curious readers. Free.
+            {t('newsletter.sub')}
           </p>
           <div className="flex gap-2.5 max-w-120 mx-auto bg-white/18 p-1.5 rounded-full backdrop-blur-2.5 border border-white/30">
             <input
-              placeholder="your@email.com"
+              placeholder={t('newsletter.placeholder')}
               value={email}
               onChange={e => setEmail(e.target.value)}
               className="flex-1 min-w-0 py-3.25 px-4.5 rounded-full border-none font-sans text-sm bg-transparent text-white outline-none"
             />
             <button className="bg-white text-coral-deep border-none py-2.75 px-4 sm:px-5.5 rounded-full font-sans text-[13.5px] font-bold cursor-pointer shrink-0">
-              Subscribe free
+              {t('newsletter.cta')}
             </button>
           </div>
           <div className="mt-4.5 text-xs text-white/65 font-sans">
-            Join 14,000+ subscribers · Unsubscribe anytime
+            {t('newsletter.disclaimer')}
           </div>
         </div>
       </div>

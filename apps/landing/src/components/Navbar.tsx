@@ -6,6 +6,7 @@ import { NAV_ITEMS } from '../design'
 import { useEffect, useRef, useState } from 'react'
 import { Menu, X, LayoutDashboard, LogOut } from 'lucide-react'
 import { getMe, logout } from '../api/auth'
+import { useTranslation } from 'react-i18next'
 
 const _dashRaw = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://app.ilovedrrealty.com'
 const DASHBOARD_URL = _dashRaw.startsWith('http') ? _dashRaw : `https://${_dashRaw}`
@@ -50,7 +51,37 @@ function Avatar({ me, size = 32 }: { me: Me; size?: number }) {
   )
 }
 
+function LanguageToggle() {
+  const { i18n } = useTranslation()
+  const current = i18n.language.startsWith('es') ? 'es' : 'en'
+
+  function pick(lng: string) {
+    i18n.changeLanguage(lng)
+    localStorage.setItem('ildr_lang', lng)
+  }
+
+  return (
+    <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold shrink-0">
+      {(['en', 'es'] as const).map(lng => (
+        <button
+          key={lng}
+          onClick={() => pick(lng)}
+          className="px-2.5 py-1.5 transition-colors cursor-pointer"
+          style={{
+            background: current === lng ? '#00102e' : 'white',
+            color:      current === lng ? 'white'   : '#64748b',
+          }}
+        >
+          {lng.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function UserDropdown({ me, onClose }: { me: Me; onClose: () => void }) {
+  const { t } = useTranslation('common')
+
   async function handleLogout() {
     try { await logout() } catch { /* ignore */ }
     onClose()
@@ -69,14 +100,14 @@ function UserDropdown({ me, onClose }: { me: Me; onClose: () => void }) {
         className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-ink hover:bg-paper2 transition-colors font-sans"
       >
         <LayoutDashboard size={15} className="text-ink2" />
-        Dashboard
+        {t('auth.dashboard')}
       </a>
       <button
         onClick={handleLogout}
         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-coral hover:bg-paper2 transition-colors cursor-pointer bg-transparent border-none font-sans text-left"
       >
         <LogOut size={15} className="text-coral" />
-        Log out
+        {t('auth.logout')}
       </button>
     </div>
   )
@@ -85,6 +116,7 @@ function UserDropdown({ me, onClose }: { me: Me; onClose: () => void }) {
 export default function Navbar() {
   const pathname = usePathname()
   const go = useNav()
+  const { t } = useTranslation('common')
   const current = !pathname || pathname === '/' ? 'landing' : pathname.replace(/^\/|\/$/g, '')
   const [open, setOpen] = useState(false)
   const [me, setMe] = useState<Me | null>(null)
@@ -122,7 +154,7 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden min-[1080px]:flex flex-none gap-1 items-center">
-          {NAV_ITEMS.map(([key, label]) => {
+          {NAV_ITEMS.map(([key]) => {
             const active = current === key
             return (
               <button
@@ -134,7 +166,7 @@ export default function Navbar() {
                     : 'font-medium text-ink2 border-transparent'
                 }`}
               >
-                {label}
+                {t(`nav.${key}`)}
               </button>
             )
           })}
@@ -142,6 +174,7 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden min-[1080px]:flex flex-1 gap-2 items-center justify-end">
+          <LanguageToggle />
           {me ? (
             <div className="relative" ref={dropdownRef}>
               <button
@@ -163,13 +196,13 @@ export default function Navbar() {
                 onClick={() => go('login')}
                 className="font-sans text-[13.5px] font-semibold cursor-pointer text-ink bg-transparent border-none py-2.25 px-3.5"
               >
-                Log in
+                {t('auth.login')}
               </button>
               <button
                 onClick={() => go('signup')}
                 className="font-sans text-[13.5px] font-semibold cursor-pointer text-white bg-coral border border-coral py-2.25 px-4.5 rounded-full transition-colors duration-150"
               >
-                Sign up
+                {t('auth.signup')}
               </button>
             </>
           )}
@@ -189,7 +222,7 @@ export default function Navbar() {
               onClick={() => go('signup')}
               className="font-sans text-[13px] font-semibold cursor-pointer text-white bg-coral border border-coral py-2 px-4 rounded-full transition-colors duration-150"
             >
-              Sign up
+              {t('auth.signup')}
             </button>
           )}
           <button
@@ -204,7 +237,7 @@ export default function Navbar() {
       {/* Mobile drawer */}
       {open && (
         <div className="min-[1080px]:hidden bg-white border-t border-line px-4 py-3 flex flex-col">
-          {NAV_ITEMS.map(([key, label]) => {
+          {NAV_ITEMS.map(([key]) => {
             const active = current === key
             return (
               <button
@@ -214,7 +247,7 @@ export default function Navbar() {
                   active ? 'font-bold text-ink bg-paper2' : 'font-medium text-ink2'
                 }`}
               >
-                {label}
+                {t(`nav.${key}`)}
               </button>
             )
           })}
@@ -234,14 +267,14 @@ export default function Navbar() {
                 className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-ink hover:bg-paper2 transition-colors font-sans"
               >
                 <LayoutDashboard size={15} className="text-ink2" />
-                Dashboard
+                {t('auth.dashboard')}
               </a>
               <button
                 onClick={handleMobileLogout}
                 className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-coral hover:bg-paper2 transition-colors cursor-pointer bg-transparent border-none font-sans text-left mb-1"
               >
                 <LogOut size={15} className="text-coral" />
-                Log out
+                {t('auth.logout')}
               </button>
             </>
           ) : (
@@ -249,9 +282,12 @@ export default function Navbar() {
               onClick={() => { go('login'); setOpen(false) }}
               className="font-sans text-sm font-semibold cursor-pointer text-ink bg-transparent border border-line py-3 px-4 rounded-xl text-left mb-2"
             >
-              Log in
+              {t('auth.login')}
             </button>
           )}
+          <div className="flex justify-start px-3 pb-1 pt-1">
+            <LanguageToggle />
+          </div>
         </div>
       )}
     </div>

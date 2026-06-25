@@ -1,0 +1,17 @@
+{
+  "heading": "Revisa tu correo",
+  "sent_to": "Enviamos un código de 6 dígitos a",
+  "email_fallback": "tu dirección de correo",
+  "wrong_email": "¿Email incorrecto?",
+  "send": "Enviar",
+  "cancel": "Cancelar",
+  "verify_btn": "Verificar correo",
+  "verifying": "Verificando…",
+  "resend": "Reenviar código",
+  "back_signup": "Volver al registro",
+  "no_code": "¿No lo recibiste?",
+  "resent": "Código reenviado — revisa tu bandeja de entrada.",
+  "err_digits": "Ingresa los 6 dígitos",
+  "err_email": "Email faltante — por favor regístrate nuevamente",
+  "toast_success": "¡Correo verificado! Redirigiendo a tu panel…"
+}

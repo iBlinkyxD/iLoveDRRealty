@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "eyebrow": "Contáctanos",
+    "heading": "Encontremos tu lugar en el paraíso",
+    "sub": "Ya sea que estés comprando, alquilando, publicando o simplemente explorando — nuestro equipo bilingüe está aquí para ayudarte."
+  },
+  "channels": {
+    "eyebrow": "Contáctanos directamente",
+    "heading": "Múltiples formas de conectar",
+    "sub": "Somos un equipo bilingüe con base en la RD. Elige el canal que mejor te funcione.",
+    "items": [
+      { "title": "WhatsApp", "desc": "Respuesta más rápida — chatea con nuestro equipo", "value": "+1 (809) 555-0147" },
+      { "title": "Reservar una llamada", "desc": "Llamada de descubrimiento gratuita de 15 min", "value": "Programar ahora →" },
+      { "title": "Oficina", "desc": "Av. Winston Churchill, Santo Domingo", "value": "Lun–Sáb · 9am–6pm" }
+    ]
+  },
+  "map": {
+    "placeholder": "Mapa en proceso",
+    "north_label": "Costa norte:",
+    "north_val": "Sosúa, Puerto Plata",
+    "capital_label": "Capital:",
+    "capital_val": "Santo Domingo"
+  },
+  "form": {
+    "heading": "Envíanos un mensaje",
+    "name_label": "Nombre completo",
+    "name_placeholder": "Tu nombre completo",
+    "email_label": "Correo electrónico",
+    "phone_label": "Teléfono / WhatsApp",
+    "phone_valid": "✓ Válido",
+    "interest_label": "Me interesa",
+    "interest_options": [
+      "Comprar una propiedad",
+      "Alquilar una propiedad",
+      "Publicar mi propiedad",
+      "Asesoramiento de inversión",
+      "Ayuda con la reubicación",
+      "Consulta general"
+    ],
+    "message_label": "Mensaje",
+    "message_placeholder": "Cuéntanos lo que buscas…",
+    "consent": "Acepto ser contactado sobre mi consulta y acepto la política de privacidad.",
+    "submit": "Enviar mensaje"
+  },
+  "success": {
+    "heading": "¡Mensaje enviado!",
+    "sub": "Te responderemos en pocas horas. Mientras tanto, puedes explorar las propiedades.",
+    "browse": "Ver propiedades"
+  },
+  "bottom": {
+    "eyebrow": "¿No sabes por dónde empezar?",
+    "heading": "Explora nuestros recursos primero",
+    "sub": "Desde guías de compra hasta calculadoras de ROI — todo lo que necesitas para tomar una decisión segura.",
+    "buying": "Guía de compra",
+    "calculator": "Calculadora ROI"
+  }
+}

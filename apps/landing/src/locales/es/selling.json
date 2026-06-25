@@ -1,0 +1,77 @@
+{
+  "hero": {
+    "eyebrow": "Para propietarios, vendedores y agentes",
+    "heading": "Publica una vez. Llega a compradores en todo el mundo.",
+    "sub": "La diáspora dominicana es global. Tu comprador puede estar en Miami, Madrid, Toronto o Nueva York. I♥DR Realty está diseñado para que un solo listado llegue a todos — traducido, verificado y optimizado para la forma en que los compradores serios realmente buscan en 2026.",
+    "list": "Publicar tu propiedad",
+    "talk": "Hablar con nuestro equipo"
+  },
+  "problem": {
+    "eyebrow": "Por qué importa",
+    "heading": "Un listado debería hacer el trabajo de diez.",
+    "body": "La mayoría de los vendedores en la RD publican la misma propiedad en cinco grupos de WhatsApp, tres páginas de Facebook, dos sitios de agentes y Marketplace — y aún así se pierden a la mayoría de los compradores serios. Construimos esta plataforma para que tu listado solo necesite estar en un lugar y llegar a compradores locales, la diáspora, inversores extranjeros y las herramientas de IA que usan cada vez más para investigar propiedades antes de hablar con alguien.",
+    "body_strong": "compradores locales, la diáspora, inversores extranjeros y las herramientas de IA que usan cada vez más para investigar propiedades antes de hablar con alguien."
+  },
+  "pillars": {
+    "eyebrow": "Por qué los vendedores trabajan con nosotros",
+    "heading": "Lo que I♥DR Realty hace por tu listado",
+    "items": [
+      { "title": "Alcance global desde el primer día", "desc": "Tu listado aparece en nuestra plataforma, sitios asociados, motores de búsqueda de IA y nuestros canales sociales — llegando a compradores de la diáspora y más allá, no solo al mercado local." },
+      { "title": "Verificado, la confianza primero", "desc": "Cada listado en nuestra plataforma se revisa para garantizar su exactitud. Ese filtro protege a los compradores — por eso los compradores serios vienen aquí primero." },
+      { "title": "Gestión de leads integrada", "desc": "Las consultas se dirigen a tu panel y a GoHighLevel automáticamente. Leads calientes etiquetados, seguimientos programados, nada se escapa." },
+      { "title": "Precios respaldados por datos", "desc": "Comparamos tu propiedad con ventas recientes similares en tu barrio — no con precios aspiracionales, sino con cierres reales." }
+    ]
+  },
+  "reach": {
+    "eyebrow": "Cómo tu listado realmente llega a los compradores",
+    "heading": "La plataforma detrás de cada listado",
+    "sub": "Diseñada para la forma en que los compradores serios buscan hoy — en distintos idiomas, divisas, dispositivos y, cada vez más, asistentes de IA.",
+    "items": [
+      { "num": "ES / EN", "label": "Listados bilingües traducidos automáticamente", "note": "Traducción DeepL revisada antes de publicar" },
+      { "num": "USD + DOP", "label": "Visualización en doble moneda en cada listado", "note": "Actualización diaria del tipo de cambio del Banco Central" },
+      { "num": "IA-ready", "label": "Marcado de esquema para motores de IA", "note": "Diseñado para ser citado por ChatGPT, Perplexity, Google AI" },
+      { "num": "WhatsApp", "label": "Enlace directo en cada listado", "note": "Así se comunican realmente los compradores de la RD" },
+      { "num": "Open Graph", "label": "Vistas previas limpias en FB, IG, LinkedIn", "note": "Probado en todas las plataformas sociales" },
+      { "num": "Tiempo real", "label": "Leads sincronizados con GoHighLevel CRM", "note": "Más vista del panel + correo + alertas de Slack" }
+    ],
+    "disclaimer_strong": "Los números de historial",
+    "disclaimer_rest": " (tratos cerrados, propiedades vendidas, alcance de marketing) se añadirán aquí a medida que la plataforma los recopile. No creemos en inflar números tempranos — preferimos decirte exactamente lo que hemos construido y dejar que los resultados hablen por sí mismos."
+  },
+  "process": {
+    "eyebrow": "El proceso",
+    "heading": "De la valoración al cierre",
+    "sub": "La mayoría de los listados cierran en 90–180 días. Así es exactamente como llegamos ahí.",
+    "steps": [
+      { "title": "Valoración gratuita", "desc": "Cuéntanos sobre tu propiedad. Analizamos ventas comparables, tendencias del barrio y demanda actual para darte un rango de precios realista — no un número inflado para ganar tu listado." },
+      { "title": "Preparación del listado", "desc": "Listado de calidad profesional con fotos optimizadas, texto bilingüe, mapa de ubicación, amenidades y estrategia de precios. Revisado por nuestro equipo antes de publicarlo." },
+      { "title": "Lanzamiento de marketing", "desc": "Listado publicado en nuestra plataforma, sitios asociados, canales sociales y la base de datos de solicitudes de compradores para coincidencia instantánea con leads calificados." },
+      { "title": "Calificación de leads", "desc": "Consultas filtradas. Solo dedicas tiempo a compradores serios — preaprobados, con presupuesto confirmado y que encajan con el perfil de tu propiedad." },
+      { "title": "Ofertas y negociación", "desc": "Gestionamos el intercambio, presentamos cierres comparables para respaldar tu posición y protegemos tus intereses durante la negociación." },
+      { "title": "Apoyo en el cierre", "desc": "Coordinación de abogado, transferencia de título, garantía en custodia, manejo del depósito y entrega final — gestionado y rastreado de principio a fin." }
+    ]
+  },
+  "trust": {
+    "eyebrow": "Encuentra un socio de confianza",
+    "heading": "Lo que vender con I♥DR Realty realmente significa",
+    "items": [
+      "Plan de marketing personalizado para cada propiedad",
+      "Listado bilingüe ES/EN, traducido automáticamente y revisado por humanos",
+      "Doble moneda USD/DOP en cada página",
+      "La cola de aprobación de listados mantiene el estándar alto de la plataforma",
+      "Leads calientes etiquetados y dirigidos a ti en tiempo real",
+      "Divisiones de co-listado y referidos gestionadas de forma transparente",
+      "Rastreador de comisiones visible solo para ti y los administradores"
+    ]
+  },
+  "quote": {
+    "eyebrow": "Lo que creemos",
+    "text": "\"Un gran listado no es un vertedero de propiedades en cinco sitios web. Es una oportunidad clara, honesta y bellamente presentada — en una plataforma en la que los compradores serios realmente confían. Ese es el estándar al que nos sujetamos.\"",
+    "author": "— El equipo de I♥DR Realty"
+  },
+  "cta": {
+    "heading": "¿Listo para publicar tu propiedad?",
+    "sub": "Obtén una valoración gratuita y honesta. Sin compromiso — solo números reales de un equipo que conoce tu mercado.",
+    "valuation": "Obtener valoración gratuita",
+    "talk": "Hablar con nuestro equipo"
+  }
+}

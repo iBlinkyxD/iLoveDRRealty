@@ -1,0 +1,124 @@
+{
+  "hero": {
+    "eyebrow": "Descubrir · Invertir · Vivir",
+    "heading": "Descubre, Invierte y Vive en el Paraíso.",
+    "sub": "El ecosistema inmobiliario de la República Dominicana — propiedades de lujo, herramientas de inversión y orientación con IA — en una sola plataforma de confianza.",
+    "search": {
+      "location_label": "Ubicación",
+      "location_any": "En cualquier lugar",
+      "type_label": "Tipo",
+      "type_all": "Todas las propiedades",
+      "type_villa": "Villa",
+      "type_apartment": "Apartamento",
+      "type_condo": "Condo",
+      "type_land": "Terreno",
+      "type_commercial": "Comercial",
+      "budget_label": "Presupuesto",
+      "budget_any": "Cualquier precio",
+      "budget_500k": "Menos de $500K",
+      "budget_1m": "Menos de $1M",
+      "budget_3m": "Menos de $3M",
+      "button": "Buscar"
+    },
+    "badges": {
+      "verified": "Propiedades verificadas",
+      "bilingual": "Inglés y Español",
+      "roi": "Análisis ROI en tiempo real",
+      "whatsapp": "Concierge por WhatsApp"
+    },
+    "empty": {
+      "title": "Inventario próximamente",
+      "sub": "Nuevas propiedades están siendo verificadas y aparecerán aquí en breve.",
+      "cta": "Ver todas →"
+    },
+    "explore": {
+      "title": "Explorar más",
+      "sub": "Ver todos los listados activos →"
+    }
+  },
+  "stats": {
+    "active_listings": "Propiedades activas",
+    "properties_listed": "Propiedades en venta",
+    "verified_realtors": "Agentes verificados",
+    "registered_buyers": "Compradores registrados"
+  },
+  "deal": {
+    "badge": "★ Oferta de la Semana",
+    "sub": "Seleccionada por nuestro equipo",
+    "pick_label": "La elección de esta semana",
+    "bedrooms": "Habitaciones",
+    "bathrooms": "Baños",
+    "area": "Área total",
+    "view_cta": "Ver esta propiedad",
+    "roi_cta": "Calcular ROI",
+    "disclaimer": "Cómo elegimos: cada semana nuestro equipo selecciona una propiedad donde la ubicación, el estilo de vida y el precio por m² realmente se destacan. <strong>Propietarios y agentes pueden enviar una propiedad para consideración</strong> — nuestro equipo revisa cada propuesta por valor y calidad antes de destacarla."
+  },
+  "founder": {
+    "eyebrow": "★ Por qué lo construimos",
+    "heading": "Alguna vez estuvimos donde <em>tú estás ahora.</em>",
+    "para1": "Somos americanos que nos mudamos a la República Dominicana por las mismas razones que la mayoría de ustedes están considerando — el clima, el costo de vida, el ritmo, la oportunidad a largo plazo y un estilo de vida caribeño que no requiere un sello de pasaporte cada seis meses.",
+    "para2": "Como la mayoría de los expatriados, creíamos haber hecho nuestra tarea. No la habíamos hecho. <strong>Pagamos de más por nuestra primera propiedad</strong>, porque el precio de venta en la RD no es realmente el precio. <strong>Perdimos un depósito en un trato que nunca cerró</strong>, porque nadie nos dijo qué verificar antes de transferir fondos. Contratamos al abogado equivocado, tomamos las recomendaciones equivocadas y aprendimos — lenta y costosamente — que la RD recompensa a quienes conocen las reglas locales y castiga a todos los demás.",
+    "para3": "Por eso existe I♥DR Realty. Construimos la plataforma que desearíamos haber tenido cuando comenzamos: listados verificados, precios transparentes, un equipo bilingüe que ha vivido el proceso y las respuestas prácticas que no aparecen en ninguna guía.",
+    "cta_guide": "Ver la guía de compra",
+    "cta_team": "Conoce al equipo",
+    "photo_caption": "Los Fundadores · Las Terrenas, 2019",
+    "badge": "Nos mudamos en 2019",
+    "mistakes_eyebrow": "★ Lecciones que pagamos, para que tú no tengas que",
+    "mistakes_heading": "Seis errores que cometimos — y cómo te ayudamos a evitarlos",
+    "mistake_label": "El error",
+    "lesson_label": "Cómo lo resolvimos",
+    "mistakes": [
+      {
+        "mistake": "Confiamos en un contrato en un solo idioma.",
+        "lesson": "Cada contrato se revisa ahora en inglés y español — y marcamos las cláusulas que los americanos suelen pasar por alto."
+      },
+      {
+        "mistake": "Pagamos un depósito antes de la búsqueda de título.",
+        "lesson": "Nunca dejamos que un cliente coloque dinero de garantía hasta que el registro de la Conservaduría esté limpio."
+      },
+      {
+        "mistake": "Contratamos al abogado más barato que encontramos.",
+        "lesson": "Nuestra red de abogados dominicanos verificados ha gestionado cientos de cierres con compradores extranjeros — te presentaremos dos o tres."
+      },
+      {
+        "mistake": "Asumimos que los beneficios de CONFOTUR eran automáticos.",
+        "lesson": "No lo son. Verificamos la elegibilidad de CONFOTUR antes de comprar y te guiamos con el papeleo después."
+      },
+      {
+        "mistake": "No presupuestamos los costos de cierre que nadie mencionó.",
+        "lesson": "Nuestra calculadora de ROI incluye el impuesto de transferencia del 3%, el IPI del 1%, honorarios notariales y cada partida que nos sorprendió."
+      },
+      {
+        "mistake": "Seguimos recomendaciones de personas que nunca habían comprado propiedades.",
+        "lesson": "Cada miembro de nuestro equipo posee propiedades en la RD o ha ayudado a un familiar a comprar. Sin excepciones."
+      }
+    ],
+    "quote": "\"Si hubiéramos tenido un equipo como el nuestro cuando empezamos, habríamos cerrado nuestra primera propiedad en la RD seis meses antes — y pagado cuarenta mil dólares menos.\"",
+    "quote_author": "— Los Fundadores, I♥DR Realty"
+  },
+  "roles": {
+    "eyebrow": "Para todos",
+    "heading": "Una plataforma. Tres experiencias poderosas.",
+    "sub": "Ya sea que estés comprando una casa de ensueño, creciendo tu portafolio o cerrando tratos como profesional — cada flujo de trabajo pasa por un marketplace verificado.",
+    "buyer": {
+      "label": "Compradores y Arrendatarios",
+      "sub": "Exploración inmersiva, filtros inteligentes y un flujo de consulta sin problemas para encontrar tu lugar en el paraíso — cada listado verificado.",
+      "perks": ["Búsqueda con filtros avanzados", "Lista de deseos y casas guardadas", "Calendario de reservas de alquiler", "Orientación del concierge de IA"]
+    },
+    "investor": {
+      "label": "Inversores",
+      "sub": "Descubrimiento enfocado en ROI con análisis profesional de ofertas e inteligencia de mercado en tiempo real integrada en cada propiedad.",
+      "perks": ["Estimador de ganancias de oferta", "Modelado de punto de equilibrio", "Mercado de solicitudes de compradores", "Datos de rendimiento regional"]
+    },
+    "realtor": {
+      "label": "Agentes y Propietarios",
+      "sub": "Publica una vez, llega a compradores internacionales y gestiona clientes potenciales, calendarios y comisiones desde un portal profesional.",
+      "perks": ["Gestor de listados y leads", "Sincronización de pipeline y CRM", "Co-listados y referencias", "Kit de compartición social"]
+    }
+  },
+  "featured": {
+    "eyebrow": "Seleccionadas a mano",
+    "heading": "Propiedades destacadas",
+    "view_all": "Ver todas"
+  }
+}

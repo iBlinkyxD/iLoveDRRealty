@@ -34,6 +34,7 @@ import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
 import { createBooking } from "../api/bookings";
 import { getMe } from "../api/auth";
+import { useTranslation } from 'react-i18next'
 
 function Slider({
   label,
@@ -123,10 +124,8 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
 
 function parseLatLng(url: string): { lat: number; lng: number } | null {
   try {
-    // Format 1: /maps/place/.../@lat,lng,zoom
     const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
     if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) }
-    // Format 2: ?q=lat,lng or &q=lat,lng
     const qMatch = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
     if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) }
   } catch { /* ignore */ }
@@ -151,7 +150,6 @@ function PropertyMap({ mapsUrl, locationName, latitude, longitude }: {
   })
 
   if (!apiKey || !coords) {
-    // Fallback: iframe embed by location name or maps_url
     const ALLOWED_HOSTS = new Set(["maps.google.com", "www.google.com", "google.com", "maps.googleapis.com"])
     const fallback = `https://maps.google.com/maps?q=${encodeURIComponent(locationName + ", Dominican Republic")}&output=embed`
     let embedSrc = fallback
@@ -261,16 +259,10 @@ function youtubeEmbedUrl(url: string): string | null {
   }
 }
 
-const DEPOSIT_LABELS: Record<string, string> = {
-  first: "First month's rent",
-  last: "Last month's rent",
-  first_last: "First + Last month's rent",
-  none: "No deposit required",
-};
-
 function PropertyDetailInner({ id: idProp }: { id?: string }) {
   const params = useSearchParams();
   const go = useNav();
+  const { t } = useTranslation('property_detail')
   const id = idProp ?? params.get("id") ?? "";
   const canonicalUrl = id
     ? `${typeof window !== "undefined" ? window.location.origin : "https://ilovedrrealty.com"}/listing/${id}/`
@@ -418,12 +410,12 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
   if (loadError)
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-muted font-sans">
-        <p className="text-[15px]">Property not found.</p>
+        <p className="text-[15px]">{t('not_found')}</p>
         <button
           onClick={() => go("search")}
           className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer text-ink2 text-[13px] font-sans"
         >
-          <ArrowLeft size={15} /> Back to search
+          <ArrowLeft size={15} /> {t('back')}
         </button>
       </div>
     );
@@ -431,7 +423,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
   if (!listing)
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-muted font-sans text-[14px]">
-        Loading property…
+        {t('loading')}
       </div>
     );
 
@@ -443,17 +435,17 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
         className="flex items-center gap-1.5 bg-transparent border-none cursor-pointer text-ink2 text-[13px] mb-4 font-sans"
       >
         <ArrowLeft size={15} />
-        Back to search
+        {t('back')}
       </button>
 
       {/* Header */}
       <div className="mb-3.5">
         <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
-          {(listing.tags?.length ? listing.tags : listing.tag ? [listing.tag] : []).map(t => {
-            const tone = TAG_TONES[t] ?? "sand";
+          {(listing.tags?.length ? listing.tags : listing.tag ? [listing.tag] : []).map(tag => {
+            const tone = TAG_TONES[tag] ?? "sand";
             return (
-              <span key={t} className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${TONE_MAP[tone] ?? TONE_MAP.sand}`}>
-                {t}
+              <span key={tag} className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${TONE_MAP[tone] ?? TONE_MAP.sand}`}>
+                {tag}
               </span>
             );
           })}
@@ -462,7 +454,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               onClick={handleShareClick}
               className="flex items-center gap-2 bg-transparent border border-line text-ink text-[13px] font-semibold px-4 py-2 rounded-full cursor-pointer font-sans hover:bg-paper2 transition-colors"
             >
-              <Share2 size={14} /> Share
+              <Share2 size={14} /> {t('share')}
             </button>
             {shareOpen && (() => {
               const shareUrl = canonicalUrl || (typeof window !== "undefined" ? window.location.href : "");
@@ -525,7 +517,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               ];
               return (
                 <div className="absolute top-full right-0 mt-2 w-72 bg-white border border-line rounded-2xl shadow-[0_12px_36px_-10px_rgba(0,16,46,.22)] z-20 p-4">
-                  <div className="text-[10.5px] font-bold uppercase tracking-widest text-ink2 mb-3.5">Share this listing</div>
+                  <div className="text-[10.5px] font-bold uppercase tracking-widest text-ink2 mb-3.5">{t('share_heading')}</div>
                   <div className="grid grid-cols-5 gap-1 mb-4">
                     {platforms.map(p => (
                       <a
@@ -552,7 +544,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                   >
                     <Link2 size={13} className="text-ink2 shrink-0" />
                     <span className="flex-1 truncate text-[11.5px] text-ink2 min-w-0">{shareUrl}</span>
-                    <span className="shrink-0 text-[12px] font-bold text-ink">{copied ? "Copied!" : "Copy"}</span>
+                    <span className="shrink-0 text-[12px] font-bold text-ink">{copied ? t('copied') : t('copy')}</span>
                   </button>
                 </div>
               );
@@ -578,14 +570,14 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               onClick={() => setGalleryTab('photos')}
               className={`px-4 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${galleryTab === 'photos' ? 'bg-ink text-white' : 'bg-paper2 text-ink2 hover:bg-paper'}`}
             >
-              Photos
+              {t('photos')}
             </button>
             <button
               onClick={() => setGalleryTab('3dtour')}
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${galleryTab === '3dtour' ? 'bg-ink text-white' : 'bg-paper2 text-ink2 hover:bg-paper'}`}
             >
               <Box size={13} />
-              3D Tour
+              {t('tour_3d')}
             </button>
           </div>
         )}
@@ -628,7 +620,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             >
               {remainingCount > 0 && (
                 <div className="absolute inset-0 grid place-items-center text-white text-[13px] font-semibold font-sans bg-ink/52">
-                  + {remainingCount} photo{remainingCount !== 1 ? "s" : ""}
+                  {remainingCount !== 1 ? t('photo_more_plural', { count: remainingCount }) : t('photo_more', { count: remainingCount })}
                 </div>
               )}
             </div>
@@ -645,13 +637,13 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             {(listing.bedrooms ?? 0) > 0 && (
               <span className="flex items-center gap-1.5">
                 <BedDouble size={18} />
-                {listing.bedrooms} beds
+                {listing.bedrooms} {t('beds')}
               </span>
             )}
             {(listing.bathrooms ?? 0) > 0 && (
               <span className="flex items-center gap-1.5">
                 <Bath size={18} />
-                {listing.bathrooms} baths
+                {listing.bathrooms} {t('baths')}
               </span>
             )}
             {listing.area_sqft && (
@@ -669,7 +661,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             {listing.year_built && (
               <span className="flex items-center gap-1.5">
                 <Calendar size={18} />
-                Built {listing.year_built}
+                {t('built', { year: listing.year_built })}
               </span>
             )}
           </div>
@@ -678,7 +670,6 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {(() => {
             const fallback = `<p>Nestled along the pristine shores of ${listing.location.split(",")[0]}, this property is an architectural masterpiece that redefines Caribbean luxury — an extraordinary residence offering an unparalleled fusion of indoor-outdoor living in one of the DR's most sought-after destinations.</p>`
             const raw = listing.description ?? fallback
-            // Support both plain-text (legacy) and Tiptap HTML
             const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
             const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
             return (
@@ -691,53 +682,53 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
 
           {/* Property details */}
           <h3 className="font-sans text-[22px] font-semibold text-ink mt-7 mb-4">
-            Property Details
+            {t('sections.details')}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               listing.lot_size_sqft && {
                 icon: <Layers size={18} />,
-                label: "Lot Size",
+                label: t('details.lot_size'),
                 value: `${listing.lot_size_sqft.toLocaleString()} ft²`,
               },
               listing.construction_status && {
                 icon: <Building2 size={18} />,
-                label: "Construction",
+                label: t('details.construction'),
                 value: listing.construction_status
                   .replace(/_/g, " ")
                   .replace(/\b\w/g, (c) => c.toUpperCase()),
               },
               listing.hoa_fee && {
                 icon: <MapPin size={18} />,
-                label: "HOA Fee",
+                label: t('details.hoa_fee'),
                 value: currency === 'DOP'
                   ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
                   : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
               },
               listing.roi && {
                 icon: <Star size={18} />,
-                label: "Est. ROI",
+                label: t('details.est_roi'),
                 value: `${listing.roi}% / yr`,
               },
               listing.seller_financing && {
                 icon: <CheckCircle2 size={18} />,
-                label: "Seller Financing",
-                value: "Available",
+                label: t('details.seller_financing'),
+                value: t('details.seller_financing_val'),
               },
               listing.tax_exempt && {
                 icon: <CheckCircle2 size={18} />,
-                label: "Tax Exemption",
-                value: "CONFOTUR Exempt",
+                label: t('details.tax_exempt'),
+                value: t('details.tax_exempt_val'),
               },
               listing.gated_community && {
                 icon: <CheckCircle2 size={18} />,
-                label: "Gated Community",
-                value: "Private Access",
+                label: t('details.gated'),
+                value: t('details.gated_val'),
               },
               listing.hoa && {
                 icon: <CheckCircle2 size={18} />,
-                label: "HOA Community",
-                value: "Included",
+                label: t('details.hoa_community'),
+                value: t('details.hoa_community_val'),
               },
             ]
               .filter(Boolean)
@@ -763,7 +754,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {listing.features.length > 0 && (
             <div className="mt-7">
               <h3 className="font-sans text-[22px] font-semibold text-ink mb-4">
-                Property Features
+                {t('sections.features')}
               </h3>
               <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                 {listing.features.map((f, i) => (
@@ -779,7 +770,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {/* Resources: video links */}
           {(listing.video_links?.length ?? 0) > 0 && (
             <div className="mt-7">
-              <h3 className="font-sans text-[22px] font-semibold text-ink mb-4">Resources</h3>
+              <h3 className="font-sans text-[22px] font-semibold text-ink mb-4">{t('sections.resources')}</h3>
               <div className="space-y-2.5">
                 {listing.video_links?.map((url, i) => {
                   const safe = safeUrl(url);
@@ -819,7 +810,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {/* Utilities */}
           {listing.utilities && (
             <div className="mt-7">
-              <h3 className="font-sans text-[22px] font-semibold text-ink mb-3">Utilities</h3>
+              <h3 className="font-sans text-[22px] font-semibold text-ink mb-3">{t('sections.utilities')}</h3>
               {(() => {
                 const raw = listing.utilities!
                 const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
@@ -832,7 +823,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {/* What is Included (rent only) */}
           {listing.transaction === "rent" && (listing.included_utilities?.length ?? 0) > 0 && (
             <div className="mt-7">
-              <h3 className="font-sans text-[22px] font-semibold text-ink mb-4">What is Included</h3>
+              <h3 className="font-sans text-[22px] font-semibold text-ink mb-4">{t('sections.included')}</h3>
               <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                 {listing.included_utilities!.map(u => (
                   <div key={u} className="flex items-center gap-2.5">
@@ -849,8 +840,8 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             <div className="mt-7 flex items-start gap-4 px-5 py-4 rounded-2xl border border-line-soft bg-paper2">
               <Calendar size={18} className="text-ink2 mt-0.5 shrink-0" />
               <div>
-                <div className="text-[11px] font-bold text-ink2 uppercase tracking-wide mb-0.5">Security Deposit</div>
-                <div className="text-[14px] font-semibold text-ink">{DEPOSIT_LABELS[listing.deposit_policy] ?? listing.deposit_policy}</div>
+                <div className="text-[11px] font-bold text-ink2 uppercase tracking-wide mb-0.5">{t('deposit.label')}</div>
+                <div className="text-[14px] font-semibold text-ink">{t('deposit.' + listing.deposit_policy, { defaultValue: listing.deposit_policy })}</div>
               </div>
             </div>
           )}
@@ -860,26 +851,26 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             <div className="mt-7 border border-line-soft rounded-2xl overflow-hidden bg-white shadow-[0_10px_30px_-18px_rgba(0,16,46,.18)]">
               {/* Header */}
               <div className="px-6 py-4 bg-[linear-gradient(135deg,var(--color-coral)_0%,#a8000d_100%)] text-white">
-                <div className="text-[11px] font-bold tracking-[.14em] uppercase">Mortgage Calculator</div>
-                <div className="text-[12px] mt-0.5 text-white/70">Estimate your monthly payment · Amounts in {currency === 'DOP' ? 'DOP' : 'USD'}</div>
+                <div className="text-[11px] font-bold tracking-[.14em] uppercase">{t('mortgage.title')}</div>
+                <div className="text-[12px] mt-0.5 text-white/70">{t('mortgage.subtitle', { currency: currency === 'DOP' ? 'DOP' : 'USD' })}</div>
               </div>
 
               <div className="px-6 pt-5 pb-6">
                 {/* Sliders */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <Slider label="Purchase price" value={aPrice} set={setAPrice} min={50000} max={5000000} step={25000} fmtV={(v) => fmt(v)} />
-                  <Slider label="Down payment" value={aDown} set={setADown} min={5} max={80} step={5} fmtV={(v) => `${v}%`} />
-                  <Slider label="Interest rate" value={aRate} set={setARate} min={0} max={14} step={0.25} fmtV={(v) => `${v}%`} />
-                  <Slider label="Loan term" value={aTerm} set={setATerm} min={5} max={30} step={5} fmtV={(v) => `${v} yrs`} />
+                  <Slider label={t('mortgage.purchase_price')} value={aPrice} set={setAPrice} min={50000} max={5000000} step={25000} fmtV={(v) => fmt(v)} />
+                  <Slider label={t('mortgage.down_payment')} value={aDown} set={setADown} min={5} max={80} step={5} fmtV={(v) => `${v}%`} />
+                  <Slider label={t('mortgage.interest_rate')} value={aRate} set={setARate} min={0} max={14} step={0.25} fmtV={(v) => `${v}%`} />
+                  <Slider label={t('mortgage.loan_term')} value={aTerm} set={setATerm} min={5} max={30} step={5} fmtV={(v) => `${v} yrs`} />
                 </div>
 
                 {/* Results */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                   {[
-                    ["Monthly payment", `${fmtM(mortgage.monthly)}/mo`],
-                    ["Loan amount", fmtM(mortgage.loan)],
-                    ["Down payment", fmtM(mortgage.down)],
-                    ["Total interest", fmtM(mortgage.totalInterest)],
+                    [t('mortgage.monthly'), `${fmtM(mortgage.monthly)}/mo`],
+                    [t('mortgage.loan_amount'), fmtM(mortgage.loan)],
+                    [t('mortgage.down_amount'), fmtM(mortgage.down)],
+                    [t('mortgage.total_interest'), fmtM(mortgage.totalInterest)],
                   ].map(([label, value], i) => (
                     <div key={i} className={`border rounded-xl p-4 ${i === 0 ? "bg-coral/10 border-coral/30" : "bg-paper2 border-line-soft"}`}>
                       <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{label}</div>
@@ -889,7 +880,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                 </div>
 
                 <p className="text-[11.5px] text-muted mt-4 leading-[1.55]">
-                  Principal & interest only. Does not include taxes, insurance, or HOA fees. Illustrative only, not financial advice.
+                  {t('mortgage.disclaimer')}
                 </p>
               </div>
             </div>
@@ -898,7 +889,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {/* Location */}
           <div className="mt-7">
             <h2 className="font-sans text-[22px] font-semibold text-ink mb-3.5">
-              Location
+              {t('sections.location')}
             </h2>
             <div
               className="rounded-2xl overflow-hidden border border-line"
@@ -908,7 +899,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             </div>
             <div className="flex items-center justify-between mt-2">
               <p className="text-[12.5px] text-ink2 leading-[1.55]">
-                Exact location shared after inquiry.
+                {t('location.exact')}
               </p>
               {listing.maps_url && (
                 <a
@@ -917,7 +908,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-sea hover:underline"
                 >
-                  Open in Google Maps <ExternalLink size={12} />
+                  {t('location.open_maps')} <ExternalLink size={12} />
                 </a>
               )}
             </div>
@@ -996,7 +987,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             <span
               className={`inline-flex items-center px-3 py-1 rounded-full text-[11.5px] font-bold border ${listing.transaction === "rent" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}
             >
-              {listing.transaction === "rent" ? "For Rent" : "For Sale"}
+              {listing.transaction === "rent" ? t('sidebar.for_rent') : t('sidebar.for_sale')}
             </span>
             <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
               {(['DOP', 'USD'] as const).map(c => (
@@ -1022,10 +1013,10 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                   <>
                     {discounted && (
                       <div className="inline-flex items-center gap-1.5 bg-coral/10 border border-coral/20 text-coral text-[11px] font-bold px-2.5 py-1 rounded-full mb-2">
-                        ★ Deal of the Week &nbsp;·&nbsp;
+                        {t('sidebar.deal_badge')} &nbsp;·&nbsp;
                         {listing.deal_discount_type === 'fixed'
-                          ? `−$${Number(listing.deal_discount_value).toLocaleString()} off`
-                          : `−${listing.deal_discount_value}% off`}
+                          ? t('sidebar.off_fixed', { amount: Number(listing.deal_discount_value).toLocaleString() })
+                          : t('sidebar.off_pct', { pct: listing.deal_discount_value })}
                       </div>
                     )}
                     <div className="text-[32px] font-bold text-ink">
@@ -1043,7 +1034,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                             ? `RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")}`
                             : fmt(listing.price)}
                         </span>
-                        <span className="text-[12px] text-ink2">original price</span>
+                        <span className="text-[12px] text-ink2">{t('sidebar.original_price')}</span>
                       </div>
                     ) : (
                       <div className="text-[12.5px] text-ink2 mt-0.5">
@@ -1057,14 +1048,14 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               })()}
 
               {[
-                listing.roi && ["Est. ROI", `${listing.roi}% / yr`],
+                listing.roi && [t('sidebar.est_roi'), `${listing.roi}% / yr`],
                 listing.hoa_fee && [
-                  "HOA Fee",
+                  t('sidebar.hoa_fee'),
                   currency === 'DOP'
                     ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
                     : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
                 ],
-                listing.tax_exempt && ["Tax", "CONFOTUR exempt (IPI waived)"],
+                listing.tax_exempt && [t('sidebar.tax_label'), t('sidebar.tax_val')],
               ]
                 .filter(Boolean)
                 .map(([l, v]: any, i) => (
@@ -1080,7 +1071,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                 onClick={() => go("calculator")}
                 className="w-full flex justify-center items-center py-3 mt-4 rounded-full border-none cursor-pointer text-white font-sans text-[13.5px] font-bold bg-coral"
               >
-                Analyze this deal
+                {t('sidebar.analyze')}
               </button>
             </>
           ) : (
@@ -1090,7 +1081,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                   ? `RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")}`
                   : fmt(listing.price)}{" "}
                 <span className="text-[16px] text-ink2 font-sans font-normal">
-                  {currency === 'DOP' ? 'DOP / mo' : 'USD / mo'}
+                  {currency === 'DOP' ? t('sidebar.per_mo_dop') : t('sidebar.per_mo_usd')}
                 </span>
               </div>
               <div className="text-[12.5px] text-ink2 mt-0.5">
@@ -1100,20 +1091,20 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               </div>
               {[
                 listing.hoa_fee && [
-                  "HOA Fee",
+                  t('sidebar.hoa_fee'),
                   currency === 'DOP'
                     ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
                     : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
                 ],
                 listing.association_fee && [
-                  "Association Fee",
+                  t('sidebar.assoc_fee'),
                   currency === 'DOP'
                     ? `RD$${Math.round(Number(listing.association_fee) * dopRate).toLocaleString('en-US')} / mo`
                     : `$${Number(listing.association_fee).toLocaleString()} / mo`,
                 ],
                 listing.deposit_policy && listing.deposit_policy !== 'none' && [
-                  "Deposit",
-                  DEPOSIT_LABELS[listing.deposit_policy] ?? listing.deposit_policy,
+                  t('sidebar.deposit'),
+                  t('deposit.' + listing.deposit_policy, { defaultValue: listing.deposit_policy }),
                 ],
               ]
                 .filter(Boolean)
@@ -1128,49 +1119,49 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                 ))}
               {bookingSent ? (
                 <div className="mt-4 py-3 text-center text-[13px] text-emerald-700 font-semibold">
-                  <CheckCircle2 size={15} className="inline mr-1.5" />Booking request sent!
+                  <CheckCircle2 size={15} className="inline mr-1.5" />{t('sidebar.booking_sent')}
                 </div>
               ) : bookingOpen ? (
                 <form onSubmit={handleBooking} className="mt-4 flex flex-col gap-2">
                   {bookingError && <div className="text-[12px] text-coral font-semibold text-center">{bookingError}</div>}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">Check-in</div>
+                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_in')}</div>
                       <input required type="date" value={bookingForm.checkIn}
                         onChange={e => setBookingForm(f => ({ ...f, checkIn: e.target.value }))}
                         className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
                     </div>
                     <div>
-                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">Check-out</div>
+                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_out')}</div>
                       <input required type="date" value={bookingForm.checkOut}
                         onChange={e => setBookingForm(f => ({ ...f, checkOut: e.target.value }))}
                         className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">Guests</div>
+                    <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.guests')}</div>
                     <input type="number" min={1} max={20} value={bookingForm.guests}
                       onChange={e => setBookingForm(f => ({ ...f, guests: parseInt(e.target.value) || 1 }))}
                       className="w-full text-[13px] border border-line rounded-lg px-3 py-1.5 font-sans outline-none" />
                   </div>
-                  <textarea rows={2} placeholder="Notes (optional)" value={bookingForm.notes}
+                  <textarea rows={2} placeholder={t('booking.notes')} value={bookingForm.notes}
                     onChange={e => setBookingForm(f => ({ ...f, notes: e.target.value }))}
                     className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none resize-none" />
                   <div className="flex gap-2">
                     <button type="button" onClick={() => { setBookingOpen(false); setBookingError('') }}
                       className="flex-1 py-2 rounded-full border border-line text-[13px] font-semibold text-ink2 cursor-pointer bg-transparent font-sans">
-                      Cancel
+                      {t('sidebar.cancel')}
                     </button>
                     <button type="submit" disabled={bookingSending}
                       className="flex-1 py-2 rounded-full bg-coral text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
-                      {bookingSending ? 'Sending…' : 'Request'}
+                      {bookingSending ? t('sidebar.sending') : t('sidebar.request')}
                     </button>
                   </div>
                 </form>
               ) : (
                 <button onClick={() => setBookingOpen(true)}
                   className="w-full flex justify-center items-center py-3 mt-4 rounded-full border-none cursor-pointer text-white font-sans text-[13.5px] font-bold bg-coral">
-                  Request to book
+                  {t('sidebar.request_book')}
                 </button>
               )}
             </>
@@ -1180,7 +1171,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {listing.submitted_by_name && (
             <div className="mt-5 pt-4 border-t border-line-soft">
               <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-3">
-                Listed by
+                {t('sidebar.listed_by')}
               </div>
               <div className="flex items-center gap-3 mb-4">
                 <div
@@ -1207,35 +1198,35 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               </div>
               {inquirySent ? (
                 <div className="py-3 text-center text-[13px] text-emerald-700 font-semibold">
-                  <CheckCircle2 size={15} className="inline mr-1.5" />Message sent! We'll be in touch.
+                  <CheckCircle2 size={15} className="inline mr-1.5" />{t('sidebar.inquiry_sent')}
                 </div>
               ) : inquiryOpen ? (
                 <form onSubmit={handleInquiry} className="flex flex-col gap-2">
-                  <input required placeholder="Your name" value={inquiryForm.name}
+                  <input required placeholder={t('inquiry.name')} value={inquiryForm.name}
                     onChange={e => setInquiryForm(f => ({ ...f, name: e.target.value }))}
                     className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
-                  <input required type="email" placeholder="Email" value={inquiryForm.email}
+                  <input required type="email" placeholder={t('inquiry.email')} value={inquiryForm.email}
                     onChange={e => setInquiryForm(f => ({ ...f, email: e.target.value }))}
                     className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
                   <PhoneInput
                     defaultCountry="us"
-                    placeholder="Phone (optional)"
+                    placeholder={t('inquiry.phone')}
                     value={inquiryForm.phone}
                     onChange={phone => setInquiryForm(f => ({ ...f, phone }))}
                     inputStyle={{ flex: 1, width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #e4ddcf', borderLeft: 'none', borderRadius: '0 0.5rem 0.5rem 0', backgroundColor: '#ffffff', fontFamily: 'inherit', fontSize: '0.8125rem', color: '#00102e', outline: 'none' }}
                     countrySelectorStyleProps={{ buttonStyle: { border: '1px solid #e4ddcf', borderRight: 'none', borderRadius: '0.5rem 0 0 0.5rem', backgroundColor: '#f3f1ea', padding: '0 0.5rem', cursor: 'pointer', height: '100%' } }}
                   />
-                  <textarea required rows={3} placeholder="Your message…" value={inquiryForm.message}
+                  <textarea required rows={3} placeholder={t('inquiry.message')} value={inquiryForm.message}
                     onChange={e => setInquiryForm(f => ({ ...f, message: e.target.value }))}
                     className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none resize-none" />
                   <div className="flex gap-2">
                     <button type="button" onClick={() => setInquiryOpen(false)}
                       className="flex-1 py-2 rounded-full border border-line text-[13px] font-semibold text-ink2 cursor-pointer bg-transparent font-sans">
-                      Cancel
+                      {t('sidebar.cancel')}
                     </button>
                     <button type="submit" disabled={inquirySending}
                       className="flex-1 py-2 rounded-full bg-sea text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
-                      {inquirySending ? 'Sending…' : 'Send'}
+                      {inquirySending ? t('sidebar.sending') : t('sidebar.send')}
                     </button>
                   </div>
                 </form>
@@ -1251,7 +1242,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                     setInquiryOpen(true)
                   }}
                   className="w-full flex justify-center items-center gap-1.5 bg-transparent border border-line text-ink px-3 py-2.5 rounded-full text-[13px] font-semibold cursor-pointer font-sans hover:bg-paper2 transition-colors">
-                  <MessageCircle size={14} /> Message Agent
+                  <MessageCircle size={14} /> {t('sidebar.message_agent')}
                 </button>
               )}
             </div>

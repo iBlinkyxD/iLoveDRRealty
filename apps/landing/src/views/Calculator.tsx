@@ -1,6 +1,7 @@
 'use client'
 import { useNav } from '../hooks/useNav'
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type Scenario = 'rent' | 'vacation' | 'flip'
 type Financing = 'mortgage' | 'cash' | 'hard' | 'seller'
@@ -97,6 +98,7 @@ function KpiCard({ label, value, kind, sub, highlight }: {
 
 export default function Calculator() {
   const go = useNav()
+  const { t } = useTranslation('calculator')
   const [scenario, setScenario] = useState<Scenario>('rent')
   const [price, setPrice] = useState(500_000)
   const [downPct, setDownPct] = useState(25)
@@ -139,14 +141,14 @@ export default function Calculator() {
       return {
         flip: true,
         kpis: [
-          { label: 'Total Flip Profit',   value: fmt(profit),        kind: profit >= 0 ? 'positive' : 'negative', sub: 'After all costs' },
-          { label: 'Return on Cash',      value: pct(roi),           kind: roi >= 0 ? 'positive' : 'negative',   sub: 'On total investment', highlight: true },
-          { label: 'Hold Period',         value: holdingMo + ' mo',  kind: 'neutral',   sub: 'Typical buy → resell' },
-          { label: 'Est. Resale',         value: fmt(resale),        kind: 'positive',  sub: '+32% uplift assumed' },
-          { label: 'Total Investment',    value: fmt(totalInvest),   kind: 'neutral',   sub: 'Down + closing + reno' },
-          { label: 'Selling Cost',        value: fmt(sellingCost),   kind: 'neutral',   sub: '3% of resale' },
-          { label: 'Holding Cost',        value: fmt(holdingCost),   kind: 'neutral',   sub: `${holdingMo} months carry` },
-          { label: 'Monthly Mortgage',    value: fmt(monthlyMort),   kind: 'neutral',   sub: 'Principal + interest' },
+          { label: t('kpis.flip_profit_label'),   value: fmt(profit),        kind: profit >= 0 ? 'positive' : 'negative', sub: t('kpis.flip_profit_sub') },
+          { label: t('kpis.roc_label'),            value: pct(roi),           kind: roi >= 0 ? 'positive' : 'negative',   sub: t('kpis.roc_sub'), highlight: true },
+          { label: t('kpis.hold_label'),           value: holdingMo + ' mo',  kind: 'neutral',   sub: t('kpis.hold_sub') },
+          { label: t('kpis.resale_label'),         value: fmt(resale),        kind: 'positive',  sub: t('kpis.resale_sub') },
+          { label: t('kpis.invest_label'),         value: fmt(totalInvest),   kind: 'neutral',   sub: t('kpis.invest_sub') },
+          { label: t('kpis.sell_cost_label'),      value: fmt(sellingCost),   kind: 'neutral',   sub: t('kpis.sell_cost_sub') },
+          { label: t('kpis.hold_cost_label'),      value: fmt(holdingCost),   kind: 'neutral',   sub: t('kpis.hold_cost_sub', { mo: holdingMo }) },
+          { label: t('kpis.mort_label'),           value: fmt(monthlyMort),   kind: 'neutral',   sub: t('kpis.mort_sub') },
         ] as { label: string; value: string; kind: string; sub: string; highlight?: boolean }[],
         years: [] as { y: number; rent: number; exp: number; net: number }[],
         maxBar: 1,
@@ -197,7 +199,7 @@ export default function Calculator() {
     const return10   = cumRent - cumExp + equityGain
 
     const allCash = {
-      label: 'All Cash Purchase',
+      label: t('comparison.all_cash_label'),
       roi: (noi / (price + closingAmt + reno)) * 100,
       cf: Math.round(noi / 12),
       be: noi > 0 ? (price + closingAmt + reno) / noi : Infinity,
@@ -206,14 +208,14 @@ export default function Calculator() {
     const mort20  = mortgagePmt(loan20, effRate, term) * 12
     const invest20 = price * 0.2 + closingAmt + reno
     const ls20 = {
-      label: '20% Down / Higher Leverage',
+      label: t('comparison.leverage_label'),
       roi: ((noi - mort20) / invest20) * 100,
       cf: Math.round((noi - mort20) / 12),
       be: noi > mort20 ? invest20 / (noi - mort20) : Infinity,
     }
     const confoturAdj = confoturYrs > 0 ? netCF : netCF + price * (propTaxPct / 100)
     const conf = {
-      label: 'With CONFOTUR Exemption',
+      label: t('comparison.confotur_label'),
       roi: (confoturAdj / totalInvest) * 100,
       cf: Math.round(confoturAdj / 12),
       be: confoturAdj > 0 ? totalInvest / confoturAdj : Infinity,
@@ -222,22 +224,25 @@ export default function Calculator() {
     return {
       flip: false,
       kpis: [
-        { label: 'Annual Net ROI',    value: pct(cocROI),    kind: cocROI >= 0 ? 'highlight' : 'negative',  sub: 'After all expenses & financing', highlight: true },
-        { label: 'Monthly Cash Flow', value: (monthlyCF >= 0 ? '+' : '') + fmt(monthlyCF), kind: monthlyCF >= 0 ? 'positive' : 'negative', sub: 'Net after mortgage' },
-        { label: 'Break-even',        value: isFinite(breakeven) ? breakeven.toFixed(1) + ' yrs' : '—', kind: 'neutral', sub: 'Based on cash-on-cash' },
-        { label: 'Annual Yield',      value: pct(grossYield), kind: 'positive', sub: 'Gross rental yield' },
-        { label: 'Total Investment',  value: fmt(totalInvest), kind: 'neutral', sub: 'Down + closing + reno' },
-        { label: 'Cap Rate',          value: pct(capRate),    kind: 'neutral',  sub: 'NOI / purchase price' },
-        { label: '10-Year Return',    value: fmt(return10),   kind: return10 >= 0 ? 'positive' : 'negative', sub: 'Cash flow + appreciation' },
-        { label: 'Monthly Mortgage',  value: fmt(monthlyMort), kind: 'neutral', sub: 'Principal + interest' },
+        { label: t('kpis.roi_label'),      value: pct(cocROI),    kind: cocROI >= 0 ? 'highlight' : 'negative',  sub: t('kpis.roi_sub'), highlight: true },
+        { label: t('kpis.cf_label'),       value: (monthlyCF >= 0 ? '+' : '') + fmt(monthlyCF), kind: monthlyCF >= 0 ? 'positive' : 'negative', sub: t('kpis.cf_sub') },
+        { label: t('kpis.be_label'),       value: isFinite(breakeven) ? breakeven.toFixed(1) + ' yrs' : '—', kind: 'neutral', sub: t('kpis.be_sub') },
+        { label: t('kpis.yield_label'),    value: pct(grossYield), kind: 'positive', sub: t('kpis.yield_sub') },
+        { label: t('kpis.invest_label'),   value: fmt(totalInvest), kind: 'neutral', sub: t('kpis.invest_sub') },
+        { label: t('kpis.cap_label'),      value: pct(capRate),    kind: 'neutral',  sub: t('kpis.cap_sub') },
+        { label: t('kpis.return10_label'), value: fmt(return10),   kind: return10 >= 0 ? 'positive' : 'negative', sub: t('kpis.return10_sub') },
+        { label: t('kpis.mort_label'),     value: fmt(monthlyMort), kind: 'neutral', sub: t('kpis.mort_sub') },
       ] as { label: string; value: string; kind: string; sub: string; highlight?: boolean }[],
       years, maxBar, breakeven,
       scenarios: [
-        { label: 'Buy & Rent (Current)', roi: cocROI, cf: monthlyCF, be: breakeven, current: true },
+        { label: t('comparison.current_label'), roi: cocROI, cf: monthlyCF, be: breakeven, current: true },
         allCash, ls20, conf,
       ] as { label: string; roi: number; cf: number; be: number; current?: boolean }[],
     }
-  }, [scenario, price, downPct, closingPct, reno, rate, term, financing, rent, occupancy, rentGrowth, propTaxPct, mgmtPct, maintPct, insPct, confoturYrs, appRate])
+  }, [scenario, price, downPct, closingPct, reno, rate, term, financing, rent, occupancy, rentGrowth, propTaxPct, mgmtPct, maintPct, insPct, confoturYrs, appRate, t])
+
+  const heroIcons = ['📊', '📈', '⚖️', '🏖️']
+  const heroBadges = t('hero.badges', { returnObjects: true }) as string[]
 
   return (
     <div className="bg-[#F8F9FC] font-sans text-[#0D1B3E] min-h-[calc(100vh-74px)]">
@@ -251,17 +256,17 @@ export default function Calculator() {
           style={{ background: 'radial-gradient(circle, rgba(245,166,35,.18) 0%, transparent 70%)' }} />
         <div className="relative max-w-310 mx-auto">
           <div className="text-2.75 font-bold tracking-[.18em] uppercase text-[#F5A623] mb-3">
-            DR Real Estate · ROI Calculator
+            {t('hero.eyebrow')}
           </div>
           <h1 className="font-sans text-[clamp(28px,4vw,52px)] font-extrabold text-white leading-[1.05] tracking-[-.02em] mb-3.5 max-w-175">
-            Run the numbers before you <em className="not-italic text-[#F5A623]">buy</em>
+            {t('hero.h1_pre')} <em className="not-italic text-[#F5A623]">{t('hero.h1_em')}</em>
           </h1>
           <p className="text-4 text-white/70 leading-[1.6] max-w-155">
-            Professional-grade deal analysis for Dominican Republic properties. Model scenarios, compare financing options, and stress-test your returns.
+            {t('hero.sub')}
           </p>
           <div className="flex gap-2.5 flex-wrap mt-5.5">
-            {[['📊', 'Live scenario modeling'], ['📈', '10-year projections'], ['⚖️', 'Financing comparison'], ['🏖️', 'CONFOTUR tax analysis']].map(([ic, l], i) => (
-              <span key={i} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/10 border border-white/15 text-white py-1.5 px-3 rounded-full">{ic} {l}</span>
+            {heroIcons.map((ic, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/10 border border-white/15 text-white py-1.5 px-3 rounded-full">{ic} {heroBadges[i]}</span>
             ))}
           </div>
         </div>
@@ -273,9 +278,9 @@ export default function Calculator() {
         {/* ── LEFT: INPUTS ── */}
         <div>
           {/* Scenario */}
-          <Card icon="🎯" title="Scenario">
+          <Card icon="🎯" title={t('scenario.title')}>
             <div className="grid grid-cols-3 gap-2">
-              {([['rent', 'Buy & Rent'], ['flip', 'Fix & Flip'], ['vacation', 'Vacation Rental']] as [Scenario, string][]).map(([k, l]) => (
+              {([['rent', t('scenario.rent')], ['flip', t('scenario.flip')], ['vacation', t('scenario.vacation')]] as [Scenario, string][]).map(([k, l]) => (
                 <button key={k} onClick={() => setScenarioMode(k)}
                   className={`py-2.75 rounded-md cursor-pointer font-sans text-3.25 font-semibold transition-all duration-150 border ${scenario === k ? 'bg-[#0D1B3E] text-white border-[#0D1B3E]' : 'bg-white text-[#556070] border-[#E2E8F0]'}`}>
                   {l}
@@ -285,69 +290,69 @@ export default function Calculator() {
           </Card>
 
           {/* Property Details */}
-          <Card icon="🏠" title="Property Details">
-            <Field label="Purchase Price" hint="USD">
+          <Card icon="🏠" title={t('property.title')}>
+            <Field label={t('property.purchase_price')} hint={t('property.usd')}>
               <NumberInput value={price} set={setPrice} min={50_000} max={5_000_000} step={10_000} prefix="$" />
               <input type="range" min={50_000} max={5_000_000} step={10_000} value={price} onChange={e => setPrice(+e.target.value)}
                 className="w-full mt-2 accent-[#0099CC]" />
-              <div className="flex justify-between text-[10.5px] text-[#556070] mt-0.5"><span>$50K</span><span>$5M</span></div>
+              <div className="flex justify-between text-[10.5px] text-[#556070] mt-0.5"><span>{t('property.price_min')}</span><span>{t('property.price_max')}</span></div>
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Down Payment"><NumberInput value={downPct} set={setDownPct} min={0} max={100} suffix="%" /></Field>
-              <Field label="Closing Costs"><NumberInput value={closingPct} set={setClosingPct} min={0} max={15} suffix="%" /></Field>
+              <Field label={t('property.down_payment')}><NumberInput value={downPct} set={setDownPct} min={0} max={100} suffix="%" /></Field>
+              <Field label={t('property.closing_costs')}><NumberInput value={closingPct} set={setClosingPct} min={0} max={15} suffix="%" /></Field>
             </div>
-            <Field label={scenario === 'flip' ? 'Renovation Budget' : 'Renovation / Furnishing'} hint="optional">
+            <Field label={scenario === 'flip' ? t('property.reno_flip') : t('property.reno_rent')} hint={t('property.optional')}>
               <NumberInput value={reno} set={setReno} min={0} step={1_000} prefix="$" />
             </Field>
           </Card>
 
           {/* Financing */}
-          <Card icon="🏦" title="Financing">
+          <Card icon="🏦" title={t('financing.title')}>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Interest Rate"><NumberInput value={rate} set={setRate} min={0} max={20} step={0.1} suffix="%" /></Field>
-              <Field label="Loan Term"><NumberInput value={term} set={setTerm} min={5} max={30} suffix="yrs" /></Field>
+              <Field label={t('financing.interest_rate')}><NumberInput value={rate} set={setRate} min={0} max={20} step={0.1} suffix="%" /></Field>
+              <Field label={t('financing.loan_term')}><NumberInput value={term} set={setTerm} min={5} max={30} suffix="yrs" /></Field>
             </div>
-            <Field label="Financing Type">
+            <Field label={t('financing.type_label')}>
               <SelectInput value={financing} set={v => setFinancing(v as Financing)} options={[
-                ['mortgage', 'Traditional Mortgage'],
-                ['cash',     'All Cash (No Financing)'],
-                ['hard',     'Hard Money Loan (+4% rate)'],
-                ['seller',   'Seller Financing'],
+                ['mortgage', t('financing.mortgage')],
+                ['cash',     t('financing.cash')],
+                ['hard',     t('financing.hard')],
+                ['seller',   t('financing.seller')],
               ]} />
             </Field>
           </Card>
 
           {/* Income (hidden for flip) */}
           {scenario !== 'flip' && (
-            <Card icon="💵" title="Income Assumptions">
-              <Field label="Monthly Rent / Rental Revenue">
+            <Card icon="💵" title={t('income.title')}>
+              <Field label={t('income.monthly_rent')}>
                 <NumberInput value={rent} set={setRent} min={0} step={100} prefix="$" />
                 <input type="range" min={300} max={30_000} step={100} value={rent} onChange={e => setRent(+e.target.value)}
                   className="w-full mt-2 accent-[#0099CC]" />
-                <div className="flex justify-between text-[10.5px] text-[#556070] mt-0.5"><span>$300</span><span>$30K</span></div>
+                <div className="flex justify-between text-[10.5px] text-[#556070] mt-0.5"><span>{t('income.rent_min')}</span><span>{t('income.rent_max')}</span></div>
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Occupancy Rate"><NumberInput value={occupancy} set={setOccupancy} min={0} max={100} suffix="%" /></Field>
-                <Field label="Annual Rent Growth"><NumberInput value={rentGrowth} set={setRentGrowth} min={0} max={15} suffix="%" /></Field>
+                <Field label={t('income.occupancy')}><NumberInput value={occupancy} set={setOccupancy} min={0} max={100} suffix="%" /></Field>
+                <Field label={t('income.rent_growth')}><NumberInput value={rentGrowth} set={setRentGrowth} min={0} max={15} suffix="%" /></Field>
               </div>
             </Card>
           )}
 
           {/* Expenses */}
-          <Card icon="📉" title="Annual Expenses">
+          <Card icon="📉" title={t('expenses.title')}>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Property Tax (IPI)"><NumberInput value={propTaxPct} set={setPropTaxPct} min={0} max={3} step={0.1} suffix="%" /></Field>
-              <Field label="Management Fee"><NumberInput value={mgmtPct} set={setMgmtPct} min={0} max={30} suffix="%" /></Field>
-              <Field label="Maintenance"><NumberInput value={maintPct} set={setMaintPct} min={0} step={0.1} suffix="%" /></Field>
-              <Field label="Insurance"><NumberInput value={insPct} set={setInsPct} min={0} step={0.1} suffix="%" /></Field>
+              <Field label={t('expenses.prop_tax')}><NumberInput value={propTaxPct} set={setPropTaxPct} min={0} max={3} step={0.1} suffix="%" /></Field>
+              <Field label={t('expenses.mgmt')}><NumberInput value={mgmtPct} set={setMgmtPct} min={0} max={30} suffix="%" /></Field>
+              <Field label={t('expenses.maint')}><NumberInput value={maintPct} set={setMaintPct} min={0} step={0.1} suffix="%" /></Field>
+              <Field label={t('expenses.insurance')}><NumberInput value={insPct} set={setInsPct} min={0} step={0.1} suffix="%" /></Field>
             </div>
-            <Field label="CONFOTUR Tax Exemption" hint="Tourism Law 158-01">
+            <Field label={t('expenses.confotur_label')} hint={t('expenses.confotur_hint')}>
               <SelectInput value={confoturYrs} set={v => setConfoturYrs(+v)} options={[
-                [10, 'Yes — 10-year exemption (recommended)'],
-                [0,  'No exemption'],
+                [10, t('expenses.confotur_yes')],
+                [0,  t('expenses.confotur_no')],
               ]} />
             </Field>
-            <Field label="Annual Appreciation">
+            <Field label={t('expenses.appreciation')}>
               <NumberInput value={appRate} set={setAppRate} min={0} max={20} step={0.5} suffix="%" />
             </Field>
           </Card>
@@ -356,7 +361,7 @@ export default function Calculator() {
         {/* ── RIGHT: RESULTS ── */}
         <div>
           {/* KPI grid */}
-          <Card icon="📊" title="Deal Summary">
+          <Card icon="📊" title={t('kpis.title')}>
             <div className="grid grid-cols-2 gap-2.5">
               {calc.kpis.map((kpi, i) => (
                 <KpiCard key={i} label={kpi.label} value={kpi.value} kind={kpi.kind} sub={kpi.sub} highlight={kpi.highlight} />
@@ -368,9 +373,9 @@ export default function Calculator() {
           {!calc.flip && calc.years.length > 0 && (
             <Card>
               <div className="flex justify-between items-center mb-3.5">
-                <div className="font-sans text-4.25 font-bold text-[#0D1B3E]">5-Year Cash Flow Projection</div>
+                <div className="font-sans text-4.25 font-bold text-[#0D1B3E]">{t('chart.title')}</div>
                 <div className="flex gap-3.5 text-[11.5px] text-[#556070]">
-                  {[['#10b981', 'Income'], ['#ef4444', 'Expenses'], ['#0099CC', 'Net']].map(([col, l], i) => (
+                  {[['#10b981', t('chart.income')], ['#ef4444', t('chart.expenses')], ['#0099CC', t('chart.net')]].map(([col, l], i) => (
                     <span key={i} className="inline-flex items-center gap-1.25">
                       <span className="w-2.25 h-2.25 rounded-full inline-block" style={{ background: col }} />{l}
                     </span>
@@ -392,7 +397,7 @@ export default function Calculator() {
                         <div title={fmt(yr.net)} className="w-4.5 rounded-t"
                           style={{ height: netH, background: yr.net >= 0 ? 'linear-gradient(180deg,#0099CC,#0077a3)' : 'linear-gradient(180deg,#f87171,#ef4444)' }} />
                       </div>
-                      <div className="text-[10.5px] text-[#556070] mt-1.5">Year {yr.y}</div>
+                      <div className="text-[10.5px] text-[#556070] mt-1.5">{t('chart.year', { n: yr.y })}</div>
                     </div>
                   )
                 })}
@@ -402,8 +407,8 @@ export default function Calculator() {
 
           {/* Break-even timeline */}
           {!calc.flip && (
-            <Card icon="⏱" title="Break-even Timeline">
-              <div className="text-3.25 text-[#556070] mb-2.5">Time to recover your initial cash investment:</div>
+            <Card icon="⏱" title={t('breakeven.title')}>
+              <div className="text-3.25 text-[#556070] mb-2.5">{t('breakeven.sub')}</div>
               {(() => {
                 const bePct = isFinite(calc.breakeven) ? Math.min((calc.breakeven / 20) * 100, 100) : 100
                 return (
@@ -414,11 +419,11 @@ export default function Calculator() {
                         style={{ left: `${bePct}%`, border: '3px solid #0D1B3E', transform: 'translateX(-10px)', boxShadow: '0 2px 8px rgba(13,27,62,.3)' }} />
                     </div>
                     <div className="flex justify-between text-2.75 text-[#556070]">
-                      <span>Today</span>
-                      <span className="hidden sm:inline">5 yrs</span>
-                      <span className="text-[#0D1B3E] font-bold">{isFinite(calc.breakeven) ? calc.breakeven.toFixed(1) + ' yrs ✓' : 'No profit'}</span>
-                      <span className="hidden sm:inline">20 yrs</span>
-                      <span>30 yrs</span>
+                      <span>{t('breakeven.today')}</span>
+                      <span className="hidden sm:inline">{t('breakeven.yr5')}</span>
+                      <span className="text-[#0D1B3E] font-bold">{isFinite(calc.breakeven) ? calc.breakeven.toFixed(1) + ' ' + t('breakeven.yrs_done') : t('breakeven.no_profit')}</span>
+                      <span className="hidden sm:inline">{t('breakeven.yr20')}</span>
+                      <span>{t('breakeven.yr30')}</span>
                     </div>
                   </>
                 )
@@ -428,12 +433,12 @@ export default function Calculator() {
 
           {/* Scenario comparison table */}
           {!calc.flip && calc.scenarios && (
-            <Card icon="⚖️" title="Scenario Comparison">
+            <Card icon="⚖️" title={t('comparison.title')}>
               <div className="overflow-x-auto -mx-1 px-1">
               <table className="w-full border-collapse font-sans min-w-105">
                 <thead>
                   <tr>
-                    {['Scenario', 'Annual ROI', 'Monthly Cash Flow', 'Break-even'].map((h, i) => (
+                    {[t('comparison.col_scenario'), t('comparison.col_roi'), t('comparison.col_cf'), t('comparison.col_be')].map((h, i) => (
                       <th key={i} className={`text-2.75 font-bold tracking-[.06em] uppercase text-[#556070] py-2.5 px-2 border-b border-[#E2E8F0] ${i === 0 ? 'text-left' : 'text-right'}`}>{h}</th>
                     ))}
                   </tr>
@@ -458,19 +463,19 @@ export default function Calculator() {
           )}
 
           {/* Export / CTA */}
-          <Card icon="📤" title="Export & Share">
+          <Card icon="📤" title={t('export.title')}>
             <div className="flex gap-2 flex-wrap">
               {[
-                ['📄 PDF Report', '#fff', '#0D1B3E', '#E2E8F0'],
-                ['🔗 Copy Link',  '#fff', '#0D1B3E', '#E2E8F0'],
-                ['💬 WhatsApp',   '#25D366', '#fff', '#25D366'],
+                [t('export.pdf'),      '#fff', '#0D1B3E', '#E2E8F0'],
+                [t('export.link'),     '#fff', '#0D1B3E', '#E2E8F0'],
+                [t('export.whatsapp'), '#25D366', '#fff', '#25D366'],
               ].map(([l, bg, fg, bd], i) => (
                 <button key={i} className="flex-1 basis-32.5 py-2.75 px-3.5 rounded-md font-sans text-3.25 font-semibold cursor-pointer"
                   style={{ border: `1px solid ${bd}`, background: bg as string, color: fg as string }}>{l}</button>
               ))}
             </div>
             <div className="text-2.75 text-[#556070] mt-3 leading-normal">
-              <strong className="text-[#0D1B3E]">Note:</strong> figures are illustrative based on the inputs above. Not financial advice.
+              <strong className="text-[#0D1B3E]">{t('export.note')}</strong> {t('export.disclaimer')}
             </div>
           </Card>
 
@@ -478,16 +483,16 @@ export default function Calculator() {
           <div className="rounded-2xl p-6 text-center"
             style={{ background: 'linear-gradient(135deg, #0D1B3E 0%, #1a3a6e 100%)' }}>
             <div className="text-4.5 mb-2">🏡</div>
-            <div className="font-sans text-4.5 font-bold text-white mb-2">Ready to move forward?</div>
-            <p className="text-3.25 text-white/65 mb-4 leading-normal">Our team can validate these numbers against real listings and current market data.</p>
+            <div className="font-sans text-4.5 font-bold text-white mb-2">{t('cta.heading')}</div>
+            <p className="text-3.25 text-white/65 mb-4 leading-normal">{t('cta.sub')}</p>
             <div className="flex gap-2.5 justify-center flex-wrap">
               <button onClick={() => go('contact')}
                 className="font-sans text-3.25 font-semibold cursor-pointer py-2.75 px-5.5 rounded-full border-none bg-[#0099CC] text-white">
-                Talk to our team
+                {t('cta.talk')}
               </button>
               <button onClick={() => go('search')}
                 className="font-sans text-3.25 font-semibold cursor-pointer py-2.75 px-5.5 rounded-full bg-transparent text-white/80 border border-white/25">
-                Browse listings
+                {t('cta.browse')}
               </button>
             </div>
           </div>

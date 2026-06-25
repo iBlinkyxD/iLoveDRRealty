@@ -6,6 +6,7 @@ import Footer from '../components/Footer'
 import { Toaster } from 'react-hot-toast'
 import GoogleAuthProvider from '../components/GoogleAuthProvider'
 import LeadCaptureProvider from '../components/LeadCaptureProvider'
+import I18nProvider from '../components/I18nProvider'
 
 export const metadata: Metadata = {
   title: {
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <I18nProvider>
         <GoogleAuthProvider>
           <LeadCaptureProvider>
           <Navbar />
@@ -50,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
           </LeadCaptureProvider>
         </GoogleAuthProvider>
+        </I18nProvider>
         <Script src="//code.tidio.co/31bscsjpyxzsm0q0fxc65bs1aba5dsf1.js" strategy="lazyOnload" />
       </body>
     </html>

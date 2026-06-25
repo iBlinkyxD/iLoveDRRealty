@@ -1,0 +1,75 @@
+{
+  "hero": {
+    "eyebrow": "For buyers & investors",
+    "heading": "Buying in the DR doesn't have to be a leap of faith.",
+    "sub": "There's no MLS in the Dominican Republic. Listings are scattered across WhatsApp groups, agent sites, and Facebook posts. We built I♥DR Realty so you have one trusted place to start — verified properties, real data, and a team that lives where you're buying.",
+    "browse": "Browse listings",
+    "book": "Book a discovery call"
+  },
+  "problem": {
+    "eyebrow": "Why this matters",
+    "heading": "The DR market is fragmented. Local expertise is the whole difference.",
+    "body": "Most countries have a central listing service that keeps everyone honest. The DR doesn't. That means the same property can be listed at three different prices, \"off-market\" deals get passed around between agents, and foreign buyers regularly overpay because they have no way to compare. Working with a team that lives here, sees every new listing, and has a track record you can verify isn't a nice-to-have — it's the entire game.",
+    "body_strong": "Working with a team that lives here, sees every new listing, and has a track record you can verify isn't a nice-to-have — it's the entire game."
+  },
+  "pillars": {
+    "eyebrow": "Why buyers work with us",
+    "heading": "What you get with I♥DR Realty",
+    "items": [
+      { "title": "Verified listings only", "desc": "Every property is reviewed by our team before it goes live — photos, price, ownership, the works. No phantom listings, no bait-and-switch." },
+      { "title": "Built for international buyers", "desc": "Bilingual ES/EN throughout, USD/DOP toggle, foreign-ownership notes on every listing, and a team that's used to closing deals across time zones." },
+      { "title": "Numbers, not vibes", "desc": "ROI calculator, regional yield data, and transparent fees built into every deal page. Decide with the math in front of you, not after." },
+      { "title": "Fast, transparent process", "desc": "From first inquiry to title transfer, every step is laid out — what happens, who does it, what it costs. No surprises." }
+    ]
+  },
+  "services": {
+    "eyebrow": "More than a \"real estate agent\"",
+    "heading": "What our team actually does for you",
+    "sub": "The right agent wears six hats. Each one matters in a market like the DR.",
+    "items": [
+      { "title": "Property matchmaker", "desc": "We learn what you're looking for — beach, mountain, rental yield, second home — and only show you properties that fit." },
+      { "title": "Skilled negotiator", "desc": "Local pricing knowledge, comparable sales, and seller relationships that get you a fair number — without leaving money on the table." },
+      { "title": "Market specialist", "desc": "Deep familiarity with Punta Cana, Cap Cana, Las Terrenas, Santo Domingo, and the rising areas most foreign buyers haven't heard of yet." },
+      { "title": "Transaction coordinator", "desc": "Title search, lawyer coordination, escrow, CONFOTUR paperwork, IPI registration — handled, tracked, and explained at every step." },
+      { "title": "Trusted advisor", "desc": "We'll tell you when not to buy. Honest feedback is the entire point of having a local in your corner." },
+      { "title": "Long-term support", "desc": "After closing: property managers, contractors, banking, residency referrals — the connections you actually need to live or invest here." }
+    ]
+  },
+  "process": {
+    "eyebrow": "The process",
+    "heading": "From first call to keys in hand",
+    "sub": "The whole journey is usually 60–120 days. Here's exactly how it goes.",
+    "steps": [
+      { "title": "Discovery call", "desc": "Tell us what you're looking for, your timeline, and how you'd use the property. 30 minutes, no pressure, in English or Spanish." },
+      { "title": "Curated shortlist", "desc": "We send you 5–10 properties that actually match — with full data, ROI numbers, and our honest take on each one." },
+      { "title": "Property tour", "desc": "On the island or via live video. We walk through neighborhoods, point out what photos don't show, and answer everything." },
+      { "title": "Offer & negotiation", "desc": "We help you write a competitive offer and negotiate on your behalf. Most deals close 4–8% under asking." },
+      { "title": "Due diligence", "desc": "Title search, survey, building inspection, HOA history — coordinated with a Dominican attorney we trust." },
+      { "title": "Closing & handover", "desc": "Sign at the notary, register at the title office, take the keys. We're with you in the room or on the call." }
+    ]
+  },
+  "trust": {
+    "eyebrow": "Find a trusted partner",
+    "heading": "What working with I♥DR Realty actually means",
+    "items": [
+      "Every listing reviewed and verified before going live",
+      "Bilingual team — English, Spanish, and growing",
+      "Real ROI numbers on every investment property",
+      "Personalized search based on goals, not just budget",
+      "Agents who actually live in the markets you're buying in",
+      "Connections to attorneys, banks, property managers, contractors",
+      "Honest pushback when a deal doesn't make sense"
+    ]
+  },
+  "quote": {
+    "eyebrow": "What we believe",
+    "text": "\"Buying property abroad shouldn't feel like a gamble. It should feel like making an informed decision — with someone in your corner who knows the country, the law, and the market better than you do, and is willing to tell you the truth.\"",
+    "author": "— The I♥DR Realty team"
+  },
+  "cta": {
+    "heading": "Ready to find your place in paradise?",
+    "sub": "Browse listings or book a 30-minute discovery call — no commitment, no pressure.",
+    "browse": "Browse listings",
+    "talk": "Talk to our team"
+  }
+}

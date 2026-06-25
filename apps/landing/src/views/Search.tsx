@@ -8,6 +8,7 @@ import { fetchListings } from '../api/listings'
 import { getMySavedIds, saveHome, unsaveHome } from '../api/savedHomes'
 import { SearchFilterSidebar } from '../components/SearchFilterSidebar'
 import { SearchMapSidebar } from '../components/SearchMapSidebar'
+import { useTranslation } from 'react-i18next'
 
 type TagTone = 'sand' | 'coral' | 'sea' | 'gold' | 'green'
 const TONE_CLASSES: Record<TagTone, string> = {
@@ -51,6 +52,7 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
   savedIds: Set<string>
   onToggleSave: (id: string) => void
 }) {
+  const { t } = useTranslation('search')
   const [hot, setHot] = useState(false)
   const isSaved = savedIds.has(l.id)
   const discountedPrice = l.is_deal && l.deal_discount_value
@@ -87,12 +89,12 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
         {l.is_deal && l.deal_discount_value ? (
           <div className="absolute bottom-3 right-3 flex items-center gap-1.25 bg-coral text-white py-1.25 px-2.5 rounded-md text-xs font-semibold font-sans">
             {l.deal_discount_type === 'fixed'
-              ? `−$${Number(l.deal_discount_value).toLocaleString()} off`
-              : `−${l.deal_discount_value}% off`}
+              ? t('discount.fixed', { amount: Number(l.deal_discount_value).toLocaleString() })
+              : t('discount.percent', { amount: l.deal_discount_value })}
           </div>
         ) : l.roi > 0 ? (
           <div className="absolute bottom-3 right-3 flex items-center gap-1.25 bg-ink/90 text-paper py-1.25 px-2.5 rounded-md text-xs font-semibold">
-            <TrendingUp size={13} />{l.roi}% yield
+            <TrendingUp size={13} />{l.roi}{t('yield')}
           </div>
         ) : null}
       </div>
@@ -100,7 +102,7 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
         <div className="flex items-baseline gap-2">
           <div className="font-sans text-5.25 font-semibold text-ink">
             {displayPrice}
-            {l.purpose === 'rent' && <span className="text-3.25 text-dim font-sans"> / mo</span>}
+            {l.purpose === 'rent' && <span className="text-3.25 text-dim font-sans">{t('per_month')}</span>}
           </div>
           {displayOrig && (
             <div className="font-sans text-3.25 text-dim line-through">{displayOrig}</div>
@@ -111,8 +113,8 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
           <MapPin size={13} />{l.region}
         </div>
         <div className="flex gap-4 mt-3.5 pt-3.25 border-t border-line-soft text-ink2 text-[12.5px]">
-          {l.bd > 0 && <span className="flex items-center gap-1.25"><BedDouble size={15} />{l.bd} bd</span>}
-          {l.ba > 0 && <span className="flex items-center gap-1.25"><Bath size={15} />{l.ba} ba</span>}
+          {l.bd > 0 && <span className="flex items-center gap-1.25"><BedDouble size={15} />{l.bd} {t('card.bd')}</span>}
+          {l.ba > 0 && <span className="flex items-center gap-1.25"><Bath size={15} />{l.ba} {t('card.ba')}</span>}
           <span className="flex items-center gap-1.25"><Maximize2 size={15} />{l.m2} m²</span>
         </div>
       </div>
@@ -122,6 +124,7 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
 
 export default function Search() {
   const go = useNav()
+  const { t } = useTranslation('search')
   const searchParams = useSearchParams()
   const router   = useRouter()
   const pathname = usePathname()
@@ -260,7 +263,7 @@ export default function Search() {
   }, [listings, results, region])
 
   const chips: { label: string; clear: () => void }[] = []
-  if (purpose !== 'sale') chips.push({ label: purpose === 'rent' ? 'For Rent' : 'Investment', clear: () => setPurpose('sale') })
+  if (purpose !== 'sale') chips.push({ label: purpose === 'rent' ? t('chips.rent') : t('chips.investment'), clear: () => setPurpose('sale') })
   if (type !== 'All')     chips.push({ label: type, clear: () => setType('All') })
   if (beds !== 'any')     chips.push({ label: `${beds}+ beds`, clear: () => setBeds('any') })
   if (region)             chips.push({ label: region, clear: () => setRegion(null) })
@@ -291,9 +294,9 @@ export default function Search() {
       <main className="min-w-0">
         <div className="flex items-start justify-between flex-wrap gap-3 mb-3.5">
           <h1 className="font-sans text-5 sm:text-6.5 font-semibold text-ink leading-[1.1] m-0">
-            {results.length} properties{' '}
+            {t('results_count', { count: results.length })}{' '}
             <span className="text-dim text-3.25 sm:text-3.75 font-sans font-normal">
-              {region ? `in ${region}` : 'across the DR'}
+              {region ? t('location_in', { region }) : t('location_across')}
             </span>
           </h1>
           <div className="flex items-center gap-2 flex-wrap">
@@ -302,18 +305,18 @@ export default function Search() {
               className="lg:hidden flex items-center gap-1.5 font-sans text-3.25 font-semibold cursor-pointer py-2 px-3.5 rounded-full border border-line bg-paper text-ink"
             >
               <SlidersHorizontal size={14} />
-              Filters
+              {t('filters')}
               {chips.length > 0 && (
                 <span className="w-4.5 h-4.5 rounded-full bg-coral text-white text-[10px] font-bold grid place-items-center">{chips.length}</span>
               )}
             </button>
-            <span className="hidden sm:inline text-[12.5px] text-dim">Sort</span>
+            <span className="hidden sm:inline text-[12.5px] text-dim">{t('sort_label')}</span>
             <select value={sort} onChange={e => setSort(e.target.value as typeof sort)}
               className="font-sans text-3.25 py-2 px-3 rounded-full border border-line bg-paper text-ink cursor-pointer">
-              <option value="new">Newest first</option>
-              <option value="low">Price: low to high</option>
-              <option value="high">Price: high to low</option>
-              <option value="roi">Best ROI</option>
+              <option value="new">{t('sort.new')}</option>
+              <option value="low">{t('sort.low')}</option>
+              <option value="high">{t('sort.high')}</option>
+              <option value="roi">{t('sort.roi')}</option>
             </select>
             <div className="hidden sm:inline-flex border border-line rounded-md overflow-hidden bg-paper">
               {(['grid', 'list'] as const).map(v => (
@@ -337,7 +340,7 @@ export default function Search() {
             ))}
             <button onClick={clearAll}
               className="bg-transparent border-none text-coral font-sans text-xs font-bold cursor-pointer py-1.25 px-2">
-              Clear all
+              {t('clear_all')}
             </button>
           </div>
         )}
@@ -363,7 +366,7 @@ export default function Search() {
           </div>
         ) : results.length === 0 ? (
           <div className="p-15 text-center text-dim border border-dashed border-line rounded-2xl">
-            No properties match these filters. Try widening your price range or clearing a region.
+            {t('empty')}
           </div>
         ) : (
           <div className={`grid gap-4.5 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>

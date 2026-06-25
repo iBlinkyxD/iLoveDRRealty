@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "search": "Search",
+    "buying": "Buying",
+    "selling": "Selling",
+    "blog": "Resources",
+    "team": "Our Team",
+    "contact": "Contact",
+    "calculator": "ROI Calculator"
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "dashboard": "Dashboard",
+    "logout": "Log out"
+  }
+}

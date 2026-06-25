@@ -1,0 +1,29 @@
+{
+  "results_count": "{{count}} properties",
+  "location_in": "in {{region}}",
+  "location_across": "across the DR",
+  "filters": "Filters",
+  "sort_label": "Sort",
+  "sort": {
+    "new": "Newest first",
+    "low": "Price: low to high",
+    "high": "Price: high to low",
+    "roi": "Best ROI"
+  },
+  "clear_all": "Clear all",
+  "empty": "No properties match these filters. Try widening your price range or clearing a region.",
+  "yield": "% yield",
+  "per_month": " / mo",
+  "chips": {
+    "rent": "For Rent",
+    "investment": "Investment"
+  },
+  "card": {
+    "bd": "bd",
+    "ba": "ba"
+  },
+  "discount": {
+    "fixed": "−${{amount}} off",
+    "percent": "−{{amount}}% off"
+  }
+}

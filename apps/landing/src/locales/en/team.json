@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "eyebrow": "Our Team",
+    "heading_pre": "The people behind",
+    "heading_em": "I♥DR Realty",
+    "sub": "Three principal brokers — Dominicans, investors, and relocation experts who actually live the market they sell."
+  },
+  "stats": ["Principals", "Regions", "Languages"],
+  "principals": {
+    "eyebrow": "★ The principals",
+    "heading": "Brokerage leaders",
+    "sub": "Each principal runs an independent brokerage on the platform. See the agents they lead in the section below.",
+    "badge": "★ Principal",
+    "bios": [
+      {
+        "role": "Co-Founder · Principal Broker",
+        "bio": "Co-founder of I Love DR Realty. Amiel and his brothers have invested and developed real estate across the DR and the US, building rental portfolios along the way. He guides clients with honest advice, real investor experience, and a family-first approach."
+      },
+      {
+        "role": "Co-Founder · Principal Broker",
+        "bio": "Co-founder of I Love DR Realty with 15+ years acquiring, renovating, and developing properties. Sayam helps clients navigate the DR market with firsthand ownership experience — spotting opportunities and avoiding costly mistakes."
+      },
+      {
+        "role": "Co-Founder · Principal Broker",
+        "bio": "South Florida-based investor and acquisitions specialist with 15+ years and 1,000+ transactions across multiple markets. Xavier helps investors build wealth through strategic property opportunities and portfolio growth."
+      }
+    ]
+  },
+  "cta": {
+    "heading": "Ready to start your DR journey?",
+    "sub": "Connect with the right agent for your goals — whether you're buying, investing, or relocating.",
+    "talk": "Talk to the team",
+    "browse": "Browse listings"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "results_count": "{{count}} propiedades",
+  "location_in": "en {{region}}",
+  "location_across": "en toda la RD",
+  "filters": "Filtros",
+  "sort_label": "Ordenar",
+  "sort": {
+    "new": "Más recientes",
+    "low": "Precio: menor a mayor",
+    "high": "Precio: mayor a menor",
+    "roi": "Mejor ROI"
+  },
+  "clear_all": "Limpiar todo",
+  "empty": "Ninguna propiedad coincide con estos filtros. Amplía el rango de precios o elimina una región.",
+  "yield": "% rendimiento",
+  "per_month": " / mes",
+  "chips": {
+    "rent": "En alquiler",
+    "investment": "Inversión"
+  },
+  "card": {
+    "bd": "hab",
+    "ba": "baños"
+  },
+  "discount": {
+    "fixed": "−${{amount}} dto.",
+    "percent": "−{{amount}}% dto."
+  }
+}
