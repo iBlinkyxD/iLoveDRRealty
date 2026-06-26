@@ -79,6 +79,13 @@ export interface AdminListing {
   is_deal: boolean
   deal_discount_value: number | null
   deal_discount_type: string
+  co_listing_enabled: boolean
+  co_listing_brokerage: string | null
+  co_listing_agent_name: string | null
+  co_listing_agent_contact: string | null
+  co_listing_commission_split: number | null
+  co_listing_notes: string | null
+  co_listing_status: string | null
 }
 
 export async function getAdminListings(status?: string): Promise<AdminListing[]> {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Bell, CalendarDays, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { StatusPill, fmtPrice } from '../../components/dashboard/shared'
 import { getOwnerBookings, acceptBooking, declineBooking, type Booking } from '../../api/bookings'
 
@@ -40,6 +41,7 @@ function BookingRow({
   onDecline?: () => void
   acting: boolean
 }) {
+  const { t } = useTranslation('owner')
   const name = booking.guest_name ?? 'Guest'
   const nights = nightsBetween(booking.check_in, booking.check_out)
 
@@ -59,7 +61,7 @@ function BookingRow({
           <span className="text-[13.5px] font-semibold text-ink">{name}</span>
           <StatusPill label={booking.status.charAt(0).toUpperCase() + booking.status.slice(1)} />
           {actionable && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Action required</span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{t('bookings_page.action_required')}</span>
           )}
         </div>
         <div className="text-[12px] text-ink2 mt-0.5 truncate font-medium">{booking.listing_title ?? 'Property'}</div>
@@ -87,14 +89,14 @@ function BookingRow({
               disabled={acting}
               className="text-[12px] font-bold py-1.5 px-3.5 rounded-lg border-0 bg-brand text-white cursor-pointer disabled:opacity-50"
             >
-              {acting ? '…' : 'Accept'}
+              {acting ? '…' : t('bookings_page.accept')}
             </button>
             <button
               onClick={onDecline}
               disabled={acting}
               className="text-[12px] font-bold py-1.5 px-3.5 rounded-lg border border-line bg-white text-ink2 cursor-pointer disabled:opacity-50"
             >
-              Decline
+              {t('bookings_page.decline')}
             </button>
           </div>
         )}
@@ -106,6 +108,7 @@ function BookingRow({
 const TONE = '#f0a800'
 
 export function OwnerBookings({ go }: { go?: (v: string) => void }) {
+  const { t } = useTranslation('owner')
   const [bookings, setBookings]   = useState<Booking[]>([])
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState<string | null>(null)
@@ -170,8 +173,8 @@ export function OwnerBookings({ go }: { go?: (v: string) => void }) {
           <Bell size={20} style={{ color: TONE }} />
         </div>
         <div>
-          <div className="text-[13.5px] font-semibold text-ink mb-0.5">No bookings yet</div>
-          <div className="text-[11.5px] text-dim">Booking requests will appear here once your realtor publishes your listing.</div>
+          <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('bookings_page.empty_title')}</div>
+          <div className="text-[11.5px] text-dim">{t('bookings_page.empty_sub')}</div>
         </div>
       </div>
     )
@@ -181,7 +184,7 @@ export function OwnerBookings({ go }: { go?: (v: string) => void }) {
     <div className="bg-paper border border-line rounded-xl overflow-hidden divide-y divide-line">
       {pending.length > 0 && (
         <div>
-          <SectionHeader label="Pending — Action Required" count={pending.length} />
+          <SectionHeader label={t('bookings_page.section_pending')} count={pending.length} />
           <div className="divide-y divide-line">
             {pending.map(b => (
               <BookingRow
@@ -199,7 +202,7 @@ export function OwnerBookings({ go }: { go?: (v: string) => void }) {
 
       {upcoming.length > 0 && (
         <div>
-          <SectionHeader label="Upcoming" count={upcoming.length} />
+          <SectionHeader label={t('bookings_page.section_upcoming')} count={upcoming.length} />
           <div className="divide-y divide-line">
             {upcoming.map(b => (
               <BookingRow key={b.id} booking={b} actionable={false} acting={false} />
@@ -210,7 +213,7 @@ export function OwnerBookings({ go }: { go?: (v: string) => void }) {
 
       {past.length > 0 && (
         <div>
-          <SectionHeader label="Past" count={past.length} />
+          <SectionHeader label={t('bookings_page.section_past')} count={past.length} />
           <div className="divide-y divide-line">
             {past.map(b => (
               <BookingRow key={b.id} booking={b} actionable={false} acting={false} />
@@ -221,7 +224,7 @@ export function OwnerBookings({ go }: { go?: (v: string) => void }) {
 
       {cancelled.length > 0 && (
         <div>
-          <SectionHeader label="Cancelled" count={cancelled.length} />
+          <SectionHeader label={t('bookings_page.section_cancelled')} count={cancelled.length} />
           <div className="divide-y divide-line">
             {cancelled.map(b => (
               <BookingRow key={b.id} booking={b} actionable={false} acting={false} />

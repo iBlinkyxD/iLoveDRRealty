@@ -46,6 +46,13 @@ export interface Listing {
   submitted_by: string
   submitted_by_name?: string | null
   owner_id: string | null
+  co_listing_enabled: boolean
+  co_listing_brokerage: string | null
+  co_listing_agent_name: string | null
+  co_listing_agent_contact: string | null
+  co_listing_commission_split: number | null
+  co_listing_notes: string | null
+  co_listing_status: string | null
 }
 
 export interface ListingUpdate {
@@ -80,6 +87,13 @@ export interface ListingUpdate {
   association_fee?: number
   deposit_policy?: string
   images?: string[]
+  co_listing_enabled?: boolean
+  co_listing_brokerage?: string
+  co_listing_agent_name?: string
+  co_listing_agent_contact?: string
+  co_listing_commission_split?: number
+  co_listing_notes?: string
+  co_listing_status?: string
 }
 
 export interface ListingCreate {
@@ -114,6 +128,13 @@ export interface ListingCreate {
   association_fee?: number
   deposit_policy?: string
   images?: string[]
+  co_listing_enabled?: boolean
+  co_listing_brokerage?: string
+  co_listing_agent_name?: string
+  co_listing_agent_contact?: string
+  co_listing_commission_split?: number
+  co_listing_notes?: string
+  co_listing_status?: string
 }
 
 export async function uploadListingImages(files: File[]): Promise<string[]> {

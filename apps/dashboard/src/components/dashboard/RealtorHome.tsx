@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Building2, ClipboardList, Shuffle, Home, MessageCircle, Plus, Clock, Star, Pencil, type LucideIcon,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
 import { getMyListings, type Listing } from '../../api/listings'
 import { getRealtorLeads, type Lead } from '../../api/leads'
@@ -46,9 +47,6 @@ export const STAGES = ['Prospect', 'Showing', 'Offer'] as const
 export const LEAD_STATUS_TONE: Record<string, string> = { Hot: '#e10f1f', Warm: '#f0a800', Cold: '#7884a0' }
 export const REALTOR_EVENT_TONE: Record<string, string> = { Showing: '#0b63ab', Call: '#f0a800', Offer: '#e10f1f', Meeting: '#1f7a3d' }
 
-const STATUS_LABEL: Record<string, string> = {
-  active: 'Active', pending_approval: 'Review', rejected: 'Rejected', archived: 'Archived',
-}
 const STATUS_TONE_MAP: Record<string, string> = {
   active: '#1f7a3d', pending_approval: '#f0a800', rejected: '#e10f1f', archived: '#9ca3af',
 }
@@ -74,6 +72,9 @@ function avatarTone(name: string): string {
 }
 
 export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: string }) {
+  const { t } = useTranslation('realtor')
+  const { t: tCommon } = useTranslation('common')
+
   const [myListings,      setMyListings]      = useState<Listing[]>([])
   const [leads,           setLeads]           = useState<Lead[]>([])
   const [loadingListings, setLoadingListings] = useState(true)
@@ -89,11 +90,18 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
   const hotLeads     = leads.filter(l => l.status === 'assigned')
 
   const kpis = [
-    { label: 'Active Clients',   value: '18',  sub: '+4 this month' },
-    { label: 'Active Listings',  value: loadingListings ? '…' : String(activeCount),   sub: `${pendingCount} pending review` },
-    { label: 'Pending Closings', value: '3',   sub: 'Est. $4.1M total' },
-    { label: 'Needs Attention',  value: loadingLeads   ? '…' : String(hotLeads.length), sub: hotLeads.length ? 'assigned, not contacted' : 'All caught up', accent: hotLeads.length > 0 ? '#e10f1f' : undefined },
+    { label: t('kpis.active_clients'),   value: '18',  sub: t('kpis.clients_sub', { n: 4 }) },
+    { label: t('kpis.active_listings'),  value: loadingListings ? '…' : String(activeCount),   sub: t('kpis.listings_pending', { count: pendingCount }) },
+    { label: t('kpis.pending_closings'), value: '3',   sub: t('kpis.closings_sub') },
+    { label: t('kpis.needs_attention'),  value: loadingLeads ? '…' : String(hotLeads.length), sub: hotLeads.length ? t('kpis.attention_assigned') : t('kpis.attention_ok'), accent: hotLeads.length > 0 ? '#e10f1f' : undefined },
   ]
+
+  const typeLabel: Record<string, string> = {
+    property_inquiry: t('hot_leads.type_inquiry'),
+    booking:          t('hot_leads.type_booking'),
+    buyer_interest:   t('hot_leads.type_buyer'),
+    seller_interest:  t('hot_leads.type_seller'),
+  }
 
   return (
     <>
@@ -103,8 +111,8 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-5">
-          <Card title={<><Building2 size={14} /> Active Listings</>} padded={false}
-            action={<button onClick={() => go('listings')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">Manage →</button>}>
+          <Card title={<><Building2 size={14} /> {t('listings.title')}</>} padded={false}
+            action={<button onClick={() => go('listings')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">{t('listings.manage')}</button>}>
             {loadingListings ? (
               <div>
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -124,15 +132,15 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                   <Building2 size={20} style={{ color: tone }} />
                 </div>
                 <div className="text-center">
-                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No listings yet</div>
-                  <div className="text-[11.5px] text-dim">Submit your first property to attract buyers.</div>
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('listings.empty_heading')}</div>
+                  <div className="text-[11.5px] text-dim">{t('listings.empty_sub')}</div>
                 </div>
                 <button
                   onClick={() => go('submit-listing')}
                   className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
                   style={{ background: tone }}
                 >
-                  <Plus size={13} strokeWidth={2.5} /> Add listing
+                  <Plus size={13} strokeWidth={2.5} /> {t('listings.add')}
                 </button>
               </div>
             ) : (
@@ -144,28 +152,28 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <div className="text-[13px] font-semibold text-ink truncate">{l.title}</div>
-                      <div className="text-[11.5px] text-dim mt-0.5">{fmtPrice(l.price)} · {l.view_count.toLocaleString()} views · {l.leads_count} leads</div>
+                      <div className="text-[11.5px] text-dim mt-0.5">{fmtPrice(l.price)} · {l.view_count.toLocaleString()} {t('listings.views')} · {l.leads_count} {t('listings.leads')}</div>
                     </div>
-                    <StatusPill label={STATUS_LABEL[l.status] ?? l.status} tone={STATUS_TONE_MAP[l.status]} />
+                    <StatusPill label={tCommon(`status_labels.${l.status}`, { defaultValue: l.status })} tone={STATUS_TONE_MAP[l.status]} />
                   </div>
                 ))}
                 <div className="py-3 px-5.5">
                   <button onClick={() => go('listings')} className="text-[12.5px] font-semibold text-brand bg-transparent border-none cursor-pointer p-0">
-                    View all {myListings.length} →
+                    {t('listings.view_all', { count: myListings.length })}
                   </button>
                 </div>
               </div>
             )}
           </Card>
 
-          <Card title={<><Shuffle size={14} /> Pipeline</>} sub="Active deals by stage">
+          <Card title={<><Shuffle size={14} /> {t('pipeline.title')}</>} sub={t('pipeline.sub')}>
             <div className="py-6 flex flex-col items-center gap-3 text-center">
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: `${tone}18` }}>
                 <Shuffle size={20} style={{ color: tone }} />
               </div>
               <div>
-                <div className="text-[13.5px] font-semibold text-ink mb-0.5">Coming soon</div>
-                <div className="text-[11.5px] text-dim max-w-55">Deal pipeline tracking is in development and will be available shortly.</div>
+                <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('pipeline.coming_soon')}</div>
+                <div className="text-[11.5px] text-dim max-w-55">{t('pipeline.coming_soon_sub')}</div>
               </div>
             </div>
           </Card>
@@ -173,8 +181,8 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
 
         <div className="flex flex-col gap-5">
           {!loadingListings && myListings.some(l => l.has_pending_deal_request || l.has_pending_edit) && (
-            <Card title={<><Clock size={14} /> Pending Reviews</>} padded={false}
-              action={<button onClick={() => go('listings')} className="text-xs font-bold bg-transparent border-none cursor-pointer" style={{ color: tone }}>All listings →</button>}>
+            <Card title={<><Clock size={14} /> {t('pending_reviews.title')}</>} padded={false}
+              action={<button onClick={() => go('listings')} className="text-xs font-bold bg-transparent border-none cursor-pointer" style={{ color: tone }}>{t('pending_reviews.all_listings')}</button>}>
               {myListings.filter(l => l.has_pending_deal_request || l.has_pending_edit).map((l, i, arr) => (
                 <div key={l.id} className={`flex items-center gap-3 py-3 px-5.5 ${i < arr.length - 1 ? 'border-b border-line' : ''}`}>
                   <div className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center" style={{ background: `${tone}18` }}>
@@ -185,12 +193,12 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                     <div className="flex gap-1.5 mt-0.75 flex-wrap">
                       {l.has_pending_deal_request && (
                         <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.75 py-0.5 rounded-full" style={{ background: '#f0a80018', color: '#c07800' }}>
-                          <Star size={9} fill="#f0a800" style={{ color: '#f0a800' }} /> Deal request
+                          <Star size={9} fill="#f0a800" style={{ color: '#f0a800' }} /> {t('pending_reviews.deal_request')}
                         </span>
                       )}
                       {l.has_pending_edit && (
                         <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold px-1.75 py-0.5 rounded-full" style={{ background: '#7c3aed18', color: '#7c3aed' }}>
-                          <Pencil size={9} /> Edit
+                          <Pencil size={9} /> {t('pending_reviews.edit')}
                         </span>
                       )}
                     </div>
@@ -201,8 +209,8 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
             </Card>
           )}
 
-          <Card title={<><ClipboardList size={14} /> Hot Leads</>}
-            action={<button onClick={() => go('leads')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">All →</button>}>
+          <Card title={<><ClipboardList size={14} /> {t('hot_leads.title')}</>}
+            action={<button onClick={() => go('leads')} className="text-xs font-bold text-brand bg-transparent border-none cursor-pointer">{t('hot_leads.all')}</button>}>
             {loadingLeads ? (
               <div className="flex flex-col gap-2.5">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -219,10 +227,10 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
               <div className="py-8 flex flex-col items-center gap-2 text-center">
                 <MessageCircle size={22} className="text-dim" />
                 <div className="text-[13px] font-semibold text-ink">
-                  {leads.length === 0 ? 'No leads assigned yet' : 'All caught up!'}
+                  {leads.length === 0 ? t('hot_leads.no_leads') : t('hot_leads.caught_up')}
                 </div>
                 <div className="text-[11.5px] text-dim">
-                  {leads.length === 0 ? 'An admin will assign leads to you here.' : 'No leads are waiting to be contacted.'}
+                  {leads.length === 0 ? t('hot_leads.no_leads_sub') : t('hot_leads.caught_up_sub')}
                 </div>
               </div>
             ) : (
@@ -231,10 +239,6 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                   const typeColor: Record<string, string> = {
                     property_inquiry: '#1f7a3d', booking: '#0d9488',
                     buyer_interest: '#e10f1f', seller_interest: '#f0a800',
-                  }
-                  const typeLabel: Record<string, string> = {
-                    property_inquiry: 'Inquiry', booking: 'Booking',
-                    buyer_interest: 'Buyer', seller_interest: 'Seller',
                   }
                   const c = typeColor[lead.type] ?? '#64748b'
                   return (
@@ -263,7 +267,7 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                   )
                 })}
                 <button onClick={() => go('leads')} className="text-[12.5px] font-semibold bg-transparent border-none cursor-pointer p-0 text-left" style={{ color: tone }}>
-                  View all {leads.length} leads →
+                  {t('hot_leads.view_all', { count: leads.length })}
                 </button>
               </div>
             )}

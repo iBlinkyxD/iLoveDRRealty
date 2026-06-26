@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CalendarDays, MapPin, Search, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { StatusPill, fmtPrice } from '../../components/dashboard/shared'
 import { getMyBookings, cancelBooking, type Booking } from '../../api/bookings'
 import { ConfirmModal } from '../../components/shared/ConfirmModal'
@@ -8,13 +9,6 @@ const TONE = '#e10f1f'
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
 
 type Tab = 'all' | 'upcoming' | 'past' | 'cancelled'
-
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'all',       label: 'All'       },
-  { key: 'upcoming',  label: 'Upcoming'  },
-  { key: 'past',      label: 'Past'      },
-  { key: 'cancelled', label: 'Cancelled' },
-]
 
 function fmtDate(s: string): string {
   return new Date(s + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -33,6 +27,15 @@ function filterBookings(bookings: Booking[], tab: Tab): Booking[] {
 }
 
 export function BuyerBookings() {
+  const { t } = useTranslation('buyer')
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'all',       label: t('bookings_page.tab_all')       },
+    { key: 'upcoming',  label: t('bookings_page.tab_upcoming')  },
+    { key: 'past',      label: t('bookings_page.tab_past')      },
+    { key: 'cancelled', label: t('bookings_page.tab_cancelled') },
+  ]
+
   const [bookings,         setBookings]         = useState<Booking[]>([])
   const [loading,          setLoading]          = useState(true)
   const [tab,              setTab]              = useState<Tab>('all')
@@ -111,13 +114,13 @@ export function BuyerBookings() {
             </div>
             <div className="text-center">
               <div className="text-[13.5px] font-semibold text-ink mb-0.5">
-                {tab === 'all' ? 'No bookings yet' : `No ${tab} bookings`}
+                {tab === 'all' ? t('bookings_page.empty_all') : tab === 'upcoming' ? t('bookings_page.empty_upcoming') : tab === 'past' ? t('bookings_page.empty_past') : t('bookings_page.empty_cancelled')}
               </div>
               <div className="text-[11.5px] text-dim">
-                {tab === 'upcoming' ? 'Book a property to see your upcoming trips here.'
-                  : tab === 'past' ? 'Completed stays will appear here.'
-                  : tab === 'cancelled' ? 'No cancelled bookings.'
-                  : 'Find a rental property and request to book.'}
+                {tab === 'upcoming' ? t('bookings_page.empty_upcoming_sub')
+                  : tab === 'past' ? t('bookings_page.empty_past_sub')
+                  : tab === 'cancelled' ? t('bookings_page.empty_cancelled_sub')
+                  : t('bookings_page.empty_all_sub')}
               </div>
             </div>
             {(tab === 'all' || tab === 'upcoming') && (
@@ -128,7 +131,7 @@ export function BuyerBookings() {
                 className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
                 style={{ background: TONE }}
               >
-                <Search size={13} strokeWidth={2.5} /> Browse rentals
+                <Search size={13} strokeWidth={2.5} /> {t('bookings_page.browse_rentals')}
               </a>
             )}
           </div>
@@ -165,8 +168,8 @@ export function BuyerBookings() {
                         <><MapPin size={10} className="shrink-0" /><span>{b.listing_location} ·</span></>
                       )}
                       <span>{fmtDate(b.check_in)} – {fmtDate(b.check_out)}</span>
-                      <span>· {nights} night{nights !== 1 ? 's' : ''}</span>
-                      <span>· {b.guests} guest{b.guests !== 1 ? 's' : ''}</span>
+                      <span>· {nights} {nights !== 1 ? t('bookings_page.nights') : t('bookings_page.night')}</span>
+                      <span>· {b.guests} {b.guests !== 1 ? t('bookings_page.guests') : t('bookings_page.guest')}</span>
                     </div>
                   </div>
 
@@ -185,7 +188,7 @@ export function BuyerBookings() {
                         className="flex items-center gap-1 text-[11.5px] font-semibold text-red-500 bg-transparent border border-red-200 rounded-lg px-2.5 py-1 cursor-pointer hover:bg-red-50 disabled:opacity-50"
                       >
                         <X size={11} strokeWidth={2.5} />
-                        {cancelling === b.id ? 'Cancelling…' : 'Cancel'}
+                        {cancelling === b.id ? t('bookings_page.cancelling') : t('bookings_page.cancel')}
                       </button>
                     )}
                   </div>
@@ -197,9 +200,9 @@ export function BuyerBookings() {
       </div>
       {confirmCancelId && (
         <ConfirmModal
-          title="Cancel this booking?"
-          description="This action cannot be undone. Your booking will be permanently cancelled."
-          confirmLabel="Yes, cancel booking"
+          title={t('bookings_page.cancel_modal_title')}
+          description={t('bookings_page.cancel_modal_desc')}
+          confirmLabel={t('bookings_page.cancel_modal_confirm')}
           variant="danger"
           loading={cancelling === confirmCancelId}
           onConfirm={async () => {

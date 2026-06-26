@@ -30,6 +30,10 @@ const DIFF_LABELS: Record<string, string> = {
   tags: 'Tags', video_links: 'Video Links', tour_3d_url: '3D Tour URL',
   utilities: 'Utilities', included_utilities: 'What is Included',
   association_fee: 'Assoc. Fee ($/mo)', deposit_policy: 'Deposit Policy',
+  co_listing_enabled: 'Co-Listing Enabled', co_listing_brokerage: 'External Brokerage',
+  co_listing_agent_name: 'External Agent Name', co_listing_agent_contact: 'External Agent Contact',
+  co_listing_commission_split: 'Commission Split (%)', co_listing_notes: 'Co-Listing Notes',
+  co_listing_status: 'Co-Listing Status',
 }
 
 const ARRAY_FIELDS = new Set(['features', 'images', 'tags', 'video_links', 'included_utilities'])

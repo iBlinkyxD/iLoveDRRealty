@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { REALTOR_PIPELINE, STAGES, STAGE_TONE } from '../../components/dashboard/RealtorHome'
 
 export function Pipeline() {
+  const { t } = useTranslation('realtor')
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
       {STAGES.map(stage => {
@@ -28,12 +30,12 @@ export function Pipeline() {
                   <div className="text-[11.5px] text-dim leading-[1.35] mb-1.5">{item.property}</div>
                   <div className="flex justify-between items-center">
                     <span className="text-[13px] font-bold text-brand">{item.value}</span>
-                    <button className="text-[11.5px] font-semibold py-1 px-2.5 rounded-lg border border-line bg-white text-ink2 cursor-pointer">View</button>
+                    <button className="text-[11.5px] font-semibold py-1 px-2.5 rounded-lg border border-line bg-white text-ink2 cursor-pointer">{t('pipeline_page.view')}</button>
                   </div>
                 </div>
               ))}
               <button className="w-full py-2.25 rounded-lg text-[12.5px] font-semibold cursor-pointer border border-dashed bg-transparent" style={{ borderColor: st, color: st }}>
-                + Add deal
+                {t('pipeline_page.add_deal')}
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DollarSign } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, RoleKpiCard } from '../../components/dashboard/shared'
 import { getOwnerBookings, type Booking } from '../../api/bookings'
 
@@ -59,6 +60,7 @@ function deriveStats(bookings: Booking[]) {
 }
 
 export function Earnings({ tone, go }: { tone: string; go?: (v: string) => void }) {
+  const { t } = useTranslation('owner')
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -100,27 +102,27 @@ export function Earnings({ tone, go }: { tone: string; go?: (v: string) => void 
           <DollarSign size={20} style={{ color: TONE }} />
         </div>
         <div>
-          <div className="text-[13.5px] font-semibold text-ink mb-0.5">No earnings yet</div>
-          <div className="text-[11.5px] text-dim">Revenue from confirmed bookings will appear here once your listing is active.</div>
+          <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('earnings_page.empty_title')}</div>
+          <div className="text-[11.5px] text-dim">{t('earnings_page.empty_sub')}</div>
         </div>
       </div>
     )
   }
 
   const momSub = momPct != null
-    ? `${momPct >= 0 ? '+' : ''}${momPct}% vs last month`
-    : 'No data last month'
+    ? t('earnings_page.mom_vs', { pct: `${momPct >= 0 ? '+' : ''}${momPct}` })
+    : t('earnings_page.no_data_last_month')
 
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {([
-          { label: 'Total This Year',  value: fmtMoney(totalThisYear), sub: `Jan–${now.toLocaleDateString('en-US', { month: 'short' })} ${now.getFullYear()}`, accent: tone },
-          { label: 'This Month',       value: fmtMoney(thisMonth),     sub: momSub },
-          { label: 'Per Property',     value: fmtMoney(perProperty),   sub: 'Avg/year' },
+          { label: t('earnings_page.kpi_total_year'), value: fmtMoney(totalThisYear), sub: `Jan–${now.toLocaleDateString('en-US', { month: 'short' })} ${now.getFullYear()}`, accent: tone },
+          { label: t('earnings_page.kpi_this_month'), value: fmtMoney(thisMonth),     sub: momSub },
+          { label: t('earnings_page.kpi_per_property'), value: fmtMoney(perProperty), sub: t('earnings_page.kpi_avg') },
         ] as const).map((k, i) => <RoleKpiCard key={i} {...k} />)}
       </div>
-      <Card title={<><DollarSign size={14} /> Monthly Revenue</>} sub={rangeLabel}>
+      <Card title={<><DollarSign size={14} /> {t('earnings_page.chart_title')}</>} sub={rangeLabel}>
         <div className="flex items-end gap-2.5 h-32.5">
           {bars.map((d, i) => {
             const h = (d.rev / maxRev) * 100

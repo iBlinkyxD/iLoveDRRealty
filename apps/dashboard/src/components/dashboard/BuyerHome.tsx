@@ -3,6 +3,7 @@ import {
   Heart, MessageCircle, CalendarDays, MapPin,
   BookOpen, Scale, Globe, Banknote, Search, type LucideIcon,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
 import { Card, CardLink, StatusPill, SceneThumb, RoleKpiCard, fmtPrice } from './shared'
@@ -34,6 +35,7 @@ export const BUYER_RESOURCES: { Icon: LucideIcon; title: string; time: string }[
 ]
 
 export function BuyerHome({ go }: { go: (v: string) => void }) {
+  const { t } = useTranslation('buyer')
   const [savedHomes,   setSavedHomes]   = useState<SavedHome[]>([])
   const [inquiries,    setInquiries]    = useState<Inquiry[]>([])
   const [bookings,     setBookings]     = useState<Booking[]>([])
@@ -55,26 +57,29 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
 
   const kpis = [
     {
-      label: 'Saved Homes',
+      label: t('kpis.saved_homes'),
       value: loadingSaved ? '…' : String(savedHomes.length),
-      sub: savedHomes.length === 1 ? '1 saved property' : `${savedHomes.length} saved properties`,
+      sub: savedHomes.length === 1 ? t('kpis.saved_one') : t('kpis.saved_many', { count: savedHomes.length }),
     },
     {
-      label: 'Inquiries Sent',
+      label: t('kpis.inquiries_sent'),
       value: loadingInquiries ? '…' : String(inquiries.length),
-      sub: inquiries.length ? `${inquiries.length} sent` : 'None sent yet',
+      sub: inquiries.length ? t('kpis.inquiries_count', { count: inquiries.length }) : t('kpis.inquiries_none'),
     },
     {
-      label: 'Upcoming Trips',
+      label: t('kpis.upcoming_trips'),
       value: loadingBookings ? '…' : String(upcomingBookings.length),
-      sub: nextTrip ? `Next: ${nextTrip.check_in}` : 'None scheduled',
+      sub: nextTrip ? t('kpis.trips_next', { date: nextTrip.check_in }) : t('kpis.trips_none'),
     },
     {
-      label: 'Wishlist Match',
+      label: t('kpis.wishlist_match'),
       value: '—',
-      sub: 'Coming soon',
+      sub: t('kpis.wishlist_soon'),
     },
   ]
+
+  const nights = nextTrip ? nightsBetween(nextTrip.check_in, nextTrip.check_out) : 0
+  const guestWord = nextTrip ? (nextTrip.guests !== 1 ? t('upcoming_trip.guests') : t('upcoming_trip.guest')) : ''
 
   return (
     <>
@@ -84,7 +89,7 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
 
       <div className="grid grid-cols-1 gap-5 mt-5 xl:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-5">
-          <Card title={<><Heart size={14} />Saved Homes</>} action={<CardLink onClick={() => go('saved')} color="#e10f1f">View all →</CardLink>} padded={false}>
+          <Card title={<><Heart size={14} />{t('saved_homes.title')}</>} action={<CardLink onClick={() => go('saved')} color="#e10f1f">{t('saved_homes.view_all')}</CardLink>} padded={false}>
             {loadingSaved ? (
               <div className="px-3 sm:px-5">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -104,8 +109,8 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
                   <Heart size={20} style={{ color: '#e10f1f' }} />
                 </div>
                 <div className="text-center">
-                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No saved homes yet</div>
-                  <div className="text-[11.5px] text-dim">Browse listings and heart the ones you love.</div>
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('saved_homes.empty_heading')}</div>
+                  <div className="text-[11.5px] text-dim">{t('saved_homes.empty_sub')}</div>
                 </div>
                 <a
                   href={`${LANDING_URL}/search`}
@@ -114,7 +119,7 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
                   className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
                   style={{ background: '#e10f1f' }}
                 >
-                  <Search size={13} strokeWidth={2.5} /> Browse listings
+                  <Search size={13} strokeWidth={2.5} /> {t('saved_homes.browse')}
                 </a>
               </div>
             ) : (
@@ -142,7 +147,7 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
             )}
           </Card>
 
-          <Card title={<><MessageCircle size={14} />My Inquiries</>} action={<CardLink onClick={() => go('inquiries')} color="#e10f1f">All →</CardLink>} padded={false}>
+          <Card title={<><MessageCircle size={14} />{t('inquiries.title')}</>} action={<CardLink onClick={() => go('inquiries')} color="#e10f1f">{t('inquiries.all')}</CardLink>} padded={false}>
             {loadingInquiries ? (
               <div className="px-5">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -161,8 +166,8 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
                   <MessageCircle size={20} style={{ color: '#e10f1f' }} />
                 </div>
                 <div className="text-center">
-                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No inquiries yet</div>
-                  <div className="text-[11.5px] text-dim">Find a listing and reach out to get started.</div>
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('inquiries.empty_heading')}</div>
+                  <div className="text-[11.5px] text-dim">{t('inquiries.empty_sub')}</div>
                 </div>
                 <a
                   href={`${LANDING_URL}/search`}
@@ -171,7 +176,7 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
                   className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
                   style={{ background: '#e10f1f' }}
                 >
-                  <Search size={13} strokeWidth={2.5} /> Browse listings
+                  <Search size={13} strokeWidth={2.5} /> {t('inquiries.browse')}
                 </a>
               </div>
             ) : (
@@ -191,7 +196,7 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
         </div>
 
         <div className="flex flex-col gap-5">
-          <Card title={<><CalendarDays size={14} />Upcoming Trip</>}>
+          <Card title={<><CalendarDays size={14} />{t('upcoming_trip.title')}</>}>
             {loadingBookings ? (
               <div className="space-y-3 animate-pulse">
                 <div className="h-5 bg-line-soft rounded w-2/3" />
@@ -199,12 +204,12 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
                 <div className="h-2 bg-line-soft rounded-full mt-4" />
               </div>
             ) : !nextTrip ? (
-              <div className="py-4 text-center text-dim text-sm">No upcoming trips</div>
+              <div className="py-4 text-center text-dim text-sm">{t('upcoming_trip.none')}</div>
             ) : (
               <div className="flex flex-col gap-2">
                 <div className="font-sans text-xl font-bold text-ink">{nextTrip.listing_title ?? 'Booking'}</div>
                 <div className="text-xs text-dim">
-                  {nextTrip.check_in} – {nextTrip.check_out} · {nightsBetween(nextTrip.check_in, nextTrip.check_out)} nights · {nextTrip.guests} guest{nextTrip.guests !== 1 ? 's' : ''}
+                  {nextTrip.check_in} – {nextTrip.check_out} · {t('upcoming_trip.nights', { n: nights })} · {nextTrip.guests} {guestWord}
                 </div>
                 <div className="h-2 bg-line rounded-full overflow-hidden mt-2">
                   <div className="h-full w-full rounded-full" style={{ background: 'linear-gradient(90deg,#0b63ab,#f0a800)' }} />

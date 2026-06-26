@@ -1,0 +1,27 @@
+{
+  "general": "General",
+  "logout": "Cerrar sesión",
+  "home": "Panel principal",
+  "settings": "Configuración",
+  "saved": "Casas guardadas",
+  "inquiries": "Consultas",
+  "bookings": "Reservas",
+  "calculator": "Calculadora ROI",
+  "resources": "Recursos",
+  "listings": "Propiedades",
+  "calendar": "Calendario",
+  "leads": "Contactos",
+  "earnings": "Ganancias",
+  "pipeline": "Embudo de ventas",
+  "users": "Usuarios",
+  "submit-listing": "Enviar propiedad",
+  "analytics": "Analíticas",
+  "owner-bookings": "Reservas de huéspedes",
+  "portal_eyebrow": "Portal {{role}} · {{name}}",
+  "roles": {
+    "Buyer": "Comprador",
+    "Owner": "Propietario",
+    "Realtor": "Agente",
+    "Admin": "Admin"
+  }
+}

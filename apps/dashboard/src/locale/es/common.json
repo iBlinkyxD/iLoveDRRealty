@@ -1,0 +1,20 @@
+{
+  "status_labels": {
+    "active": "Activo",
+    "pending_approval": "En revisión",
+    "rejected": "Rechazado",
+    "archived": "Archivado"
+  },
+  "locked": {
+    "request_submitted": "Solicitud enviada",
+    "request_pending_owner": "Tu solicitud de acceso como Propietario está pendiente de revisión. Tendrás acceso completo una vez aprobada.",
+    "request_pending_realtor": "Tu solicitud de acceso como Agente está pendiente de revisión. Tendrás acceso completo una vez aprobada.",
+    "unlock": "Desbloquear acceso {{label}}",
+    "desc_owner": "Publica tus propiedades, gestiona reservas, rastrea contactos y ve tus ganancias.",
+    "desc_realtor": "Gestiona propiedades, administra tu embudo de ventas y cierra acuerdos.",
+    "cta_owner": "Publicar mi propiedad →",
+    "cta_realtor": "Solicitar acceso →",
+    "label_owner": "Propietario",
+    "label_realtor": "Agente"
+  }
+}

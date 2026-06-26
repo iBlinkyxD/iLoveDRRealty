@@ -1,0 +1,133 @@
+{
+  "pages": {
+    "home":          "Resumen",
+    "listings":      "Mis propiedades",
+    "calendar":      "Calendario de reservas",
+    "bookings":      "Mis reservas",
+    "owner-bookings":"Reservas de huéspedes",
+    "leads":         "Contactos",
+    "earnings":      "Ganancias",
+    "settings":      "Configuración"
+  },
+  "kpis": {
+    "active_listings":  "Propiedades activas",
+    "upcoming_bookings":"Próximas reservas",
+    "open_leads":       "Contactos abiertos",
+    "revenue_month":    "Ingresos este mes",
+    "active_one":       "1 activa",
+    "active_many":      "{{count}} activas",
+    "bookings_next":    "Próxima: {{date}}",
+    "bookings_none":    "Sin programar",
+    "leads_count":      "{{count}} total",
+    "leads_none":       "Sin contactos aún",
+    "revenue_sub":      "Este mes (confirmados)"
+  },
+  "listings": {
+    "title":          "Propiedades activas",
+    "manage":         "Gestionar →",
+    "view_all":       "Ver todas las propiedades →",
+    "empty_heading":  "Sin propiedades aún",
+    "empty_sub":      "Tu agente añadirá propiedades en tu nombre.",
+    "views":          "vistas",
+    "leads":          "contactos"
+  },
+  "revenue": {
+    "title":          "Ingresos",
+    "sub":            "Últimos 6 meses (reservas confirmadas)",
+    "view_breakdown": "Ver desglose completo →"
+  },
+  "agent": {
+    "title":        "Tu agente",
+    "none_heading": "Sin agente asignado",
+    "none_sub":     "Un agente será asignado para gestionar tus propiedades."
+  },
+  "pending_reviews": {
+    "title":        "Revisiones pendientes",
+    "all_listings": "Todas las propiedades →",
+    "deal_request": "Solicitud de oferta",
+    "edit":         "Edición"
+  },
+  "bookings": {
+    "title":          "Reservas",
+    "sub":            "Próximas",
+    "all":            "Todas →",
+    "empty_heading":  "Sin próximas reservas",
+    "empty_sub":      "Las reservas de huéspedes aparecerán aquí.",
+    "guest_fallback": "Huésped"
+  },
+  "leads_card": {
+    "title":         "Contactos recientes",
+    "total":         "{{count}} total",
+    "empty_heading": "Sin contactos aún",
+    "empty_sub":     "Las consultas de compradores aparecerán aquí.",
+    "view_all":      "Ver {{count}} contactos →"
+  },
+  "bookings_page": {
+    "empty_title":      "Sin reservas aún",
+    "empty_sub":        "Las solicitudes de reserva aparecerán aquí una vez que tu agente publique tu propiedad.",
+    "section_pending":  "Pendientes — Acción requerida",
+    "section_upcoming": "Próximas",
+    "section_past":     "Pasadas",
+    "section_cancelled":"Canceladas",
+    "action_required":  "Acción requerida",
+    "accept":           "Aceptar",
+    "decline":          "Rechazar"
+  },
+  "leads_page": {
+    "title":       "Todos los contactos",
+    "empty_title": "Sin contactos aún",
+    "empty_sub":   "Las consultas de compradores aparecerán aquí cuando tu propiedad esté activa.",
+    "reply":       "Responder"
+  },
+  "earnings_page": {
+    "empty_title":        "Sin ganancias aún",
+    "empty_sub":          "Los ingresos de reservas confirmadas aparecerán aquí cuando tu propiedad esté activa.",
+    "kpi_total_year":     "Total este año",
+    "kpi_this_month":     "Este mes",
+    "kpi_per_property":   "Por propiedad",
+    "kpi_avg":            "Prom/año",
+    "chart_title":        "Ingresos mensuales",
+    "no_data_last_month": "Sin datos el mes pasado",
+    "mom_vs":             "{{pct}}% vs mes anterior"
+  },
+  "calendar_page": {
+    "title":             "Calendario de reservas",
+    "coming_soon_label": "Próximamente",
+    "coming_soon_badge": "Próximamente",
+    "desc":              "Controla reservas de huéspedes, bloquea fechas y gestiona disponibilidad — próximamente."
+  },
+  "listings_page": {
+    "title":                "Mis propiedades",
+    "your_agent":           "Tu Agente Inmobiliario",
+    "agent_unassigned":     "No asignado aún",
+    "pending_reviews":      "Revisiones pendientes",
+    "deal_request_pending": "Solicitud de oferta pendiente",
+    "edit_pending":         "Edición pendiente de aprobación",
+    "empty_title":          "Sin propiedades aún",
+    "empty_sub":            "Tu agente agregará propiedades en tu nombre una vez asignado.",
+    "unassigned":           "Sin asignar",
+    "search_ph":            "Buscar propiedades…",
+    "request_change":       "Solicitar cambio",
+    "deal_of_week":         "Oferta de la semana",
+    "hide_listing":         "Ocultar propiedad",
+    "delete_listing":       "Eliminar propiedad",
+    "send_request":         "Enviar solicitud",
+    "sending":              "Enviando…",
+    "describe_change_ph":   "Describe el cambio que deseas…",
+    "request_change_title": "Solicitar cambio",
+    "cancel":               "Cancelar",
+    "filter_all":           "Todas",
+    "filter_active":        "Activas",
+    "filter_review":        "En revisión",
+    "filter_rejected":      "Rechazadas",
+    "filter_archived":      "Archivadas",
+    "header_property":      "Propiedad",
+    "header_type":          "Tipo",
+    "header_price":         "Precio",
+    "header_status":        "Estado",
+    "header_views":         "Vistas",
+    "header_leads":         "Contactos",
+    "header_realtor":       "Agente",
+    "header_updated":       "Actualizado"
+  }
+}

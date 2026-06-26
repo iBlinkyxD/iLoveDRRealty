@@ -1,0 +1,20 @@
+{
+  "status_labels": {
+    "active": "Active",
+    "pending_approval": "Review",
+    "rejected": "Rejected",
+    "archived": "Archived"
+  },
+  "locked": {
+    "request_submitted": "Request submitted",
+    "request_pending_owner": "Your Property Owner upgrade request is pending admin review. You'll have full access once approved.",
+    "request_pending_realtor": "Your Realtor upgrade request is pending admin review. You'll have full access once approved.",
+    "unlock": "Unlock {{label}} Access",
+    "desc_owner": "List your properties, manage bookings, track leads, and view earnings.",
+    "desc_realtor": "Manage listings, run your sales pipeline, and close deals.",
+    "cta_owner": "List My Property →",
+    "cta_realtor": "Request Upgrade →",
+    "label_owner": "Property Owner",
+    "label_realtor": "Realtor"
+  }
+}

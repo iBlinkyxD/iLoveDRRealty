@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ClipboardList, Search } from 'lucide-react'
 import { getAdminLeads, type Lead } from '../../api/leads'
 import { getAdminUsers, type AdminUser } from '../../api/admin'
@@ -56,8 +57,7 @@ const STATUS_PILL_MAP: Record<string, string> = {
   New: 'new', Assigned: 'assigned', Contacted: 'contacted', Closed: 'closed',
 }
 
-const COLS    = 'grid-cols-[100px_1fr_1fr_1.2fr_160px_110px]'
-const HEADERS = ['Type', 'Contact', 'Property', 'Message', 'Assign Realtor', 'Status'] as const
+const COLS = 'grid-cols-[100px_1fr_1fr_1.2fr_160px_110px]'
 
 function fmtUserCode(code: string | null): string {
   if (!code) return ''
@@ -123,6 +123,7 @@ function StatusBadge({ status }: { status: string }) {
 
 
 export function AdminLeads() {
+  const { t } = useTranslation('admin')
   const [leads,        setLeads]        = useState<Lead[]>([])
   const [realtors,     setRealtors]     = useState<AdminUser[]>([])
   const [loading,      setLoading]      = useState(true)
@@ -215,10 +216,10 @@ export function AdminLeads() {
   }
 
   const kpis = [
-    { label: 'New',       value: counts.new,       sub: 'awaiting action', accent: counts.new > 0 ? '#e10f1f' : undefined as string | undefined },
-    { label: 'Assigned',  value: counts.assigned,  sub: 'with a realtor',  accent: undefined as string | undefined },
-    { label: 'Contacted', value: counts.contacted, sub: 'in progress',     accent: undefined },
-    { label: 'Closed',    value: counts.closed,    sub: 'completed',       accent: undefined },
+    { label: t('leads_page.kpi_new'),       value: counts.new,       sub: t('leads_page.kpi_new_sub'),       accent: counts.new > 0 ? '#e10f1f' : undefined as string | undefined },
+    { label: t('leads_page.kpi_assigned'),  value: counts.assigned,  sub: t('leads_page.kpi_assigned_sub'),  accent: undefined as string | undefined },
+    { label: t('leads_page.kpi_contacted'), value: counts.contacted, sub: t('leads_page.kpi_contacted_sub'), accent: undefined },
+    { label: t('leads_page.kpi_closed'),    value: counts.closed,    sub: t('leads_page.kpi_closed_sub'),    accent: undefined },
   ]
 
   return (
@@ -255,7 +256,7 @@ export function AdminLeads() {
         {/* Toolbar */}
         <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
           <div className="font-sans text-[17px] font-bold text-ink">
-            All leads
+            {t('leads_page.title')}
             {!loading && leads.length > 0 && (
               <span className="ml-2 text-[13px] font-normal text-dim">({filtered.length})</span>
             )}
@@ -267,7 +268,7 @@ export function AdminLeads() {
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search leads…"
+                placeholder={t('leads_page.search_ph')}
                 className="text-[12.5px] border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1 min-w-0"
               />
             </div>
@@ -282,8 +283,8 @@ export function AdminLeads() {
 
         {/* Table header */}
         <div className={`hidden lg:grid ${COLS} gap-3 py-2.5 px-5.5 border-b border-line bg-nav/5`}>
-          {HEADERS.map(h => (
-            <div key={h} className="text-[11px] font-bold text-dim uppercase tracking-[.06em]">{h}</div>
+          {[t('leads_page.header_type'), t('leads_page.header_contact'), t('leads_page.header_property'), t('leads_page.header_message'), t('leads_page.header_assign_realtor'), t('leads_page.header_status')].map((h, i) => (
+            <div key={i} className="text-[11px] font-bold text-dim uppercase tracking-[.06em]">{h}</div>
           ))}
         </div>
 
@@ -330,13 +331,13 @@ export function AdminLeads() {
             <div>
               {query.trim() ? (
                 <>
-                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No results for "{query}"</div>
-                  <div className="text-[11.5px] text-dim">Try a different name, email, or property.</div>
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('leads_page.no_results_title', { query })}</div>
+                  <div className="text-[11.5px] text-dim">{t('leads_page.no_results_sub')}</div>
                 </>
               ) : (
                 <>
-                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">No leads yet</div>
-                  <div className="text-[11.5px] text-dim">Leads appear here when buyers inquire, book, or sign up from the site.</div>
+                  <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('leads_page.no_leads_title')}</div>
+                  <div className="text-[11.5px] text-dim">{t('leads_page.no_leads_sub')}</div>
                 </>
               )}
             </div>

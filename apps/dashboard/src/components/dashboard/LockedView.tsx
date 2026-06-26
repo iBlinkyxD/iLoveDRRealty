@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Lock, Clock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { Role } from '../../App'
 import { OwnerHome } from './OwnerHome'
 import { RealtorHome } from './RealtorHome'
@@ -8,10 +9,10 @@ import { getMyLeads } from '../../api/leads'
 import { OwnerLeadModal, RealtorModal } from '../../pages/buyer/Upgrade'
 
 export function LockedView({ tab, tone, go }: { tab: Role; tone: string; go: (v: string) => void }) {
-  const label = tab === 'Owner' ? 'Property Owner' : 'Realtor'
-  const desc = tab === 'Owner'
-    ? 'List your properties, manage bookings, track leads, and view earnings.'
-    : 'Manage listings, run your sales pipeline, and close deals.'
+  const { t } = useTranslation('common')
+
+  const label = tab === 'Owner' ? t('locked.label_owner') : t('locked.label_realtor')
+  const desc  = tab === 'Owner' ? t('locked.desc_owner') : t('locked.desc_realtor')
 
   const [ownerModalOpen, setOwnerModalOpen] = useState(false)
   const [realtorModalOpen, setRealtorModalOpen] = useState(false)
@@ -58,9 +59,9 @@ export function LockedView({ tab, tone, go }: { tab: Role; tone: string; go: (v:
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: `${tone}18` }}>
                 <Clock size={24} style={{ color: tone }} />
               </div>
-              <div className="font-sans text-xl font-bold text-ink mb-2">Request submitted</div>
+              <div className="font-sans text-xl font-bold text-ink mb-2">{t('locked.request_submitted')}</div>
               <p className="text-[13px] text-dim leading-[1.55]">
-                Your {label} upgrade request is pending admin review. You'll have full access once approved.
+                {tab === 'Owner' ? t('locked.request_pending_owner') : t('locked.request_pending_realtor')}
               </p>
             </>
           ) : (
@@ -68,7 +69,7 @@ export function LockedView({ tab, tone, go }: { tab: Role; tone: string; go: (v:
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: `${tone}18` }}>
                 <Lock size={24} style={{ color: tone }} />
               </div>
-              <div className="font-sans text-xl font-bold text-ink mb-2">Unlock {label} Access</div>
+              <div className="font-sans text-xl font-bold text-ink mb-2">{t('locked.unlock', { label })}</div>
               <p className="text-[13px] text-dim leading-[1.55] mb-5">{desc}</p>
               {tab === 'Owner' ? (
                 <button
@@ -76,7 +77,7 @@ export function LockedView({ tab, tone, go }: { tab: Role; tone: string; go: (v:
                   className="px-6 py-2.5 rounded-full text-[13px] font-bold text-white border-none cursor-pointer"
                   style={{ background: tone }}
                 >
-                  List My Property →
+                  {t('locked.cta_owner')}
                 </button>
               ) : (
                 <button
@@ -84,7 +85,7 @@ export function LockedView({ tab, tone, go }: { tab: Role; tone: string; go: (v:
                   className="px-6 py-2.5 rounded-full text-[13px] font-bold text-white border-none cursor-pointer"
                   style={{ background: tone }}
                 >
-                  Request Upgrade →
+                  {t('locked.cta_realtor')}
                 </button>
               )}
             </>

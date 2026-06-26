@@ -5,6 +5,7 @@ import { PhoneInput } from 'react-international-phone'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import 'react-international-phone/style.css'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import type { UserInfo } from '../lib/auth'
 import type { Role } from '../App'
 import { changePassword, linkGoogle, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../api/auth'
@@ -63,60 +64,18 @@ function StatusBadge({ active, label }: { active: boolean; label: string }) {
   )
 }
 
-function UnlinkGoogleModal({ onConfirm, onCancel, loading }: { onConfirm: () => void; onCancel: () => void; loading: boolean }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onCancel}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-      <div
-        className="relative bg-white rounded-2xl shadow-xl border border-line w-full max-w-sm p-6 flex flex-col gap-4"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 grid place-items-center shrink-0">
-            <AlertTriangle size={18} className="text-red-500" />
-          </div>
-          <div>
-            <div className="text-[15px] font-bold text-ink">Unlink Google account?</div>
-            <div className="text-[12.5px] text-dim mt-1 leading-relaxed">
-              You'll no longer be able to sign in with Google. Make sure you remember your email and password before continuing.
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-2.5 justify-end pt-1">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="px-4 py-2 rounded-xl border border-line bg-white text-[13px] font-semibold text-ink cursor-pointer hover:bg-surface transition-colors disabled:opacity-60"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={loading}
-            className="px-4 py-2 rounded-xl border-0 bg-red-600 text-white text-[13px] font-bold cursor-pointer hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center gap-2"
-          >
-            <Unlink size={13} />
-            {loading ? 'Unlinking…' : 'Yes, unlink'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 type SettingsTab = 'profile' | 'security' | 'notifications'
 
-const TABS: { id: SettingsTab; label: string }[] = [
-  { id: 'profile',       label: 'Profile'       },
-  { id: 'security',      label: 'Security'      },
-  { id: 'notifications', label: 'Notifications' },
-]
-
 export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInfo; role: Role; tone: string; onUserUpdate: (updates: Partial<UserInfo>) => void }) {
+  const { t } = useTranslation('settings')
+
   const [tab, setTab] = useState<SettingsTab>('profile')
+
+  const TABS: { id: SettingsTab; label: string }[] = [
+    { id: 'profile',       label: t('tabs.profile')       },
+    { id: 'security',      label: t('tabs.security')      },
+    { id: 'notifications', label: t('tabs.notifications') },
+  ]
 
   // Profile state
   const [displayName, setDisplayName] = useState(user.display_name)
@@ -147,14 +106,14 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
       try {
         await linkGoogle(access_token)
         setHasGoogle(true)
-        toast.success('Google account linked')
+        toast.success(t('security.toast_google_linked'))
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Failed to link Google')
+        toast.error(err instanceof Error ? err.message : t('security.toast_google_linked'))
       } finally {
         setLinking(false)
       }
     },
-    onError: () => toast.error('Google sign-in was cancelled or failed'),
+    onError: () => toast.error(t('security.err_google_failed')),
   })
 
   // Notifications state
@@ -175,10 +134,10 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
       const { avatar_url } = await uploadAvatar(file)
       setAvatarSrc(avatar_url)
       onUserUpdate({ avatar_url })
-      toast.success('Profile picture updated')
+      toast.success(t('profile.toast_photo'))
     } catch (err: unknown) {
       setAvatarSrc(user.avatar_url ?? '')
-      toast.error(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(err instanceof Error ? err.message : t('profile.err_upload'))
     } finally {
       setAvatarUploading(false)
       e.target.value = ''
@@ -187,14 +146,14 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
 
   async function handleProfileSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!displayName.trim()) { toast.error('Full name is required'); return }
-    if (phone && !isValidPhoneNumber(phone)) { toast.error('Enter a valid phone number'); return }
+    if (!displayName.trim()) { toast.error(t('profile.err_name')); return }
+    if (phone && !isValidPhoneNumber(phone)) { toast.error(t('profile.err_phone')); return }
     setProfileSaving(true)
     try {
       await updateProfile({ display_name: displayName.trim(), phone: phone || undefined })
-      toast.success('Profile saved')
+      toast.success(t('profile.toast_saved'))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save profile')
+      toast.error(err instanceof Error ? err.message : t('profile.err_upload'))
     } finally {
       setProfileSaving(false)
     }
@@ -209,23 +168,23 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
 
   async function handlePasswordSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!next || !confirm) { toast.error('All fields are required'); return }
-    if (next.length < 8) { toast.error('Password must be at least 8 characters'); return }
-    if (next !== confirm) { toast.error('Passwords do not match'); return }
-    if (hasPassword && !current) { toast.error('Current password is required'); return }
+    if (!next || !confirm) { toast.error(t('security.err_required')); return }
+    if (next.length < 8) { toast.error(t('security.err_min_8')); return }
+    if (next !== confirm) { toast.error(t('security.err_no_match')); return }
+    if (hasPassword && !current) { toast.error(t('security.err_current')); return }
     setSaving(true)
     try {
       if (hasPassword) {
         await changePassword(current, next)
-        toast.success('Password updated')
+        toast.success(t('security.toast_pw_updated'))
       } else {
         await setPassword(next)
-        toast.success('Password set — you can now sign in with email')
+        toast.success(t('security.toast_pw_set'))
         setHasPassword(true)
       }
       resetPwForm()
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update password')
+      toast.error(err instanceof Error ? err.message : t('security.err_required'))
     } finally {
       setSaving(false)
     }
@@ -235,11 +194,11 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
     setUnlinking(true)
     try {
       await unlinkGoogle()
-      toast.success('Google account unlinked')
+      toast.success(t('security.toast_google_unlinked'))
       setHasGoogle(false)
       setUnlinkOpen(false)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to unlink Google')
+      toast.error(err instanceof Error ? err.message : t('security.err_required'))
     } finally {
       setUnlinking(false)
     }
@@ -249,34 +208,66 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
     <div className="max-w-2xl flex flex-col gap-5">
 
       {unlinkOpen && (
-        <UnlinkGoogleModal
-          onConfirm={handleUnlinkConfirm}
-          onCancel={() => !unlinking && setUnlinkOpen(false)}
-          loading={unlinking}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !unlinking && setUnlinkOpen(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+          <div
+            className="relative bg-white rounded-2xl shadow-xl border border-line w-full max-w-sm p-6 flex flex-col gap-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 grid place-items-center shrink-0">
+                <AlertTriangle size={18} className="text-red-500" />
+              </div>
+              <div>
+                <div className="text-[15px] font-bold text-ink">{t('security.unlink_modal.title')}</div>
+                <div className="text-[12.5px] text-dim mt-1 leading-relaxed">
+                  {t('security.unlink_modal.sub')}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2.5 justify-end pt-1">
+              <button
+                type="button"
+                onClick={() => setUnlinkOpen(false)}
+                disabled={unlinking}
+                className="px-4 py-2 rounded-xl border border-line bg-white text-[13px] font-semibold text-ink cursor-pointer hover:bg-surface transition-colors disabled:opacity-60"
+              >
+                {t('security.unlink_modal.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleUnlinkConfirm}
+                disabled={unlinking}
+                className="px-4 py-2 rounded-xl border-0 bg-red-600 text-white text-[13px] font-bold cursor-pointer hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center gap-2"
+              >
+                <Unlink size={13} />
+                {unlinking ? t('security.unlink_modal.confirming') : t('security.unlink_modal.confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Tab bar */}
       <div className="flex gap-1.5 p-1 bg-paper border border-line rounded-xl w-fit">
-        {TABS.map(t => (
+        {TABS.map(tb => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
             className="px-4 py-1.75 rounded-lg text-[12.5px] font-semibold cursor-pointer transition-all duration-150 border-0"
             style={{
-              background: tab === t.id ? tone : 'transparent',
-              color: tab === t.id ? '#fff' : 'rgba(0,0,0,.45)',
+              background: tab === tb.id ? tone : 'transparent',
+              color: tab === tb.id ? '#fff' : 'rgba(0,0,0,.45)',
             }}
           >
-            {t.label}
+            {tb.label}
           </button>
         ))}
       </div>
 
       {/* ── Profile tab ── */}
       {tab === 'profile' && (
-        <Section icon={Camera} title="Profile">
-          {/* Avatar + identity */}
+        <Section icon={Camera} title={t('profile.title')}>
           <div className="pb-5 mb-5 border-b border-line flex items-center gap-4">
             <div className="relative shrink-0">
               <button
@@ -284,7 +275,7 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                 onClick={() => fileRef.current?.click()}
                 disabled={avatarUploading}
                 className="w-16 h-16 rounded-full overflow-hidden border-2 border-line cursor-pointer bg-transparent p-0 relative group disabled:opacity-70 disabled:cursor-wait"
-                title="Change profile picture"
+                title={t('profile.change_photo')}
               >
                 {avatarSrc ? (
                   <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
@@ -326,26 +317,25 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                 className="mt-1.5 text-[11.5px] font-semibold border-0 bg-transparent cursor-pointer p-0 transition-opacity disabled:opacity-50"
                 style={{ color: tone }}
               >
-                {avatarUploading ? 'Uploading…' : 'Change photo'}
+                {avatarUploading ? t('profile.uploading') : t('profile.change_photo')}
               </button>
             </div>
           </div>
 
-          {/* Editable form */}
           <form onSubmit={handleProfileSave} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Full name</label>
+                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.full_name')}</label>
                 <input
                   className={inp}
                   value={displayName}
                   onChange={e => setDisplayName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder={t('profile.name_ph')}
                   maxLength={100}
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Phone</label>
+                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.phone')}</label>
                 <PhoneInput
                   defaultCountry="do"
                   value={phone}
@@ -360,11 +350,11 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Email</label>
+                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.email')}</label>
                 <input className={inp} value={user.email} disabled />
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Role</label>
+                <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.role')}</label>
                 <input className={inp} value={role} disabled />
               </div>
             </div>
@@ -376,7 +366,7 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                 style={{ background: tone }}
               >
                 <Save size={13} />
-                {profileSaving ? 'Saving…' : 'Save changes'}
+                {profileSaving ? t('profile.saving') : t('profile.save')}
               </button>
             </div>
           </form>
@@ -385,25 +375,23 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
 
       {/* ── Security tab ── */}
       {tab === 'security' && (
-        <Section icon={Shield} title="Security">
+        <Section icon={Shield} title={t('security.title')}>
           <div className="flex flex-col divide-y divide-line">
 
-            {/* Email row */}
             <div className="flex items-center justify-between py-4 first:pt-0">
               <div>
-                <div className="text-[13.5px] font-semibold text-ink">Email address</div>
-                <div className="text-[11.5px] text-dim mt-0.5">The email address associated with your account.</div>
+                <div className="text-[13.5px] font-semibold text-ink">{t('security.email_label')}</div>
+                <div className="text-[11.5px] text-dim mt-0.5">{t('security.email_sub')}</div>
               </div>
               <span className="text-[13px] text-ink ml-6 shrink-0">{user.email}</span>
             </div>
 
-            {/* Password row */}
             <div className="py-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-[13.5px] font-semibold text-ink">Password</div>
+                  <div className="text-[13.5px] font-semibold text-ink">{t('security.password_label')}</div>
                   <div className="text-[11.5px] text-dim mt-0.5">
-                    {hasPassword ? 'Update your current password.' : 'Add a password to sign in with email.'}
+                    {hasPassword ? t('security.password_sub_set') : t('security.password_sub_add')}
                   </div>
                 </div>
                 <button
@@ -411,7 +399,7 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                   onClick={() => setPwOpen(v => !v)}
                   className="ml-6 shrink-0 px-3.5 py-1.5 rounded-lg border border-line bg-white text-[12.5px] font-semibold text-ink hover:bg-surface transition-colors cursor-pointer"
                 >
-                  {pwOpen ? 'Cancel' : hasPassword ? 'Change Password' : 'Set Password'}
+                  {pwOpen ? t('security.cancel') : hasPassword ? t('security.change_pw') : t('security.set_pw')}
                 </button>
               </div>
 
@@ -419,7 +407,7 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                 <form onSubmit={handlePasswordSave} className="mt-4 flex flex-col gap-3">
                   {hasPassword && (
                     <div>
-                      <label className="block text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">Current password</label>
+                      <label className="block text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('security.current_pw')}</label>
                       <div className="relative">
                         <input
                           className={inp + ' pr-10'}
@@ -437,14 +425,14 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                   )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">New password</label>
+                      <label className="block text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('security.new_pw')}</label>
                       <div className="relative">
                         <input
                           className={inp + ' pr-10'}
                           type={showNext ? 'text' : 'password'}
                           value={next}
                           onChange={e => setNext(e.target.value)}
-                          placeholder="Min. 8 characters"
+                          placeholder={t('security.new_pw_ph')}
                           autoComplete="new-password"
                         />
                         <button type="button" onClick={() => setShowNext(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 border-0 bg-transparent cursor-pointer text-dim hover:text-ink">
@@ -453,20 +441,20 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">Confirm password</label>
+                      <label className="block text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('security.confirm_pw')}</label>
                       <input
                         className={inp}
                         type="password"
                         value={confirm}
                         onChange={e => setConfirm(e.target.value)}
-                        placeholder="Re-enter password"
+                        placeholder={t('security.confirm_pw_ph')}
                         autoComplete="new-password"
                       />
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-1">
                     <button type="button" onClick={resetPwForm} className="px-4 py-2 rounded-lg border border-line bg-white text-[12.5px] font-semibold text-ink cursor-pointer hover:bg-surface transition-colors">
-                      Cancel
+                      {t('security.cancel')}
                     </button>
                     <button
                       type="submit"
@@ -474,17 +462,16 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                       className="px-5 py-2 rounded-lg text-[12.5px] font-bold text-white border-0 cursor-pointer transition-opacity disabled:opacity-60"
                       style={{ background: tone }}
                     >
-                      {saving ? 'Saving…' : hasPassword ? 'Update Password' : 'Set Password'}
+                      {saving ? t('security.saving_pw') : hasPassword ? t('security.update_pw_btn') : t('security.set_pw_btn')}
                     </button>
                   </div>
                 </form>
               )}
             </div>
 
-            {/* Linked accounts */}
             <div className="pt-4">
-              <div className="text-[13.5px] font-semibold text-ink">Linked accounts</div>
-              <div className="text-[11.5px] text-dim mt-0.5 mb-3">Sign-in methods connected to your account.</div>
+              <div className="text-[13.5px] font-semibold text-ink">{t('security.linked_accounts')}</div>
+              <div className="text-[11.5px] text-dim mt-0.5 mb-3">{t('security.linked_sub')}</div>
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-line bg-white">
@@ -492,12 +479,12 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                     <Mail size={14} className="text-ink2" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-ink">Email &amp; Password</div>
+                    <div className="text-[13px] font-semibold text-ink">{t('security.email_pw_label')}</div>
                     <div className="text-[11px] text-dim mt-0.5">
-                      {hasPassword ? 'Password login enabled' : 'Not configured'}
+                      {hasPassword ? t('security.pw_enabled') : t('security.pw_not_configured')}
                     </div>
                   </div>
-                  <StatusBadge active={hasPassword} label={hasPassword ? 'Configured' : 'Not set up'} />
+                  <StatusBadge active={hasPassword} label={hasPassword ? t('security.pw_configured') : t('security.pw_not_set')} />
                 </div>
 
                 <div className="flex items-center gap-3 p-3 rounded-xl border border-line bg-white">
@@ -505,9 +492,9 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                     <GoogleIcon />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold text-ink">Google</div>
+                    <div className="text-[13px] font-semibold text-ink">{t('security.google_label')}</div>
                     <div className="text-[11px] text-dim mt-0.5">
-                      {hasGoogle ? 'Connected' : 'Not linked'}
+                      {hasGoogle ? t('security.google_connected') : t('security.google_not_linked')}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -522,11 +509,11 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                       >
                         <span className="w-1.5 h-1.5 rounded-full bg-current group-hover:hidden" />
                         <Unlink size={10} className="hidden group-hover:block" />
-                        <span className="group-hover:hidden">Connected</span>
-                        <span className="hidden group-hover:inline">Unlink</span>
+                        <span className="group-hover:hidden">{t('security.google_connected')}</span>
+                        <span className="hidden group-hover:inline">{t('security.google_unlink')}</span>
                       </button>
                     ) : hasGoogle ? (
-                      <StatusBadge active={true} label="Connected" />
+                      <StatusBadge active={true} label={t('security.google_connected')} />
                     ) : (
                       <button
                         type="button"
@@ -536,7 +523,7 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
                         style={{ background: '#f8faff', color: '#2563eb', borderColor: '#bfdbfe' }}
                       >
                         <Link2 size={10} />
-                        {linking ? 'Linking…' : 'Link account'}
+                        {linking ? t('security.google_linking') : t('security.google_link')}
                       </button>
                     )}
                   </div>
@@ -550,12 +537,12 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
 
       {/* ── Notifications tab ── */}
       {tab === 'notifications' && (
-        <Section icon={Bell} title="Notifications">
+        <Section icon={Bell} title={t('notifications.title')}>
           <div className="flex flex-col divide-y divide-line-soft">
             {([
-              { key: 'inquiryAlerts'  as const, label: 'Inquiry alerts',    sub: 'Get notified when someone sends an inquiry'    },
-              { key: 'bookingUpdates' as const, label: 'Booking updates',   sub: 'Receive updates on booking status changes'     },
-              { key: 'weeklyDigest'   as const, label: 'Weekly digest',     sub: 'Summary email every Monday with platform news' },
+              { key: 'inquiryAlerts'  as const, label: t('notifications.inquiry_alerts'),  sub: t('notifications.inquiry_alerts_sub')  },
+              { key: 'bookingUpdates' as const, label: t('notifications.booking_updates'), sub: t('notifications.booking_updates_sub') },
+              { key: 'weeklyDigest'   as const, label: t('notifications.weekly_digest'),   sub: t('notifications.weekly_digest_sub')   },
             ]).map(({ key, label, sub }) => (
               <div key={key} className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
                 <div>

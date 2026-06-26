@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Lock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { Role } from '../App'
 import type { UserInfo } from '../lib/auth'
 import { BuyerHome } from '../components/dashboard/BuyerHome'
@@ -35,25 +36,6 @@ const ROLE_TONE: Record<Role, string> = {
   Buyer: '#e10f1f', Owner: '#f0a800', Realtor: '#1f7a3d', Admin: '#0d9488',
 }
 
-const PAGE_TITLES: Record<Role, Record<string, string>> = {
-  Buyer: {
-    home: 'Your search dashboard', saved: 'Saved Homes',
-    inquiries: 'My Inquiries', bookings: 'Bookings', calculator: 'ROI Calculator',
-    resources: 'Resources', settings: 'Settings',
-  },
-  Owner: {
-    home: 'Overview', listings: 'My Listings', calendar: 'Booking Calendar',
-    bookings: 'My Bookings', 'owner-bookings': 'Guest Bookings', leads: 'Leads',
-    earnings: 'Earnings', settings: 'Settings',
-  },
-  Realtor: {
-    home: 'Overview', listings: 'My Listings', leads: 'Leads',
-    pipeline: 'Sales Pipeline', calendar: 'Calendar',
-    settings: 'Settings', 'submit-listing': 'Submit New Listing',
-  },
-  Admin: {},
-}
-
 interface Props {
   go: (v: string) => void
   view?: string
@@ -63,11 +45,24 @@ interface Props {
 }
 
 export default function Dashboard({ go, view = 'home', role, user, onUserUpdate }: Props) {
+  const { t: tBuyer }   = useTranslation('buyer')
+  const { t: tOwner }   = useTranslation('owner')
+  const { t: tRealtor } = useTranslation('realtor')
+  const { t: tNav }     = useTranslation('nav')
+
   const [activeTab, setActiveTab] = useState<Role>(role)
 
   const isLocked = (tab: Role) => !ROLE_ACCESS[role]?.includes(tab)
   const tone = ROLE_TONE[role]
   const tabTone = ROLE_TONE[activeTab]
+
+  function getPageTitle(v: string): string {
+    const key = `pages.${v}`
+    if (role === 'Buyer')   return tBuyer(key,   { defaultValue: tBuyer('pages.home') })
+    if (role === 'Owner')   return tOwner(key,   { defaultValue: tOwner('pages.home') })
+    if (role === 'Realtor') return tRealtor(key, { defaultValue: tRealtor('pages.home') })
+    return 'Dashboard'
+  }
 
   function renderView() {
     if (view === 'home') {
@@ -89,7 +84,7 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
                   }}
                 >
                   {locked && <Lock size={11} />}
-                  {tab}
+                  {tNav(`roles.${tab}`)}
                 </button>
               )
             })}
@@ -128,10 +123,10 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
     <div>
       <div className="mb-6">
         <div className="text-[11px] font-bold tracking-[.14em] uppercase mb-1.5" style={{ color: tone }}>
-          {role} Portal · {user.display_name}
+          {tNav('portal_eyebrow', { role: tNav(`roles.${role}`), name: user.display_name })}
         </div>
         <h1 className="font-sans text-[22px] sm:text-[28px] font-extrabold text-ink tracking-[-0.02em]">
-          {PAGE_TITLES[role][view] ?? PAGE_TITLES[role].home ?? 'Dashboard'}
+          {getPageTitle(view)}
         </h1>
       </div>
       {renderView()}

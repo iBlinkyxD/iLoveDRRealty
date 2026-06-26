@@ -3,8 +3,10 @@ import {
   LayoutDashboard, Heart, Search, MessageCircle, CalendarDays, Calculator,
   BookOpen, ClipboardList, Home, Bell, DollarSign,
   Building2, GitBranch, Users, Settings, Inbox,
-  Key, Shield, LogOut, Menu, X, Lock, ChevronRight, type LucideIcon,
+  Key, Shield, LogOut, Menu, X, Lock, ChevronRight, Globe, type LucideIcon,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import type { Role } from '../App'
 import type { UserInfo } from '../lib/auth'
 import logo from '../assets/iLoveDRRealty_White.png'
@@ -26,40 +28,40 @@ const ROLE_ICON: Record<Role, LucideIcon> = {
   Buyer: Search, Owner: Key, Realtor: Building2, Admin: Shield,
 }
 
-const GENERAL_NAV: { Icon: LucideIcon; label: string; view: string }[] = [
-  { Icon: LayoutDashboard, label: 'Dashboard', view: 'home'     },
-  { Icon: Settings,        label: 'Settings',  view: 'settings' },
+const GENERAL_NAV: { Icon: LucideIcon; view: string }[] = [
+  { Icon: LayoutDashboard, view: 'home'     },
+  { Icon: Settings,        view: 'settings' },
 ]
 
-const NAV: Record<Exclude<Role, 'Admin'>, { Icon: LucideIcon; label: string; view: string }[]> = {
+const NAV: Record<Exclude<Role, 'Admin'>, { Icon: LucideIcon; view: string }[]> = {
   Buyer: [
-    { Icon: Heart,         label: 'Saved Homes',    view: 'saved'      },
-    { Icon: MessageCircle, label: 'Inquiries',      view: 'inquiries'  },
-    { Icon: CalendarDays,  label: 'Bookings',       view: 'bookings'   },
-    { Icon: Calculator,    label: 'ROI Calculator', view: 'calculator' },
-    { Icon: BookOpen,      label: 'Resources',      view: 'resources'  },
+    { Icon: Heart,         view: 'saved'      },
+    { Icon: MessageCircle, view: 'inquiries'  },
+    { Icon: CalendarDays,  view: 'bookings'   },
+    { Icon: Calculator,    view: 'calculator' },
+    { Icon: BookOpen,      view: 'resources'  },
   ],
   Owner: [
-    { Icon: Home,          label: 'Listings',        view: 'listings'        },
-    { Icon: CalendarDays,  label: 'Calendar',        view: 'calendar'        },
-    { Icon: Bell,          label: 'Bookings',        view: 'owner-bookings'  },
-    { Icon: MessageCircle, label: 'Leads',           view: 'leads'           },
-    { Icon: DollarSign,    label: 'Earnings',        view: 'earnings'        },
+    { Icon: Home,          view: 'listings'        },
+    { Icon: CalendarDays,  view: 'calendar'        },
+    { Icon: Bell,          view: 'owner-bookings'  },
+    { Icon: MessageCircle, view: 'leads'           },
+    { Icon: DollarSign,    view: 'earnings'        },
   ],
   Realtor: [
-    { Icon: Building2,     label: 'Listings',  view: 'listings' },
-    { Icon: ClipboardList, label: 'Leads',     view: 'leads'    },
-    { Icon: GitBranch,     label: 'Pipeline',  view: 'pipeline' },
-    { Icon: CalendarDays,  label: 'Calendar',  view: 'calendar' },
+    { Icon: Building2,     view: 'listings' },
+    { Icon: ClipboardList, view: 'leads'    },
+    { Icon: GitBranch,     view: 'pipeline' },
+    { Icon: CalendarDays,  view: 'calendar' },
   ],
 }
 
-const ADMIN_NAV: { Icon: LucideIcon; label: string; view: string }[] = [
-  { Icon: LayoutDashboard, label: 'Dashboard', view: 'home'     },
-  { Icon: Users,           label: 'Users',     view: 'users'    },
-  { Icon: Building2,       label: 'Listings',  view: 'listings' },
-  { Icon: Inbox,           label: 'Leads',     view: 'leads'    },
-  { Icon: Settings,        label: 'Settings',  view: 'settings' },
+const ADMIN_NAV: { Icon: LucideIcon; view: string }[] = [
+  { Icon: LayoutDashboard, view: 'home'      },
+  { Icon: Users,           view: 'users'     },
+  { Icon: Building2,       view: 'listings'  },
+  { Icon: Inbox,           view: 'leads'     },
+  { Icon: Settings,        view: 'settings'  },
 ]
 
 interface Props {
@@ -72,6 +74,7 @@ interface Props {
 }
 
 export default function DashLayout({ role, view, go, onLogout, user, children }: Props) {
+  const { t } = useTranslation('nav')
   const tone = ROLE_TONE[role]
   const ownNavItems = role === 'Admin'
     ? ADMIN_NAV
@@ -79,13 +82,24 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
   const RoleIcon = ROLE_ICON[role]
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedLocked, setExpandedLocked] = useState<Record<string, boolean>>({})
+  const [lang, setLang] = useState<'en' | 'es'>(() =>
+    (localStorage.getItem('ildr_lang') as 'en' | 'es') ?? 'en'
+  )
   const closeNav = () => setSidebarOpen(false)
   const toggleLocked = (r: string) => setExpandedLocked(prev => ({ ...prev, [r]: !prev[r] }))
 
   const isSectionLocked = (r: Role) => !ROLE_ACCESS[role]?.includes(r)
 
+  function toggleLang() {
+    const next = lang === 'en' ? 'es' : 'en'
+    setLang(next)
+    localStorage.setItem('ildr_lang', next)
+    i18n.changeLanguage(next)
+  }
+
+  const topbarLabel = t(view as string, { defaultValue: t('home') })
+
   const navContent = role === 'Admin' ? (
-    // Admin: flat list
     ADMIN_NAV.map(item => {
       const active = view === item.view
       return (
@@ -100,20 +114,19 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
           }}
         >
           <item.Icon size={14} className="shrink-0" />
-          <span className="flex-1">{item.label}</span>
+          <span className="flex-1">{t(item.view)}</span>
           {active && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: tone }} />}
         </button>
       )
     })
   ) : (
-    // Non-admin: General section + role sections
     <>
       {/* General — always accessible */}
       <div className="mb-3">
         <div className="flex items-center gap-1.5 px-3 mb-0.5 mt-1">
           <LayoutDashboard size={10} style={{ color: 'rgba(255,255,255,.55)', flexShrink: 0 }} />
           <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,.55)' }}>
-            General
+            {t('general')}
           </span>
         </div>
         {GENERAL_NAV.map(item => {
@@ -130,7 +143,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
               }}
             >
               <item.Icon size={14} className="shrink-0" />
-              <span className="flex-1">{item.label}</span>
+              <span className="flex-1">{t(item.view)}</span>
               {active && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: tone }} />}
             </button>
           )
@@ -145,7 +158,6 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
         const isExpanded = !sectionLocked || !!expandedLocked[r]
         return (
           <div key={r} className="mb-3">
-            {/* Section header — clickable toggle for locked sections */}
             <button
               onClick={() => sectionLocked ? toggleLocked(r) : undefined}
               className="flex items-center gap-1.5 px-3 mb-0.5 mt-1 w-full border-0 bg-transparent cursor-pointer text-left"
@@ -153,7 +165,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
             >
               <SectionIcon size={10} style={{ color: sectionLocked ? 'rgba(255,255,255,.38)' : sectionTone, flexShrink: 0 }} />
               <span className="text-[10px] font-bold uppercase tracking-widest flex-1" style={{ color: sectionLocked ? 'rgba(255,255,255,.38)' : sectionTone }}>
-                {r}
+                {t(`roles.${r}`)}
               </span>
               {sectionLocked && (
                 <ChevronRight
@@ -167,7 +179,6 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
               )}
             </button>
 
-            {/* Items — hidden when locked and collapsed */}
             {isExpanded && NAV[r as Exclude<Role, 'Admin'>].map(item => {
               const active = !sectionLocked && view === item.view
               return (
@@ -182,7 +193,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
                   }}
                 >
                   <item.Icon size={14} className="shrink-0" />
-                  <span className="flex-1">{item.label}</span>
+                  <span className="flex-1">{t(item.view)}</span>
                   {sectionLocked
                     ? <Lock size={9} style={{ color: 'rgba(255,255,255,.32)' }} />
                     : active && <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sectionTone }} />
@@ -228,7 +239,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
           {navContent}
         </nav>
 
-        {/* Bottom — user + logout */}
+        {/* Bottom — language + user + logout */}
         <div className="px-3 pb-5 pt-3 border-t border-white/8 shrink-0">
           <div className="flex items-center gap-2.5 px-2 py-2 mb-2">
             {user.avatar_url ? (
@@ -248,13 +259,31 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
               </div>
             </div>
           </div>
+
+          {/* Language toggle */}
+          <button
+            onClick={toggleLang}
+            className="w-full px-3 py-2 rounded-lg border border-white/12 bg-transparent cursor-pointer text-[12.5px] font-medium text-left flex items-center justify-between transition-colors duration-120 hover:bg-white/6 mb-2"
+            style={{ color: 'rgba(255,255,255,.65)' }}
+          >
+            <span className="flex items-center gap-1.5">
+              <Globe size={13} />
+              Language
+            </span>
+            <div className="flex items-center gap-0.5 text-[12px] font-bold">
+              <span style={{ color: lang === 'en' ? '#fff' : 'rgba(255,255,255,.38)' }}>EN</span>
+              <span style={{ color: 'rgba(255,255,255,.25)' }}>/</span>
+              <span style={{ color: lang === 'es' ? '#fff' : 'rgba(255,255,255,.38)' }}>ES</span>
+            </div>
+          </button>
+
           <button
             onClick={onLogout}
             className="w-full px-3 py-2 rounded-lg border border-white/12 bg-transparent cursor-pointer text-[12.5px] font-medium text-left flex items-center gap-2 transition-colors duration-120 hover:bg-white/6"
             style={{ color: 'rgba(255,255,255,.65)' }}
           >
             <LogOut size={13} />
-            Log out
+            {t('logout')}
           </button>
         </div>
       </aside>
@@ -271,7 +300,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
             <Menu size={20} />
           </button>
           <span className="flex-1 text-[13.5px] font-semibold text-ink2 truncate">
-            {ownNavItems.find(n => n.view === view)?.label ?? 'Dashboard'}
+            {topbarLabel}
           </span>
           <div className="flex items-center gap-2.5">
             <div
@@ -279,7 +308,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
               style={{ background: `${tone}15`, color: tone }}
             >
               <RoleIcon size={12} />
-              {role}
+              {t(`roles.${role}`)}
             </div>
             {user.avatar_url ? (
               <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />

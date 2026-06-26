@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify'
 import {
   Check, X, ArrowLeft, Home, MapPin, Tag, Link2, Calendar,
   CircleDollarSign, ArrowLeftRight, BedDouble, Bath, Ruler, Maximize2,
-  TrendingUp, Wallet, CheckCircle2, Video, Box, Building2,
+  TrendingUp, Wallet, CheckCircle2, Video, Box, Building2, Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { AdminListingEdit } from '../../api/admin'
@@ -386,6 +386,87 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                 />
               )
             })()}
+          </div>
+        )}
+
+        {/* Co-Listing */}
+        {(bool('co_listing_enabled') || ch('co_listing_enabled')) && (
+          <div>
+            <div className="text-[10.5px] font-bold uppercase tracking-widest mb-3"
+              style={{ color: ch('co_listing_enabled') ? AMBER : undefined }}>
+              {ch('co_listing_enabled') ? 'Co-Listing' : <span className="text-dim">Co-Listing</span>}
+            </div>
+            {!bool('co_listing_enabled') ? (
+              <div className="px-4 py-3 rounded-xl border border-amber-300 bg-amber-50 text-[12.5px] font-semibold text-amber-700">
+                Co-listing will be disabled
+              </div>
+            ) : (
+              <div className="rounded-xl border border-line-soft overflow-hidden divide-y divide-line-soft">
+                {str('co_listing_brokerage') && (
+                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_brokerage') ? 'bg-amber-50' : ''}`}>
+                    <Building2 size={14} style={{ color: ch('co_listing_brokerage') ? AMBER : accent }} className="shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[10.5px] text-dim">External Brokerage</div>
+                      <div className="text-[13.5px] font-bold truncate" style={{ color: ch('co_listing_brokerage') ? AMBER : 'var(--color-ink)' }}>
+                        {str('co_listing_brokerage')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {str('co_listing_agent_name') && (
+                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_agent_name') ? 'bg-amber-50' : ''}`}>
+                    <Users size={14} style={{ color: ch('co_listing_agent_name') ? AMBER : accent }} className="shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[10.5px] text-dim">External Agent</div>
+                      <div className="text-[13.5px] font-bold truncate" style={{ color: ch('co_listing_agent_name') ? AMBER : 'var(--color-ink)' }}>
+                        {str('co_listing_agent_name')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {str('co_listing_agent_contact') && (
+                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_agent_contact') ? 'bg-amber-50' : ''}`}>
+                    <Link2 size={14} style={{ color: ch('co_listing_agent_contact') ? AMBER : accent }} className="shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[10.5px] text-dim">Contact</div>
+                      <div className="text-[13.5px] font-bold truncate" style={{ color: ch('co_listing_agent_contact') ? AMBER : 'var(--color-ink)' }}>
+                        {str('co_listing_agent_contact')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {num('co_listing_commission_split') != null && (
+                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_commission_split') ? 'bg-amber-50' : ''}`}>
+                    <TrendingUp size={14} style={{ color: ch('co_listing_commission_split') ? AMBER : accent }} className="shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[10.5px] text-dim">Commission Split</div>
+                      <div className="text-[13.5px] font-bold" style={{ color: ch('co_listing_commission_split') ? AMBER : 'var(--color-ink)' }}>
+                        {num('co_listing_commission_split')}%
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {str('co_listing_status') && (
+                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_status') ? 'bg-amber-50' : ''}`}>
+                    <CheckCircle2 size={14} style={{ color: ch('co_listing_status') ? AMBER : accent }} className="shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[10.5px] text-dim">Status</div>
+                      <div className="text-[13.5px] font-bold capitalize" style={{ color: ch('co_listing_status') ? AMBER : 'var(--color-ink)' }}>
+                        {str('co_listing_status')?.replace(/_/g, ' ')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {str('co_listing_notes') && (
+                  <div className={`px-4 py-3 ${ch('co_listing_notes') ? 'bg-amber-50' : ''}`}>
+                    <div className="text-[10.5px] text-dim mb-1">Notes</div>
+                    <div className="text-[13px] whitespace-pre-wrap" style={{ color: ch('co_listing_notes') ? AMBER : 'var(--color-ink)' }}>
+                      {str('co_listing_notes')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

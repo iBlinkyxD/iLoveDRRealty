@@ -1,10 +1,12 @@
 import { Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '../../components/dashboard/shared'
 import { REALTOR_CAL_EVENTS, REALTOR_EVENT_TONE } from '../../components/dashboard/RealtorHome'
 
 export function RealtorCalendar() {
+  const { t } = useTranslation('realtor')
   return (
-    <Card title={<><Calendar size={14} /> Upcoming Schedule</>} sub="Showings, calls & meetings">
+    <Card title={<><Calendar size={14} /> {t('calendar_page.title')}</>} sub={t('calendar_page.sub')}>
       <div className="flex flex-col gap-3">
         {REALTOR_CAL_EVENTS.map((e, i) => {
           const evTone = REALTOR_EVENT_TONE[e.type] ?? '#7884a0'
@@ -21,7 +23,7 @@ export function RealtorCalendar() {
           )
         })}
         <button className="w-full py-2.75 rounded-full border-2 border-brand bg-transparent text-brand text-[13px] font-bold cursor-pointer">
-          + Schedule showing
+          {t('calendar_page.schedule_showing')}
         </button>
       </div>
     </Card>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Check, X, Home, Search, MoreHorizontal, Archive,
   MapPin, Pencil, GitCompare, Eye, Plus, CheckCircle2, XCircle, Star, Clock, Sparkles,
@@ -66,6 +67,7 @@ function StatusChip({ status }: { status: string }) {
 }
 
 function ActionMenu({ onView, onEdit, onHistory, onSetDeal, onArchive }: { onView: () => void; onEdit: () => void; onHistory: () => void; onSetDeal?: () => void; onArchive: () => void }) {
+  const { t } = useTranslation('admin')
   const [open, setOpen] = useState(false)
   const [pos, setPos]   = useState({ top: 0, left: 0 })
   const btnRef  = useRef<HTMLButtonElement>(null)
@@ -114,26 +116,26 @@ function ActionMenu({ onView, onEdit, onHistory, onSetDeal, onArchive }: { onVie
             onClick={() => { onView(); setOpen(false) }}
             className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
           >
-            <Eye size={12} /> View details
+            <Eye size={12} /> {t('listings_page.action_view')}
           </button>
           <button
             onClick={() => { onEdit(); setOpen(false) }}
             className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
           >
-            <Pencil size={12} /> Edit listing
+            <Pencil size={12} /> {t('listings_page.action_edit')}
           </button>
           <button
             onClick={() => { onHistory(); setOpen(false) }}
             className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
           >
-            <Clock size={12} /> View history
+            <Clock size={12} /> {t('listings_page.action_history')}
           </button>
           {onSetDeal && (
             <button
               onClick={() => { onSetDeal(); setOpen(false) }}
               className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-amber-600 hover:bg-amber-50 cursor-pointer"
             >
-              <Sparkles size={12} /> Set as Deal of Week
+              <Sparkles size={12} /> {t('listings_page.action_set_deal')}
             </button>
           )}
           <div className="border-t border-line mx-2" />
@@ -141,7 +143,7 @@ function ActionMenu({ onView, onEdit, onHistory, onSetDeal, onArchive }: { onVie
             onClick={() => { onArchive(); setOpen(false) }}
             className="w-full text-left flex items-center gap-2 px-3.5 py-2 text-[12.5px] text-red-500 hover:bg-red-50 cursor-pointer"
           >
-            <Archive size={12} /> Archive
+            <Archive size={12} /> {t('listings_page.action_archive')}
           </button>
         </div>
       )}
@@ -165,14 +167,16 @@ const LISTING_EVENTS = new Set(['listing_approved', 'listing_rejected', 'listing
 // ── Main component ─────────────────────────────────────────────────────────────
 
 const STATUS_FILTERS = ['All', 'Active', 'Rejected', 'Archived'] as const
-const COLS    = 'grid-cols-[2fr_0.9fr_1fr_1fr_1.6fr_1fr_40px]'
-const HEADERS = ['Property', 'Type', 'Price', 'Status', 'Submitted by', 'Updated', ''] as const
+const CO_LISTING_FILTERS = ['All', 'Co-Listed', 'No Co-Listing'] as const
+const COLS = 'grid-cols-[2fr_0.9fr_1fr_1fr_1.6fr_1fr_40px]'
 
 export function AdminListings() {
+  const { t } = useTranslation('admin')
   const [all,          setAll]          = useState<AdminListing[]>([])
   const [edits,        setEdits]        = useState<AdminListingEdit[]>([])
   const [dealRequests, setDealRequests] = useState<DealRequest[]>([])
   const [filter,       setFilter]       = useState<string>('All')
+  const [coFilter,     setCoFilter]     = useState<string>('All')
   const [query,        setQuery]        = useState('')
   const [loading,      setLoading]      = useState(true)
   const [working,      setWorking]      = useState(false)
@@ -231,12 +235,16 @@ export function AdminListings() {
     return true
   })
 
+  const afterCoFilter = coFilter === 'All' ? afterFilter : afterFilter.filter(l =>
+    coFilter === 'Co-Listed' ? l.co_listing_enabled : !l.co_listing_enabled
+  )
+
   const visible = query.trim()
-    ? afterFilter.filter(l =>
+    ? afterCoFilter.filter(l =>
         l.title.toLowerCase().includes(query.toLowerCase()) ||
         l.location.toLowerCase().includes(query.toLowerCase())
       )
-    : afterFilter
+    : afterCoFilter
 
   const counts = {
     total:    all.length,
@@ -337,27 +345,27 @@ export function AdminListings() {
 
   const kpis = [
     {
-      label: 'Total Listings',
+      label: t('listings_page.kpi_total'),
       value: counts.total,
-      sub: `${counts.active} active · ${counts.archived} archived`,
+      sub: t('listings_page.kpi_total_sub', { active: counts.active, archived: counts.archived }),
       accent: undefined as string | undefined,
     },
     {
-      label: 'Active',
+      label: t('listings_page.kpi_active'),
       value: counts.active,
-      sub: 'live on site',
+      sub: t('listings_page.kpi_active_sub'),
       accent: undefined,
     },
     {
-      label: 'Pending Approval',
+      label: t('listings_page.kpi_pending'),
       value: counts.pending,
-      sub: 'awaiting review',
+      sub: t('listings_page.kpi_pending_sub'),
       accent: counts.pending > 0 ? '#d97706' : undefined,
     },
     {
-      label: 'Pending Edits',
+      label: t('listings_page.kpi_edits'),
       value: counts.edits,
-      sub: 'awaiting review',
+      sub: t('listings_page.kpi_edits_sub'),
       accent: counts.edits > 0 ? '#7c3aed' : undefined,
     },
   ]
@@ -423,7 +431,7 @@ export function AdminListings() {
           {/* Toolbar */}
           <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
             <div className="font-sans text-[17px] font-bold text-ink">
-              All listings
+              {t('listings_page.title')}
               {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({visible.length})</span>}
             </div>
             <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -433,7 +441,7 @@ export function AdminListings() {
                   <input
                     value={query}
                     onChange={e => setQuery(e.target.value)}
-                    placeholder="Search listings…"
+                    placeholder={t('listings_page.search_ph')}
                     className="text-xs border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1"
                   />
                 </div>
@@ -442,10 +450,14 @@ export function AdminListings() {
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
                   style={{ background: TONE }}
                 >
-                  <Plus size={13} /> Add Listing
+                  <Plus size={13} /> {t('listings_page.add_listing')}
                 </button>
               </div>
-              <FilterPills options={[...STATUS_FILTERS]} value={filter} onChange={setFilter} />
+              <div className="flex items-center gap-2">
+                <FilterPills options={[...STATUS_FILTERS]} value={filter} onChange={setFilter} />
+                <div className="w-px h-4 bg-line shrink-0" />
+                <FilterPills options={[...CO_LISTING_FILTERS]} value={coFilter} onChange={setCoFilter} />
+              </div>
             </div>
           </div>
 
@@ -455,7 +467,7 @@ export function AdminListings() {
               <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
-                  Pending Approval ({pending.length})
+                  {t('listings_page.pending_approval_banner', { count: pending.length })}
                 </span>
               </div>
               <div className="divide-y divide-line-soft">
@@ -505,7 +517,7 @@ export function AdminListings() {
               <div className="px-4 sm:px-5.5 py-2.5 bg-violet-50 border-b border-violet-100 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-violet-700">
-                  Pending Edits ({edits.length})
+                  {t('listings_page.pending_edits_banner', { count: edits.length })}
                 </span>
               </div>
               <div className="divide-y divide-line-soft">
@@ -555,7 +567,7 @@ export function AdminListings() {
               <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <Star size={11} fill="#f59e0b" style={{ color: '#f59e0b' }} />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
-                  Active Deals ({all.filter(l => l.is_deal).length})
+                  {t('listings_page.active_deals_banner', { count: all.filter(l => l.is_deal).length })}
                 </span>
               </div>
 
@@ -600,7 +612,7 @@ export function AdminListings() {
               <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <Star size={11} fill="#f59e0b" style={{ color: '#f59e0b' }} />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
-                  Deal Requests ({dealRequests.length})
+                  {t('listings_page.deal_requests_banner', { count: dealRequests.length })}
                 </span>
               </div>
               <div className="divide-y divide-line-soft">
@@ -667,8 +679,8 @@ export function AdminListings() {
 
           {/* Desktop table header */}
           <div className={`hidden sm:grid ${COLS} px-5.5 py-2.5 border-b border-line bg-nav/5`}>
-            {HEADERS.map(h => (
-              <div key={h} className="text-[11px] font-bold uppercase tracking-[.07em] text-dim">{h}</div>
+            {[t('listings_page.header_property'), t('listings_page.header_type'), t('listings_page.header_price'), t('listings_page.header_status'), t('listings_page.header_submitted_by'), t('listings_page.header_updated'), ''].map((h, i) => (
+              <div key={i} className="text-[11px] font-bold uppercase tracking-[.07em] text-dim">{h}</div>
             ))}
           </div>
 
@@ -687,7 +699,7 @@ export function AdminListings() {
             </div>
           ) : visible.length === 0 ? (
             <div className="py-12 text-center text-sm text-dim">
-              {query.trim() ? `No results for "${query}"` : 'No listings found.'}
+              {query.trim() ? t('listings_page.no_results', { query }) : t('listings_page.no_listings')}
             </div>
           ) : (
             <div className="divide-y divide-line-soft">
@@ -708,7 +720,12 @@ export function AdminListings() {
                         </div>
                       )}
                       <div className="min-w-0">
-                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                          {l.co_listing_enabled && (
+                            <span className="shrink-0 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wide" style={{ background: '#ccfbf1', color: '#0f766e' }}>CO-LIST</span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
                       </div>
                     </div>
@@ -773,7 +790,7 @@ export function AdminListings() {
       {/* ── Activity Sidebar ─────────────────────────────────────────────── */}
       <div className="w-72 shrink-0 hidden xl:block bg-paper border border-line rounded-2xl overflow-hidden sticky top-4">
         <div className="px-4 py-3.5 border-b border-line">
-          <div className="font-semibold text-[14px] text-ink">Recent Activity</div>
+          <div className="font-semibold text-[14px] text-ink">{t('listings_page.recent_activity')}</div>
         </div>
         {actLoading ? (
           <div className="divide-y divide-line-soft">
@@ -788,7 +805,7 @@ export function AdminListings() {
             ))}
           </div>
         ) : activity.filter(e => LISTING_EVENTS.has(e.event_type)).length === 0 ? (
-          <div className="py-8 text-center text-[12px] text-dim">No listing activity yet.</div>
+          <div className="py-8 text-center text-[12px] text-dim">{t('listings_page.no_activity')}</div>
         ) : (
           <div className="divide-y divide-line-soft max-h-150 overflow-y-auto">
             {activity.filter(e => LISTING_EVENTS.has(e.event_type)).map(entry => {
@@ -854,9 +871,9 @@ export function AdminListings() {
       {/* Archive confirmation */}
       {confirmArchive && (
         <ConfirmModal
-          title="Archive this listing?"
+          title={t('listings_page.confirm_archive_title')}
           description={`"${titleCase(confirmArchive.title)}" will be removed from the site and marked as archived. This can be reversed by contacting a developer.`}
-          confirmLabel="Archive"
+          confirmLabel={t('listings_page.confirm_archive_btn')}
           variant="danger"
           loading={working}
           onConfirm={async () => {
@@ -870,9 +887,9 @@ export function AdminListings() {
       {/* Clear Deal confirmation */}
       {confirmClearDealId && (
         <ConfirmModal
-          title="Remove Deal of the Week?"
-          description="This listing will no longer appear in the Deal of the Week section on the landing page."
-          confirmLabel="Remove Deal"
+          title={t('listings_page.confirm_clear_deal_title')}
+          description={t('listings_page.confirm_clear_deal_desc')}
+          confirmLabel={t('listings_page.confirm_clear_deal_btn')}
           variant="warning"
           loading={working}
           onConfirm={async () => {

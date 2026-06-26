@@ -3,6 +3,7 @@ import {
   Building2, Plus, Search, MoreHorizontal, Home, Pencil, Trash2, EyeOff,
   MapPin, Star, Clock,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getMyListings, type Listing } from '../../api/listings'
 import { EditListing } from './SubmitListing'
 import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
@@ -61,6 +62,7 @@ function StatusChip({ status }: { status: string }) {
 // ── ActionMenu (3-dots dropdown) ──────────────────────────────────────────────
 
 function ActionMenu({ onEdit, onRequestDeal }: { onEdit: () => void; onRequestDeal?: () => void }) {
+  const { t } = useTranslation('realtor')
   const [open, setOpen] = useState(false)
   const [pos,  setPos]  = useState({ top: 0, left: 0 })
   const btnRef  = useRef<HTMLButtonElement>(null)
@@ -104,7 +106,7 @@ function ActionMenu({ onEdit, onRequestDeal }: { onEdit: () => void; onRequestDe
             onClick={() => { onEdit(); setOpen(false) }}
             className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-ink hover:bg-line/40 transition-colors cursor-pointer"
           >
-            <Pencil size={12} /> Edit listing
+            <Pencil size={12} /> {t('listings_page.edit_listing')}
           </button>
           {onRequestDeal && (
             <button
@@ -112,21 +114,21 @@ function ActionMenu({ onEdit, onRequestDeal }: { onEdit: () => void; onRequestDe
               className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs hover:bg-amber-50 transition-colors cursor-pointer"
               style={{ color: '#c07800' }}
             >
-              <Star size={12} /> Deal of the Week
+              <Star size={12} /> {t('listings_page.deal_of_week')}
             </button>
           )}
           <button
             onClick={() => setOpen(false)}
             className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-ink hover:bg-line/40 transition-colors cursor-pointer"
           >
-            <EyeOff size={12} /> Hide listing
+            <EyeOff size={12} /> {t('listings_page.hide_listing')}
           </button>
           <div className="border-t border-line" />
           <button
             onClick={() => setOpen(false)}
             className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
           >
-            <Trash2 size={12} /> Delete listing
+            <Trash2 size={12} /> {t('listings_page.delete_listing')}
           </button>
         </div>
       )}
@@ -135,12 +137,13 @@ function ActionMenu({ onEdit, onRequestDeal }: { onEdit: () => void; onRequestDe
 }
 
 function PendingReviewsCard({ items, tone, onSelect }: { items: Listing[]; tone: string; onSelect: (l: Listing) => void }) {
+  const { t } = useTranslation('realtor')
   return (
     <div className="bg-paper border border-line rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-line">
         <div className="flex items-center gap-2 text-[14px] font-bold text-ink">
           <Clock size={14} className="text-dim" />
-          Pending Reviews
+          {t('listings_page.pending_reviews')}
         </div>
         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ color: tone, background: `${tone}18` }}>
           {items.length}
@@ -167,13 +170,13 @@ function PendingReviewsCard({ items, tone, onSelect }: { items: Listing[]; tone:
               {l.has_pending_deal_request && (
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#c07800' }}>
                   <Star size={10} fill="#f0a800" style={{ color: '#f0a800' }} />
-                  Deal request pending
+                  {t('listings_page.deal_request_pending')}
                 </div>
               )}
               {l.has_pending_edit && (
                 <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: '#7c3aed' }}>
                   <Pencil size={10} />
-                  Edit pending approval
+                  {t('listings_page.edit_pending')}
                 </div>
               )}
             </div>
@@ -187,12 +190,12 @@ function PendingReviewsCard({ items, tone, onSelect }: { items: Listing[]; tone:
 // ── constants ─────────────────────────────────────────────────────────────────
 
 const COLS    = 'grid-cols-[2fr_0.8fr_1fr_1fr_0.7fr_0.7fr_1fr_40px]'
-const HEADERS = ['Property', 'Type', 'Price', 'Status', 'Views', 'Leads', 'Updated', ''] as const
 const FILTERS = ['All', 'Active', 'Review', 'Rejected', 'Archived'] as const
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function RealtorListings({ tone, go }: { tone: string; go: (v: string) => void }) {
+  const { t } = useTranslation('realtor')
   const [listings, setListings] = useState<Listing[]>([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState<typeof FILTERS[number]>('All')
@@ -246,7 +249,7 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
         {/* Toolbar */}
         <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
           <div className="font-sans text-[17px] font-bold text-ink">
-            My Listings
+            {t('listings_page.title')}
             {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({visible.length})</span>}
           </div>
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -256,7 +259,7 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                 <input
                   value={query}
                   onChange={e => setQuery(e.target.value)}
-                  placeholder="Search listings…"
+                  placeholder={t('listings_page.search_ph')}
                   className="text-xs border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1"
                 />
               </div>
@@ -265,7 +268,7 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
                 style={{ background: tone }}
               >
-                <Plus size={13} /> Add Listing
+                <Plus size={13} /> {t('listings_page.add_listing')}
               </button>
             </div>
             <div className="flex gap-1.5 flex-wrap">
@@ -280,7 +283,7 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                     color:      filter === f ? '#fff' : '#33425f',
                   }}
                 >
-                  {f}
+                  {t(`listings_page.filter_${f.toLowerCase()}`)}
                 </button>
               ))}
             </div>
@@ -289,8 +292,8 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
 
         {/* Desktop table header */}
         <div className={`hidden sm:grid ${COLS} px-5.5 py-2.5 border-b border-line bg-nav/5`}>
-          {HEADERS.map(h => (
-            <div key={h} className="text-[11px] font-bold uppercase tracking-[.07em] text-dim">{h}</div>
+          {[t('listings_page.header_property'), t('listings_page.header_type'), t('listings_page.header_price'), t('listings_page.header_status'), t('listings_page.header_views'), t('listings_page.header_leads'), t('listings_page.header_updated'), ''].map((h, i) => (
+            <div key={i} className="text-[11px] font-bold uppercase tracking-[.07em] text-dim">{h}</div>
           ))}
         </div>
 
@@ -316,9 +319,9 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
               <Building2 size={26} style={{ color: tone }} />
             </div>
             <div className="text-center">
-              <div className="text-[15px] font-semibold text-ink mb-1">No listings yet</div>
+              <div className="text-[15px] font-semibold text-ink mb-1">{t('listings_page.empty_title')}</div>
               <div className="text-xs text-dim max-w-55">
-                Add your first property to start attracting buyers and renters.
+                {t('listings_page.empty_sub')}
               </div>
             </div>
             <button
@@ -327,7 +330,7 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
               style={{ background: tone, color: '#fff' }}
             >
               <Plus size={14} strokeWidth={2.5} />
-              Add your first listing
+              {t('listings_page.add_first')}
             </button>
           </div>
         ) : visible.length === 0 ? (
@@ -353,7 +356,12 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                       </div>
                     )}
                     <div className="min-w-0">
-                      <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="text-[13px] font-semibold text-ink truncate">{titleCase(l.title)}</div>
+                        {l.co_listing_enabled && (
+                          <span className="shrink-0 px-1.5 py-0.5 rounded text-[9.5px] font-bold tracking-wide" style={{ background: '#ccfbf1', color: '#0f766e' }}>CO-LIST</span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
                     </div>
                   </div>

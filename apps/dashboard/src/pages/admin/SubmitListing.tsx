@@ -517,7 +517,83 @@ function AdminFormBody({
         <p className="text-[11.5px] text-dim mt-1">Describe utility availability, backup systems, or anything relevant to the property's services.</p>
       </Sec>
 
-      {/* 9 — Listing Tags */}
+      {/* 9 — Co-Listing */}
+      <Sec n={n()} title="Co-Listing" tone={tone}>
+        <div className="space-y-4">
+          <FormToggle
+            value={form.co_listing_enabled as boolean}
+            onChange={v => {
+              set('co_listing_enabled', v)
+              if (!v) {
+                set('co_listing_brokerage', '')
+                set('co_listing_agent_name', '')
+                set('co_listing_agent_contact', '')
+                set('co_listing_commission_split', '')
+                set('co_listing_notes', '')
+                set('co_listing_status', '')
+              }
+            }}
+            label="Co-Listing Enabled"
+            tone={tone}
+          />
+          {(form.co_listing_enabled as boolean) && (
+            <div className="space-y-4 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Lbl>External Brokerage Name</Lbl>
+                  <input className={inp} value={form.co_listing_brokerage as string} onChange={e => set('co_listing_brokerage', e.target.value)} placeholder="e.g. Century 21 DR" />
+                </div>
+                <div>
+                  <Lbl>External Agent Name</Lbl>
+                  <input className={inp} value={form.co_listing_agent_name as string} onChange={e => set('co_listing_agent_name', e.target.value)} placeholder="e.g. María López" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Lbl>External Agent Contact</Lbl>
+                  <input className={inp} value={form.co_listing_agent_contact as string} onChange={e => set('co_listing_agent_contact', e.target.value)} placeholder="Phone or email" />
+                </div>
+                <div>
+                  <Lbl>Commission Split (%)</Lbl>
+                  <input className={inp} type="number" step="0.1" min="0" max="100" value={form.co_listing_commission_split as string} onChange={e => set('co_listing_commission_split', e.target.value)} placeholder="e.g. 50" />
+                </div>
+              </div>
+              <div>
+                <Lbl>Status</Lbl>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {CO_LISTING_STATUSES.map(s => (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => set('co_listing_status', form.co_listing_status === s.value ? '' : s.value)}
+                      className="py-2.5 px-3 rounded-lg text-[12.5px] font-semibold border cursor-pointer transition-all text-center"
+                      style={{
+                        background: form.co_listing_status === s.value ? tone : 'white',
+                        color: form.co_listing_status === s.value ? 'white' : '#64748b',
+                        borderColor: form.co_listing_status === s.value ? tone : '#e2e8f0',
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Lbl>Notes / Agreement Details</Lbl>
+                <textarea
+                  className={inp + ' resize-none'}
+                  rows={3}
+                  value={form.co_listing_notes as string}
+                  onChange={e => set('co_listing_notes', e.target.value)}
+                  placeholder="e.g. Split agreed verbally, MLS #DR-204, contract expires Dec 2025…"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </Sec>
+
+      {/* 10 — Listing Tags */}
       <Sec n={n()} title="Listing Tags" tone={tone}>
         <Lbl>Tags (select all that apply)</Lbl>
         <div className="flex flex-wrap gap-2 mt-1">
@@ -553,6 +629,13 @@ function AdminFormBody({
 
 // ── Create new listing ────────────────────────────────────────────────────────
 
+const CO_LISTING_STATUSES = [
+  { value: 'available', label: 'Available for Co-Listing' },
+  { value: 'active',    label: 'Co-Listing Active' },
+  { value: 'closed',    label: 'Closed' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
+
 const EMPTY_FORM = {
   title: '', type: 'villa', transaction: 'sale', location: '', price: '',
   description: '', bedrooms: '', bathrooms: '', area_sqft: '', lot_size_sqft: '',
@@ -567,6 +650,13 @@ const EMPTY_FORM = {
   association: false,
   association_fee: '',
   deposit_policy: '',
+  co_listing_enabled: false,
+  co_listing_brokerage: '',
+  co_listing_agent_name: '',
+  co_listing_agent_contact: '',
+  co_listing_commission_split: '',
+  co_listing_notes: '',
+  co_listing_status: '',
 }
 
 export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone: string }) {
@@ -685,6 +775,13 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
         latitude: form.latitude ? parseFloat(form.latitude) : undefined,
         longitude: form.longitude ? parseFloat(form.longitude) : undefined,
         images: orderedImages.length ? orderedImages : undefined,
+        co_listing_enabled: form.co_listing_enabled,
+        co_listing_brokerage: form.co_listing_brokerage.trim() || undefined,
+        co_listing_agent_name: form.co_listing_agent_name.trim() || undefined,
+        co_listing_agent_contact: form.co_listing_agent_contact.trim() || undefined,
+        co_listing_commission_split: form.co_listing_commission_split ? parseFloat(form.co_listing_commission_split) : undefined,
+        co_listing_notes: form.co_listing_notes.trim() || undefined,
+        co_listing_status: form.co_listing_status || undefined,
       })
       toast.success('Listing published successfully.')
       setForm(EMPTY_FORM); setUploadedUrls([]); setThumbnail(null)
@@ -762,6 +859,13 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
     association:         listing.association_fee != null && listing.association_fee > 0,
     association_fee:     listing.association_fee != null ? String(listing.association_fee) : '',
     deposit_policy:      listing.deposit_policy ?? '',
+    co_listing_enabled:          listing.co_listing_enabled ?? false,
+    co_listing_brokerage:        listing.co_listing_brokerage ?? '',
+    co_listing_agent_name:       listing.co_listing_agent_name ?? '',
+    co_listing_agent_contact:    listing.co_listing_agent_contact ?? '',
+    co_listing_commission_split: listing.co_listing_commission_split != null ? String(listing.co_listing_commission_split) : '',
+    co_listing_notes:            listing.co_listing_notes ?? '',
+    co_listing_status:           listing.co_listing_status ?? '',
   })
 
   const [uploadedUrls, setUploadedUrls] = useState<string[]>(listing.images ?? [])
@@ -882,6 +986,13 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
         latitude: form.latitude ? parseFloat(form.latitude) : undefined,
         longitude: form.longitude ? parseFloat(form.longitude) : undefined,
         images: orderedImages,
+        co_listing_enabled: form.co_listing_enabled as boolean,
+        co_listing_brokerage: (form.co_listing_brokerage as string).trim() || undefined,
+        co_listing_agent_name: (form.co_listing_agent_name as string).trim() || undefined,
+        co_listing_agent_contact: (form.co_listing_agent_contact as string).trim() || undefined,
+        co_listing_commission_split: (form.co_listing_commission_split as string) ? parseFloat(form.co_listing_commission_split as string) : undefined,
+        co_listing_notes: (form.co_listing_notes as string).trim() || undefined,
+        co_listing_status: (form.co_listing_status as string) || undefined,
       })
       toast.success('Changes saved!')
       onSaved({

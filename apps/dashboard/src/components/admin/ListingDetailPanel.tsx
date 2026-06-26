@@ -47,6 +47,13 @@ const DEPOSIT_LABELS: Record<string, string> = {
   none:       'No deposit required',
 }
 
+const CO_LISTING_STATUS_CHIP: Record<string, { bg: string; color: string; label: string }> = {
+  available: { bg: '#dbeafe', color: '#1d4ed8', label: 'Available for Co-Listing' },
+  active:    { bg: '#dcfce7', color: '#15803d', label: 'Co-Listing Active'        },
+  closed:    { bg: '#f3f4f6', color: '#4b5563', label: 'Closed'                   },
+  cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Cancelled'                },
+}
+
 const STATUS_CHIP: Record<string, { bg: string; color: string; label: string }> = {
   active:           { bg: '#16a34a', color: 'white',   label: 'Active'   },
   pending_approval: { bg: '#fef08a', color: '#854d0e', label: 'Pending'  },
@@ -500,6 +507,78 @@ export function ListingDetailPanel({
                     <div className="detail-prose" dangerouslySetInnerHTML={{ __html: safe }} />
                   )
                 })()}
+              </div>
+            )}
+
+            {/* Co-Listing */}
+            {listing.co_listing_enabled && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">
+                  Co-Listing
+                </div>
+                <div className="rounded-xl border border-line-soft bg-paper2 overflow-hidden divide-y divide-line-soft">
+                  {listing.co_listing_brokerage && (
+                    <div className="px-4 py-3 flex items-center gap-3">
+                      <Building2 size={14} style={{ color: TONE }} className="shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[10.5px] text-dim">External Brokerage</div>
+                        <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_brokerage}</div>
+                      </div>
+                    </div>
+                  )}
+                  {listing.co_listing_agent_name && (
+                    <div className="px-4 py-3 flex items-center gap-3">
+                      <User size={14} style={{ color: TONE }} className="shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[10.5px] text-dim">External Agent</div>
+                        <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_agent_name}</div>
+                      </div>
+                    </div>
+                  )}
+                  {listing.co_listing_agent_contact && (
+                    <div className="px-4 py-3 flex items-center gap-3">
+                      <Link2 size={14} style={{ color: TONE }} className="shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-[10.5px] text-dim">Agent Contact</div>
+                        <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_agent_contact}</div>
+                      </div>
+                    </div>
+                  )}
+                  {listing.co_listing_commission_split != null && (
+                    <div className="px-4 py-3 flex items-center gap-3">
+                      <TrendingUp size={14} style={{ color: TONE }} className="shrink-0" />
+                      <div>
+                        <div className="text-[10.5px] text-dim">Commission Split</div>
+                        <div className="text-[13.5px] font-bold text-ink">{listing.co_listing_commission_split}%</div>
+                      </div>
+                    </div>
+                  )}
+                  {listing.co_listing_status && (() => {
+                    const chip = CO_LISTING_STATUS_CHIP[listing.co_listing_status] ?? {
+                      bg: '#f3f4f6', color: '#4b5563', label: listing.co_listing_status,
+                    }
+                    return (
+                      <div className="px-4 py-3 flex items-center gap-3">
+                        <CheckCircle2 size={14} style={{ color: TONE }} className="shrink-0" />
+                        <div>
+                          <div className="text-[10.5px] text-dim">Status</div>
+                          <span
+                            className="inline-flex items-center mt-0.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+                            style={{ background: chip.bg, color: chip.color }}
+                          >
+                            {chip.label}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  {listing.co_listing_notes && (
+                    <div className="px-4 py-3">
+                      <div className="text-[10.5px] text-dim mb-1">Notes / Agreement</div>
+                      <div className="text-[13px] text-ink whitespace-pre-line">{listing.co_listing_notes}</div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

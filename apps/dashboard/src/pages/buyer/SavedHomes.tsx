@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Heart, MapPin, Search, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardLink, StatusPill, fmtPrice } from '../../components/dashboard/shared'
 import { getMySavedHomes, unsaveHome, type SavedHome } from '../../api/savedHomes'
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
 
 export function SavedHomes() {
+  const { t } = useTranslation('buyer')
   const [homes, setHomes] = useState<SavedHome[]>([])
   const [loading, setLoading] = useState(true)
   const [removing, setRemoving] = useState<string | null>(null)
@@ -31,8 +33,8 @@ export function SavedHomes() {
 
   return (
     <Card
-      title={<><Heart size={14} />Saved Homes ({homes.length})</>}
-      action={<CardLink>Browse more →</CardLink>}
+      title={<><Heart size={14} />{t('saved_homes_page.title', { count: homes.length })}</>}
+      action={<CardLink>{t('saved_homes_page.browse_more')}</CardLink>}
       padded={false}
     >
       {loading ? (
@@ -43,8 +45,8 @@ export function SavedHomes() {
             <Heart size={20} style={{ color: '#e10f1f' }} />
           </div>
           <div className="text-center">
-            <div className="text-[13.5px] font-semibold text-ink mb-0.5">No saved homes yet</div>
-            <div className="text-[11.5px] text-dim">Browse listings and heart the ones you love.</div>
+            <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('saved_homes_page.empty_title')}</div>
+            <div className="text-[11.5px] text-dim">{t('saved_homes_page.empty_sub')}</div>
           </div>
           <a
             href={`${LANDING_URL}/search`}
@@ -53,7 +55,7 @@ export function SavedHomes() {
             className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
             style={{ background: '#e10f1f' }}
           >
-            <Search size={13} strokeWidth={2.5} /> Browse listings
+            <Search size={13} strokeWidth={2.5} /> {t('saved_homes.browse')}
           </a>
         </div>
       ) : (
@@ -80,7 +82,7 @@ export function SavedHomes() {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <div className="text-[13px] font-bold text-ink">{fmtPrice(h.listing_price)}</div>
-                  <StatusPill label={h.listing_transaction === 'rent' ? 'For Rent' : 'For Sale'} />
+                  <StatusPill label={h.listing_transaction === 'rent' ? t('saved_homes_page.for_rent') : t('saved_homes_page.for_sale')} />
                 </div>
                 <button
                   onClick={() => handleUnsave(h.listing_id)}

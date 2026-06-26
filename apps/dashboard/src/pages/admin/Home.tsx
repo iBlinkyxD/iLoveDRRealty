@@ -3,6 +3,7 @@ import {
   CheckCircle2, XCircle, UserPlus, Bell, Archive,
   ClipboardList, Users,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { TONE, FilterPills, ApprovalRow } from './shared'
 import { getAdminListings, getAdminUpgradeRequests, getAdminStats, getAdminActivityLog, getAdminUsers, type AdminListing, type AdminUpgradeRequest, type ActivityEntry, type AdminStats, type AdminUser } from '../../api/admin'
 import { getAdminLeads, type Lead } from '../../api/leads'
@@ -92,6 +93,7 @@ function last6Months(): { key: string; label: string }[] {
 }
 
 export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) {
+  const { t } = useTranslation('admin')
   const [filter, setFilter] = useState<'All' | 'Listing' | 'User' | 'Lead'>('All')
   const [pendingListings,  setPendingListings]  = useState<AdminListing[]>([])
   const [pendingUpgrades,  setPendingUpgrades]  = useState<AdminUpgradeRequest[]>([])
@@ -153,27 +155,27 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
 
   const kpis = [
     {
-      label: 'Pending Approvals',
+      label: t('home_page.kpi_pending'),
       value: pendingCount,
       sub: `${newLeads.length} leads · ${pendingListings.length} listings · ${pendingUpgrades.length} requests`,
       accent: pendingCount > 0 ? '#d97706' : undefined as string | undefined,
     },
     {
-      label: 'Total Users',
+      label: t('home_page.kpi_total_users'),
       value: stats?.total_users ?? 0,
-      sub: 'registered accounts',
+      sub: t('home_page.kpi_total_users_sub'),
       accent: undefined as string | undefined,
     },
     {
-      label: 'Active Listings',
+      label: t('home_page.kpi_active_listings'),
       value: stats?.active_listings ?? 0,
-      sub: 'live on platform',
+      sub: t('home_page.kpi_active_sub'),
       accent: undefined as string | undefined,
     },
     {
-      label: 'Pending Listings',
+      label: t('home_page.kpi_pending_listings'),
       value: stats?.pending_listings ?? 0,
-      sub: 'awaiting review',
+      sub: t('home_page.kpi_pending_sub'),
       accent: (stats?.pending_listings ?? 0) > 0 ? '#d97706' : undefined as string | undefined,
     },
   ]
@@ -217,7 +219,7 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
         {/* Approval queue */}
         <div className="bg-paper border border-line rounded-2xl overflow-hidden">
           <div className="flex flex-wrap justify-between items-center gap-2 px-4 sm:px-5.5 py-4 border-b border-line">
-            <div className="font-sans text-[17px] font-bold text-ink">Approval queue</div>
+            <div className="font-sans text-[17px] font-bold text-ink">{t('home_page.approval_queue')}</div>
             <div className="flex items-center gap-3">
               <FilterPills options={['All', 'Lead', 'Listing', 'User']} value={filter} onChange={v => setFilter(v as typeof filter)} />
             </div>
@@ -237,21 +239,21 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
               ))
             ) : filtered.length === 0 ? (
               <div className="py-10 flex flex-col items-center gap-4 text-center px-6">
-                <div className="text-dim text-sm">All caught up — no pending items</div>
+                <div className="text-dim text-sm">{t('home_page.all_clear')}</div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => go('listings')}
                     className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer border"
                     style={{ color: TONE, borderColor: TONE, background: `${TONE}10` }}
                   >
-                    <ClipboardList size={13} /> Review listings
+                    <ClipboardList size={13} /> {t('home_page.review_listings')}
                   </button>
                   <button
                     onClick={() => go('users')}
                     className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer border"
                     style={{ color: TONE, borderColor: TONE, background: `${TONE}10` }}
                   >
-                    <Users size={13} /> Review users
+                    <Users size={13} /> {t('home_page.review_users')}
                   </button>
                 </div>
               </div>
@@ -273,8 +275,8 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
 
           {/* User growth chart */}
           <div className="bg-paper border border-line rounded-2xl p-5.5">
-            <div className="font-sans text-[17px] font-bold text-ink mb-1">User growth</div>
-            <div className="text-xs text-dim mb-4">New registrations per month</div>
+            <div className="font-sans text-[17px] font-bold text-ink mb-1">{t('home_page.user_growth')}</div>
+            <div className="text-xs text-dim mb-4">{t('home_page.registrations_sub')}</div>
             {loadingUsers ? (
               <div className="flex items-end gap-2 h-25 animate-pulse">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -305,7 +307,7 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
 
           {/* Activity feed */}
           <div className="bg-paper border border-line rounded-2xl p-5.5 flex-1">
-            <div className="font-sans text-[17px] font-bold text-ink mb-4">Recent activity</div>
+            <div className="font-sans text-[17px] font-bold text-ink mb-4">{t('home_page.recent_activity')}</div>
             <div className="flex flex-col gap-2.5">
               {loadingActivity ? (
                 Array.from({ length: 5 }).map((_, i) => (
@@ -318,7 +320,7 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
                   </div>
                 ))
               ) : activity.length === 0 ? (
-                <div className="py-4 text-center text-dim text-sm">No activity yet</div>
+                <div className="py-4 text-center text-dim text-sm">{t('home_page.no_activity')}</div>
               ) : (
                 activity.map((entry) => {
                   const meta = EVENT_META[entry.event_type] ?? DEFAULT_META

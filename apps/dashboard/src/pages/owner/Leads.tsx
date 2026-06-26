@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { MessageCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '../../components/dashboard/shared'
 import { getOwnerInquiries, type Inquiry } from '../../api/inquiries'
 
@@ -25,6 +26,7 @@ function fmtRelative(iso: string): string {
 }
 
 export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => void }) {
+  const { t } = useTranslation('owner')
   const [leads, setLeads] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -37,7 +39,7 @@ export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => voi
 
   return (
     <Card
-      title={<><MessageCircle size={14} /> All Leads{!loading && leads.length > 0 && ` (${leads.length})`}</>}
+      title={<><MessageCircle size={14} /> {t('leads_page.title')}{!loading && leads.length > 0 && ` (${leads.length})`}</>}
       padded={false}
     >
       {loading ? (
@@ -59,8 +61,8 @@ export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => voi
             <MessageCircle size={20} style={{ color: TONE }} />
           </div>
           <div>
-            <div className="text-[13.5px] font-semibold text-ink mb-0.5">No leads yet</div>
-            <div className="text-[11.5px] text-dim">Buyer inquiries will show up here once your listing is live.</div>
+            <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('leads_page.empty_title')}</div>
+            <div className="text-[11.5px] text-dim">{t('leads_page.empty_sub')}</div>
           </div>
         </div>
       ) : (
@@ -87,7 +89,7 @@ export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => voi
                     className="text-xs font-bold py-1.5 px-3.5 rounded-lg border-none text-white cursor-pointer shrink-0 no-underline"
                     style={{ background: tone }}
                   >
-                    Reply
+                    {t('leads_page.reply')}
                   </a>
                 </div>
               </div>

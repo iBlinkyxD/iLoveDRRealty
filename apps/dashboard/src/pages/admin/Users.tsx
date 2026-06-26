@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Search, Mail, Check, X,
   UserPlus, UserCheck, CheckCircle2, XCircle, Archive, MoreHorizontal,
@@ -71,6 +72,7 @@ function roleColor(role: string) {
 }
 
 export function AdminUsers() {
+  const { t } = useTranslation('admin')
   const [users,        setUsers]        = useState<AdminUser[]>([])
   const [requests,     setRequests]     = useState<AdminUpgradeRequest[]>([])
   const [activity,     setActivity]     = useState<ActivityEntry[]>([])
@@ -180,25 +182,25 @@ export function AdminUsers() {
 
   const kpis = [
     {
-      label: 'Total Users',
+      label: t('users_page.kpi_total'),
       value: users.length,
-      sub: `${buyerCount} buyers · ${ownerCount} owners · ${realtorCount} realtors`,
+      sub: t('users_page.kpi_total_sub', { buyers: buyerCount, owners: ownerCount, realtors: realtorCount }),
       accent: undefined as string | undefined,
     },
     {
-      label: 'Active Accounts',
+      label: t('users_page.kpi_active'),
       value: activeCount,
-      sub: suspendedCount > 0 ? `${suspendedCount} suspended` : 'None suspended',
+      sub: suspendedCount > 0 ? t('users_page.kpi_active_sub_suspended', { count: suspendedCount }) : t('users_page.kpi_active_sub_none'),
       accent: undefined,
     },
     {
-      label: 'Pending Requests',
+      label: t('users_page.kpi_pending'),
       value: pendingRequests.length,
-      sub: 'awaiting review',
+      sub: t('users_page.kpi_pending_sub'),
       accent: pendingRequests.length > 0 ? '#d97706' : undefined,
     },
     {
-      label: 'New This Month',
+      label: t('users_page.kpi_new_month'),
       value: newThisMonth,
       sub: now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
       accent: undefined,
@@ -243,7 +245,7 @@ export function AdminUsers() {
         <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
           {/* Row 1: heading */}
           <div className="font-sans text-[17px] font-bold text-ink">
-            All users
+            {t('users_page.title')}
             {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({filtered.length})</span>}
           </div>
           {/* Row 2: search + add user (left) | filter pills (right) */}
@@ -254,7 +256,7 @@ export function AdminUsers() {
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search name or email…"
+                  placeholder={t('users_page.search_ph')}
                   className="text-xs border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1"
                 />
               </div>
@@ -263,7 +265,7 @@ export function AdminUsers() {
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
                 style={{ background: TONE }}
               >
-                <UserPlus size={13} /> Add User
+                <UserPlus size={13} /> {t('users_page.add_user')}
               </button>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -280,7 +282,7 @@ export function AdminUsers() {
             <div className="px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
               <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
-                Pending Requests ({pendingRequests.length})
+                {t('users_page.pending_requests_header', { count: pendingRequests.length })}
               </span>
             </div>
             <div className="divide-y divide-line-soft">
@@ -339,7 +341,7 @@ export function AdminUsers() {
 
         {/* Desktop table header */}
         <div className="hidden sm:grid grid-cols-[1.6fr_1.8fr_1.2fr_1.1fr_1fr_1fr_40px] px-5.5 py-2.5 border-b border-line bg-nav/5">
-          {['Name', 'Email', 'Phone', 'Joined', 'Role', 'Status', ''].map(h => (
+          {[t('users_page.header_name'), t('users_page.header_email'), t('users_page.header_phone'), t('users_page.header_joined'), t('users_page.header_role'), t('users_page.header_status'), ''].map(h => (
             <div key={h} className="text-[11px] font-bold uppercase tracking-[.07em] text-dim">{h}</div>
           ))}
         </div>
@@ -357,7 +359,7 @@ export function AdminUsers() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-12 text-center text-sm text-dim">No users match your filters.</div>
+          <div className="py-12 text-center text-sm text-dim">{t('users_page.no_match')}</div>
         ) : (
           <div className="divide-y divide-line-soft">
             {filtered.map(u => {
@@ -431,7 +433,7 @@ export function AdminUsers() {
                               onClick={() => { setSelectedUser(u); setMenuOpenId(null); setMenuPos(null) }}
                               className="w-full text-left px-3.5 py-2 text-[12.5px] text-ink hover:bg-line-soft cursor-pointer"
                             >
-                              View details
+                              {t('users_page.view_details')}
                             </button>
                             {u.role !== 'admin' && (
                               <button
@@ -440,7 +442,7 @@ export function AdminUsers() {
                                 className="w-full text-left px-3.5 py-2 text-[12.5px] cursor-pointer disabled:opacity-50 hover:bg-line-soft"
                                 style={{ color: u.status === 'suspended' ? '#1f7a3d' : '#dc2626' }}
                               >
-                                {u.status === 'suspended' ? 'Restore account' : 'Suspend account'}
+                                {u.status === 'suspended' ? t('users_page.restore_account') : t('users_page.suspend_account')}
                               </button>
                             )}
                           </div>
@@ -485,7 +487,7 @@ export function AdminUsers() {
       {/* ── Activity Sidebar ──────────────────────────────────────────────── */}
       <div className="w-72 shrink-0 hidden xl:block bg-paper border border-line rounded-2xl overflow-hidden sticky top-4">
         <div className="px-4 py-3.5 border-b border-line">
-          <div className="font-semibold text-[14px] text-ink">Recent Activity</div>
+          <div className="font-semibold text-[14px] text-ink">{t('users_page.recent_activity')}</div>
         </div>
         {actLoading ? (
           <div className="divide-y divide-line-soft">
@@ -500,7 +502,7 @@ export function AdminUsers() {
             ))}
           </div>
         ) : activity.filter(e => USER_EVENTS.has(e.event_type)).length === 0 ? (
-          <div className="py-8 text-center text-[12px] text-dim">No user activity yet.</div>
+          <div className="py-8 text-center text-[12px] text-dim">{t('users_page.no_user_activity')}</div>
         ) : (
           <div className="divide-y divide-line-soft max-h-150 overflow-y-auto">
             {activity.filter(e => USER_EVENTS.has(e.event_type)).map(entry => {
@@ -525,12 +527,12 @@ export function AdminUsers() {
       {/* ── Panels ───────────────────────────────────────────────────────── */}
       {confirmSuspendUser && (
         <ConfirmModal
-          title={confirmSuspendUser.status === 'suspended' ? 'Restore this account?' : 'Suspend this account?'}
+          title={confirmSuspendUser.status === 'suspended' ? t('users_page.confirm_restore_title') : t('users_page.confirm_suspend_title')}
           description={confirmSuspendUser.status === 'suspended'
-            ? `${confirmSuspendUser.display_name ?? confirmSuspendUser.email} will regain access to the platform.`
-            : `${confirmSuspendUser.display_name ?? confirmSuspendUser.email} will lose access to the platform immediately.`
+            ? t('users_page.confirm_restore_desc', { name: confirmSuspendUser.display_name ?? confirmSuspendUser.email })
+            : t('users_page.confirm_suspend_desc', { name: confirmSuspendUser.display_name ?? confirmSuspendUser.email })
           }
-          confirmLabel={confirmSuspendUser.status === 'suspended' ? 'Restore' : 'Suspend'}
+          confirmLabel={confirmSuspendUser.status === 'suspended' ? t('users_page.confirm_restore_btn') : t('users_page.confirm_suspend_btn')}
           variant={confirmSuspendUser.status === 'suspended' ? 'warning' : 'danger'}
           loading={working === confirmSuspendUser.id}
           onConfirm={async () => {

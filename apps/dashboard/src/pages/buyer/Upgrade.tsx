@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Key, Building2, Clock, CheckCircle, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { PhoneInput } from 'react-international-phone'
 import { isPossiblePhoneNumber } from 'libphonenumber-js'
@@ -12,6 +13,7 @@ import { getMe } from '../../api/auth'
 // ── Owner lead form ────────────────────────────────────────────────────────────
 
 export function OwnerLeadModal({ onClose, onDone }: { onClose: () => void; onDone?: () => void }) {
+  const { t } = useTranslation('buyer')
   const [done, setDone] = useState(false)
 
   if (done) {
@@ -24,16 +26,16 @@ export function OwnerLeadModal({ onClose, onDone }: { onClose: () => void; onDon
               <CheckCircle size={26} style={{ color: '#f0a800' }} />
             </div>
             <div>
-              <div className="font-sans text-[19px] font-bold text-ink mb-1">Request received!</div>
+              <div className="font-sans text-[19px] font-bold text-ink mb-1">{t('upgrade_page.request_received')}</div>
               <p className="text-[13.5px] text-dim leading-[1.6]">
-                We'll review your property details and connect you with a realtor shortly.
+                {t('upgrade_page.request_received_sub')}
               </p>
             </div>
             <button
               onClick={onClose}
               className="px-6 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
             >
-              Close
+              {t('upgrade_page.close')}
             </button>
           </div>
         </div>
@@ -52,8 +54,8 @@ export function OwnerLeadModal({ onClose, onDone }: { onClose: () => void; onDon
                 <Key size={17} style={{ color: '#f0a800' }} />
               </div>
               <div>
-                <div className="font-sans text-[16px] font-bold text-ink">List Your Property</div>
-                <div className="text-[11.5px] text-dim">We'll connect you with a realtor.</div>
+                <div className="font-sans text-[16px] font-bold text-ink">{t('upgrade_page.owner_modal_title')}</div>
+                <div className="text-[11.5px] text-dim">{t('upgrade_page.owner_modal_sub')}</div>
               </div>
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-line-soft cursor-pointer border-0 bg-transparent">
@@ -70,6 +72,7 @@ export function OwnerLeadModal({ onClose, onDone }: { onClose: () => void; onDon
 }
 
 function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+  const { t } = useTranslation('buyer')
   const [me, setMe] = useState<{ display_name: string; email: string; phone?: string } | null>(null)
   const [form, setForm] = useState({ name: '', email: '', location: '', message: '' })
   const [phone, setPhone] = useState('')
@@ -118,7 +121,7 @@ function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => v
     <div>
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Your Name</label>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.form_name')}</label>
             <input
               value={form.name}
               onChange={set('name')}
@@ -127,7 +130,7 @@ function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => v
             />
           </div>
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Email</label>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.form_email')}</label>
             <input
               type="email"
               value={form.email}
@@ -137,7 +140,7 @@ function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => v
             />
           </div>
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Phone <span className="normal-case font-normal text-dim">(optional)</span></label>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.form_phone')} <span className="normal-case font-normal text-dim">{t('upgrade_page.form_phone_optional')}</span></label>
             <PhoneInput
               defaultCountry="do"
               value={phone}
@@ -150,21 +153,21 @@ function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => v
             />
           </div>
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Property Location <span className="normal-case font-normal text-dim">(optional)</span></label>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.form_location')} <span className="normal-case font-normal text-dim">{t('upgrade_page.form_phone_optional')}</span></label>
             <input
               value={form.location}
               onChange={set('location')}
-              placeholder="e.g. Punta Cana, La Romana…"
+              placeholder={t('upgrade_page.form_location_ph')}
               className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-gold placeholder:text-dim"
             />
           </div>
           <div>
-            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Tell us about your property</label>
+            <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.form_message')}</label>
             <textarea
               value={form.message}
               onChange={set('message')}
               rows={4}
-              placeholder="Type, size, price range, any details…"
+              placeholder={t('upgrade_page.form_message_ph')}
               className="w-full px-3 py-2.5 rounded-xl border border-line bg-white text-[13px] text-ink outline-none focus:border-gold resize-none placeholder:text-dim"
             />
           </div>
@@ -174,7 +177,7 @@ function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => v
             className="w-full py-2.5 rounded-xl text-[13.5px] font-bold text-white border-0 cursor-pointer disabled:opacity-60"
             style={{ background: '#f0a800' }}
           >
-            {submitting ? 'Sending…' : 'Send My Details'}
+            {submitting ? t('upgrade_page.sending') : t('upgrade_page.send_details')}
           </button>
         </form>
     </div>
@@ -184,6 +187,7 @@ function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => v
 // ── Realtor questionnaire modal ────────────────────────────────────────────────
 
 export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone: (req: UpgradeRequest) => void }) {
+  const { t } = useTranslation('buyer')
   const [form, setForm] = useState<RealtorQuestionnaire & { years_experience_str: string }>({
     license_number: '',
     territory: '',
@@ -231,8 +235,8 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
                 <Building2 size={17} style={{ color: '#1f7a3d' }} />
               </div>
               <div>
-                <div className="font-sans text-[16px] font-bold text-ink">Realtor Application</div>
-                <div className="text-[11.5px] text-dim">Help us verify your credentials</div>
+                <div className="font-sans text-[16px] font-bold text-ink">{t('upgrade_page.realtor_modal_title')}</div>
+                <div className="text-[11.5px] text-dim">{t('upgrade_page.realtor_modal_sub')}</div>
               </div>
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-line-soft cursor-pointer border-0 bg-transparent">
@@ -243,7 +247,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">License # <span className="normal-case font-normal">(optional)</span></label>
+                <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.license_no')} <span className="normal-case font-normal">{t('upgrade_page.optional')}</span></label>
                 <input
                   value={form.license_number}
                   onChange={set('license_number')}
@@ -252,7 +256,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Years Experience</label>
+                <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.years_exp')}</label>
                 <input
                   type="number"
                   min={0}
@@ -266,7 +270,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
             </div>
 
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Territory / Area <span className="normal-case font-normal">(optional)</span></label>
+              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.territory')} <span className="normal-case font-normal">{t('upgrade_page.optional')}</span></label>
               <input
                 value={form.territory}
                 onChange={set('territory')}
@@ -276,7 +280,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
             </div>
 
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Specialties <span className="normal-case font-normal">(optional)</span></label>
+              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.specialties')} <span className="normal-case font-normal">{t('upgrade_page.optional')}</span></label>
               <input
                 value={form.specialties}
                 onChange={set('specialties')}
@@ -286,7 +290,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
             </div>
 
             <div>
-              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">Brief Bio <span className="normal-case font-normal">(optional)</span></label>
+              <label className="text-[11px] font-bold uppercase tracking-wide text-dim block mb-1">{t('upgrade_page.bio')} <span className="normal-case font-normal">{t('upgrade_page.optional')}</span></label>
               <textarea
                 value={form.bio}
                 onChange={set('bio')}
@@ -302,7 +306,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
                 onClick={onClose}
                 className="flex-1 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
               >
-                Cancel
+                {t('upgrade_page.cancel')}
               </button>
               <button
                 type="submit"
@@ -310,7 +314,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
                 className="flex-1 py-2.5 rounded-xl border-0 text-[13.5px] font-bold text-white cursor-pointer disabled:opacity-60"
                 style={{ background: '#1f7a3d' }}
               >
-                {submitting ? 'Submitting…' : 'Submit Application'}
+                {submitting ? t('upgrade_page.submitting') : t('upgrade_page.submit_application')}
               </button>
             </div>
           </form>
@@ -323,6 +327,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
 // ── Main Upgrade page ──────────────────────────────────────────────────────────
 
 export function Upgrade() {
+  const { t } = useTranslation('buyer')
   const [pending, setPending]           = useState<UpgradeRequest | null>(null)
   const [loading, setLoading]           = useState(true)
   const [ownerFormOpen, setOwnerFormOpen] = useState(false)
@@ -353,9 +358,9 @@ export function Upgrade() {
             <CheckCircle size={26} style={{ color: '#f0a800' }} />
           </div>
           <div>
-            <div className="font-sans text-[19px] font-bold text-ink mb-1">Request received!</div>
+            <div className="font-sans text-[19px] font-bold text-ink mb-1">{t('upgrade_page.request_received')}</div>
             <p className="text-[13.5px] text-dim leading-[1.6]">
-              We'll review your property details and connect you with a realtor shortly.
+              {t('upgrade_page.request_received_sub')}
             </p>
           </div>
         </div>
@@ -372,10 +377,9 @@ export function Upgrade() {
             <Clock size={26} style={{ color: '#1f7a3d' }} />
           </div>
           <div>
-            <div className="font-sans text-[19px] font-bold text-ink mb-1">Application submitted</div>
+            <div className="font-sans text-[19px] font-bold text-ink mb-1">{t('upgrade_page.application_submitted')}</div>
             <p className="text-[13.5px] text-dim leading-[1.6]">
-              Your <span className="font-semibold text-ink">Realtor</span> application is pending review.
-              You'll have full access once an admin approves it.
+              {t('upgrade_page.realtor_pending_sub')}
             </p>
           </div>
           <div
@@ -383,7 +387,7 @@ export function Upgrade() {
             style={{ background: '#f0faf4', color: '#1f7a3d' }}
           >
             <CheckCircle size={13} />
-            Pending admin review
+            {t('upgrade_page.pending_review_badge')}
           </div>
         </div>
       </div>
@@ -397,7 +401,7 @@ export function Upgrade() {
   return (
     <>
       <p className="text-[14px] text-dim mb-6 max-w-lg leading-[1.6]">
-        Expand your access by requesting a role upgrade. Once reviewed and approved, you'll unlock the full feature set for that role.
+        {t('upgrade_page.intro')}
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl">
@@ -407,10 +411,10 @@ export function Upgrade() {
             <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#fff9ed' }}>
               <Key size={20} style={{ color: '#f0a800' }} />
             </div>
-            <div className="font-sans text-[17px] font-bold text-ink">Property Owner</div>
+            <div className="font-sans text-[17px] font-bold text-ink">{t('upgrade_page.owner_title')}</div>
           </div>
           <p className="text-[13px] text-dim leading-[1.6] flex-1">
-            List your properties, manage bookings, track leads, and view earnings.
+            {t('upgrade_page.owner_desc')}
           </p>
           {ownerPending ? (
             <div
@@ -418,7 +422,7 @@ export function Upgrade() {
               style={{ background: '#fff9ed', color: '#b07800' }}
             >
               <Clock size={14} />
-              Request Pending
+              {t('upgrade_page.owner_pending')}
             </div>
           ) : (
             <button
@@ -426,7 +430,7 @@ export function Upgrade() {
               className="w-full py-2.5 rounded-xl text-[13.5px] font-bold text-white border-0 cursor-pointer"
               style={{ background: '#f0a800' }}
             >
-              List My Property
+              {t('upgrade_page.owner_cta')}
             </button>
           )}
         </div>
@@ -437,17 +441,17 @@ export function Upgrade() {
             <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#f0faf4' }}>
               <Building2 size={20} style={{ color: '#1f7a3d' }} />
             </div>
-            <div className="font-sans text-[17px] font-bold text-ink">Realtor</div>
+            <div className="font-sans text-[17px] font-bold text-ink">{t('upgrade_page.realtor_title')}</div>
           </div>
           <p className="text-[13px] text-dim leading-[1.6] flex-1">
-            Manage listings, run your sales pipeline, and close deals.
+            {t('upgrade_page.realtor_desc')}
           </p>
           <button
             onClick={() => setRealtorModalOpen(true)}
             className="w-full py-2.5 rounded-xl text-[13.5px] font-bold text-white border-0 cursor-pointer"
             style={{ background: '#1f7a3d' }}
           >
-            Apply as Realtor
+            {t('upgrade_page.realtor_cta')}
           </button>
         </div>
       </div>

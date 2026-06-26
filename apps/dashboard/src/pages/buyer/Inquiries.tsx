@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { MessageCircle, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '../../components/dashboard/shared'
 import { getMyLeads, type Lead } from '../../api/leads'
 
@@ -25,6 +26,7 @@ function fmtRelative(iso: string): string {
 }
 
 export function Inquiries() {
+  const { t } = useTranslation('buyer')
   const [inquiries, setInquiries] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -36,7 +38,7 @@ export function Inquiries() {
   }, [])
 
   return (
-    <Card title={<><MessageCircle size={14} />My Inquiries</>} padded={false}>
+    <Card title={<><MessageCircle size={14} />{t('inquiries_page.title')}</>} padded={false}>
       {loading ? (
         <div className="px-5 py-8 text-[13px] text-dim text-center">Loading…</div>
       ) : inquiries.length === 0 ? (
@@ -45,8 +47,8 @@ export function Inquiries() {
             <MessageCircle size={20} style={{ color: '#e10f1f' }} />
           </div>
           <div className="text-center">
-            <div className="text-[13.5px] font-semibold text-ink mb-0.5">No inquiries yet</div>
-            <div className="text-[11.5px] text-dim">Find a listing and reach out to get started.</div>
+            <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('inquiries_page.empty_title')}</div>
+            <div className="text-[11.5px] text-dim">{t('inquiries_page.empty_sub')}</div>
           </div>
           <a
             href={`${LANDING_URL}/search`}
@@ -55,7 +57,7 @@ export function Inquiries() {
             className="flex items-center gap-1.5 py-1.75 px-4 rounded-full text-[12.5px] font-bold cursor-pointer border-0 text-white"
             style={{ background: '#e10f1f' }}
           >
-            <Search size={13} strokeWidth={2.5} /> Browse listings
+            <Search size={13} strokeWidth={2.5} /> {t('inquiries.browse')}
           </a>
         </div>
       ) : (
@@ -63,7 +65,7 @@ export function Inquiries() {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                {['Property', 'Message', 'Sent', 'Status'].map((h, i) => (
+                {[t('inquiries_page.table_property'), t('inquiries_page.table_message'), t('inquiries_page.table_sent'), t('inquiries_page.table_status')].map((h, i) => (
                   <th key={i} className="px-5 py-2.5 text-[11px] font-bold uppercase tracking-[.07em] text-dim text-left border-b border-line">{h}</th>
                 ))}
               </tr>
@@ -88,7 +90,7 @@ export function Inquiries() {
                         color: STATUS_COLOR[inq.status] ?? '#64748b',
                       }}
                     >
-                      {inq.status === 'new' ? 'Pending' : inq.status}
+                      {inq.status === 'new' ? t('inquiries_page.status_pending') : inq.status}
                     </span>
                   </td>
                 </tr>

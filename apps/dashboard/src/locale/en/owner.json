@@ -1,0 +1,133 @@
+{
+  "pages": {
+    "home":          "Overview",
+    "listings":      "My Listings",
+    "calendar":      "Booking Calendar",
+    "bookings":      "My Bookings",
+    "owner-bookings":"Guest Bookings",
+    "leads":         "Leads",
+    "earnings":      "Earnings",
+    "settings":      "Settings"
+  },
+  "kpis": {
+    "active_listings":  "Active Listings",
+    "upcoming_bookings":"Upcoming Bookings",
+    "open_leads":       "Open Leads",
+    "revenue_month":    "Revenue This Month",
+    "active_one":       "1 active",
+    "active_many":      "{{count}} active",
+    "bookings_next":    "Next: {{date}}",
+    "bookings_none":    "None scheduled",
+    "leads_count":      "{{count}} total",
+    "leads_none":       "No leads yet",
+    "revenue_sub":      "This month (confirmed)"
+  },
+  "listings": {
+    "title":          "Active Listings",
+    "manage":         "Manage →",
+    "view_all":       "View all listings →",
+    "empty_heading":  "No listings yet",
+    "empty_sub":      "Your realtor will add listings on your behalf.",
+    "views":          "views",
+    "leads":          "leads"
+  },
+  "revenue": {
+    "title":          "Revenue",
+    "sub":            "Last 6 months (confirmed bookings)",
+    "view_breakdown": "View full breakdown →"
+  },
+  "agent": {
+    "title":          "Your Agent",
+    "none_heading":   "No agent assigned yet",
+    "none_sub":       "A realtor will be assigned to manage your listings."
+  },
+  "pending_reviews": {
+    "title":        "Pending Reviews",
+    "all_listings": "All listings →",
+    "deal_request": "Deal request",
+    "edit":         "Edit"
+  },
+  "bookings": {
+    "title":          "Bookings",
+    "sub":            "Upcoming",
+    "all":            "All →",
+    "empty_heading":  "No upcoming bookings",
+    "empty_sub":      "Bookings from guests will appear here.",
+    "guest_fallback": "Guest"
+  },
+  "leads_card": {
+    "title":         "Recent Leads",
+    "total":         "{{count}} total",
+    "empty_heading": "No leads yet",
+    "empty_sub":     "Inquiries from buyers will show up here.",
+    "view_all":      "View all {{count}} leads →"
+  },
+  "bookings_page": {
+    "empty_title":      "No bookings yet",
+    "empty_sub":        "Booking requests will appear here once your realtor publishes your listing.",
+    "section_pending":  "Pending — Action Required",
+    "section_upcoming": "Upcoming",
+    "section_past":     "Past",
+    "section_cancelled":"Cancelled",
+    "action_required":  "Action required",
+    "accept":           "Accept",
+    "decline":          "Decline"
+  },
+  "leads_page": {
+    "title":       "All Leads",
+    "empty_title": "No leads yet",
+    "empty_sub":   "Buyer inquiries will show up here once your listing is live.",
+    "reply":       "Reply"
+  },
+  "earnings_page": {
+    "empty_title":        "No earnings yet",
+    "empty_sub":          "Revenue from confirmed bookings will appear here once your listing is active.",
+    "kpi_total_year":     "Total This Year",
+    "kpi_this_month":     "This Month",
+    "kpi_per_property":   "Per Property",
+    "kpi_avg":            "Avg/year",
+    "chart_title":        "Monthly Revenue",
+    "no_data_last_month": "No data last month",
+    "mom_vs":             "{{pct}}% vs last month"
+  },
+  "calendar_page": {
+    "title":             "Booking Calendar",
+    "coming_soon_label": "Coming soon",
+    "coming_soon_badge": "Coming Soon",
+    "desc":              "Track guest bookings, block dates, and manage availability — coming soon."
+  },
+  "listings_page": {
+    "title":                "My Listings",
+    "your_agent":           "Your Realtor Agent",
+    "agent_unassigned":     "Not yet assigned",
+    "pending_reviews":      "Pending Reviews",
+    "deal_request_pending": "Deal request pending",
+    "edit_pending":         "Edit pending approval",
+    "empty_title":          "No listings yet",
+    "empty_sub":            "Your realtor will add listings on your behalf once assigned.",
+    "unassigned":           "Unassigned",
+    "search_ph":            "Search listings…",
+    "request_change":       "Request Change",
+    "deal_of_week":         "Deal of the Week",
+    "hide_listing":         "Hide listing",
+    "delete_listing":       "Delete listing",
+    "send_request":         "Send Request",
+    "sending":              "Sending…",
+    "describe_change_ph":   "Describe what you'd like changed…",
+    "request_change_title": "Request Change",
+    "cancel":               "Cancel",
+    "filter_all":           "All",
+    "filter_active":        "Active",
+    "filter_review":        "Review",
+    "filter_rejected":      "Rejected",
+    "filter_archived":      "Archived",
+    "header_property":      "Property",
+    "header_type":          "Type",
+    "header_price":         "Price",
+    "header_status":        "Status",
+    "header_views":         "Views",
+    "header_leads":         "Leads",
+    "header_realtor":       "Realtor",
+    "header_updated":       "Updated"
+  }
+}
