@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ImagePlus, X, Star, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { submitListing, updateListing, uploadListingImages, type Listing } from '../../api/listings'
@@ -16,12 +17,11 @@ const FEATURES = [
 const ALL_TAGS = ['Luxury', 'New', 'Investment', 'Commercial', 'Pet Friendly', 'Short Term', 'Long Term', 'Furnished', 'Ocean View', 'Mountain View']
 const INCLUDED_UTILITIES = ['Water', 'Electricity', 'Gas', 'WiFi', 'Cable TV', 'Trash Removal', 'Pool Maintenance', 'Gardening', 'Security', 'Parking', 'Laundry']
 const DEPOSIT_OPTIONS = [
-  { value: 'first', label: 'First month' },
-  { value: 'last', label: 'Last month' },
+  { value: 'first',      label: 'First month' },
+  { value: 'last',       label: 'Last month' },
   { value: 'first_last', label: 'First + Last' },
-  { value: 'none', label: 'None' },
+  { value: 'none',       label: 'None' },
 ]
-
 const CO_LISTING_STATUSES = [
   { value: 'available', label: 'Available for Co-Listing' },
   { value: 'active',    label: 'Co-Listing Active' },
@@ -95,7 +95,7 @@ function parseLatLng(url: string): { lat: string; lng: string } | null {
 
 function PhotoSection({
   tone, uploadedUrls, thumbnail, uploading, fileInputRef,
-  onFileChange, onRemove, onSetThumbnail, label = 'Click to upload photos',
+  onFileChange, onRemove, onSetThumbnail, label,
 }: {
   tone: string
   uploadedUrls: string[]
@@ -105,11 +105,12 @@ function PhotoSection({
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onRemove: (url: string) => void
   onSetThumbnail: (url: string) => void
-  label?: string
+  label: string
 }) {
+  const { t } = useTranslation('realtor')
   return (
     <div>
-      <Lbl>Property Photos</Lbl>
+      <Lbl>{t('submit_listing_page.lbl_photos')}</Lbl>
       <button
         type="button"
         onClick={() => fileInputRef.current?.click()}
@@ -119,9 +120,9 @@ function PhotoSection({
       >
         <ImagePlus size={22} style={{ color: tone }} />
         <span className="text-[13px] font-semibold" style={{ color: tone }}>
-          {uploading ? 'Uploading…' : label}
+          {uploading ? t('submit_listing_page.uploading') : label}
         </span>
-        <span className="text-[11.5px] text-dim">JPEG, JPG, PNG, WebP · max 25 MB each · up to 25 photos</span>
+        <span className="text-[11.5px] text-dim">{t('submit_listing_page.photos_sub')}</span>
       </button>
       <input
         ref={fileInputRef}
@@ -159,7 +160,7 @@ function PhotoSection({
                 {isThumb && (
                   <div className="absolute bottom-0 inset-x-0 text-center text-[10px] font-bold text-white py-0.5"
                     style={{ background: tone + 'cc' }}>
-                    Thumbnail
+                    {t('submit_listing_page.thumbnail')}
                   </div>
                 )}
               </div>
@@ -194,19 +195,27 @@ function FormSections({
   setPriceCurrency: (c: 'USD' | 'DOP') => void
   dopRate: number
 }) {
-  const features           = form.features as string[]
-  const tags               = form.tags as string[]
-  const videoLinks         = form.video_links as string[]
-  const includedUtilities  = form.included_utilities as string[]
+  const { t } = useTranslation('realtor')
+
+  const featureKey = (f: string) => `submit_listing_page.feature_${f.toLowerCase().replace(/ /g, '_')}`
+  const tagKey     = (tag: string) => `submit_listing_page.tag_${tag.toLowerCase().replace(/ /g, '_')}`
+  const utilKey    = (u: string) => `submit_listing_page.util_${u.toLowerCase().replace(/ /g, '_')}`
+
+  const features          = form.features as string[]
+  const tags              = form.tags as string[]
+  const videoLinks        = form.video_links as string[]
+  const includedUtilities = form.included_utilities as string[]
   const construction_status = form.construction_status as string
-  const hoa                = form.hoa as boolean
-  const association        = form.association as boolean
-  const isRent             = form.transaction === 'rent'
+  const hoa               = form.hoa as boolean
+  const association       = form.association as boolean
+  const isRent            = form.transaction === 'rent'
 
   const [customInput, setCustomInput] = useState('')
   const [customUtilityInput, setCustomUtilityInput] = useState('')
-  const customFeatures = features.filter(f => !FEATURES.includes(f))
+  const customFeatures  = features.filter(f => !FEATURES.includes(f))
   const customUtilities = includedUtilities.filter(u => !INCLUDED_UTILITIES.includes(u))
+
+  const uploadLabel = photoLabel ?? t('submit_listing_page.photos_label')
 
   function handleCurrencyToggle(newCurrency: 'USD' | 'DOP') {
     const raw = parseFloat((form.price as string) || '0') || 0
@@ -224,8 +233,8 @@ function FormSections({
     setCustomInput('')
   }
 
-  function toggleTag(t: string) {
-    set('tags', tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t])
+  function toggleTag(tag: string) {
+    set('tags', tags.includes(tag) ? tags.filter(x => x !== tag) : [...tags, tag])
   }
 
   function toggleIncluded(u: string) {
@@ -247,31 +256,26 @@ function FormSections({
     set('included_utilities', includedUtilities.filter(x => x !== u))
   }
 
-  function addVideoLink() {
-    set('video_links', [...videoLinks, ''])
-  }
+  function addVideoLink() { set('video_links', [...videoLinks, '']) }
 
   function updateVideoLink(i: number, val: string) {
-    const arr = [...videoLinks]
-    arr[i] = val
-    set('video_links', arr)
+    const arr = [...videoLinks]; arr[i] = val; set('video_links', arr)
   }
 
   function removeVideoLink(i: number) {
     set('video_links', videoLinks.filter((_, j) => j !== i))
   }
 
-  // dynamic section counter so numbers stay sequential regardless of conditional sections
   let sn = 0
   const n = () => ++sn
 
   return (
     <>
       {/* 1 — Basic Info */}
-      <Sec n={n()} title="Basic Info" tone={tone}>
+      <Sec n={n()} title={t('submit_listing_page.sec_basic_info')} tone={tone}>
         <div className="space-y-4">
           <div>
-            <Lbl>Property Title *</Lbl>
+            <Lbl>{t('submit_listing_page.field_title')}</Lbl>
             <input
               className={inp}
               value={form.title as string}
@@ -283,15 +287,15 @@ function FormSections({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Lbl>Property Type</Lbl>
+              <Lbl>{t('submit_listing_page.field_type')}</Lbl>
               <select className={inp + ' cursor-pointer'} value={form.type as string} onChange={e => set('type', e.target.value)}>
-                {TYPES.map(t => (
-                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                {TYPES.map(tp => (
+                  <option key={tp} value={tp}>{t('submit_listing_page.type_' + tp, { defaultValue: tp.charAt(0).toUpperCase() + tp.slice(1) })}</option>
                 ))}
               </select>
             </div>
             <div>
-              <Lbl>Purpose</Lbl>
+              <Lbl>{t('submit_listing_page.field_purpose')}</Lbl>
               <div className="flex gap-2">
                 {(['sale', 'rent'] as const).map(p => (
                   <button
@@ -305,7 +309,7 @@ function FormSections({
                       borderColor: form.transaction === p ? tone : '#e2e8f0',
                     }}
                   >
-                    For {p.charAt(0).toUpperCase() + p.slice(1)}
+                    {p === 'sale' ? t('submit_listing_page.for_sale') : t('submit_listing_page.for_rent')}
                   </button>
                 ))}
               </div>
@@ -315,7 +319,7 @@ function FormSections({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex items-center h-7 mb-1.5">
-                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Region *</div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing_page.field_region')}</div>
               </div>
               <select
                 className={inp + ' cursor-pointer'}
@@ -323,13 +327,13 @@ function FormSections({
                 onChange={e => set('location', e.target.value)}
                 required
               >
-                <option value="">Select region…</option>
+                <option value="">{t('submit_listing_page.select_region')}</option>
                 {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Price *</div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing_page.field_price')}</div>
                 <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
                   {(['USD', 'DOP'] as const).map(c => (
                     <button key={c} type="button" onClick={() => handleCurrencyToggle(c)}
@@ -352,15 +356,15 @@ function FormSections({
               {(form.price as string) ? (
                 <p className="text-[11.5px] text-dim mt-1">
                   {priceCurrency === 'USD'
-                    ? `≈ RD$${Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US')} DOP`
-                    : `≈ $${Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US')} USD · rate: ${dopRate.toFixed(1)} DOP/USD`}
+                    ? t('submit_listing_page.price_hint_dop', { amount: Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US') })
+                    : t('submit_listing_page.price_hint_usd_rate', { amount: Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US'), rate: dopRate.toFixed(1) })}
                 </p>
               ) : null}
             </div>
           </div>
 
           <div>
-            <Lbl>Description</Lbl>
+            <Lbl>{t('submit_listing_page.field_description')}</Lbl>
             <RichTextEditor
               value={form.description as string}
               onChange={v => set('description', v)}
@@ -371,13 +375,13 @@ function FormSections({
       </Sec>
 
       {/* 2 — Property Details */}
-      <Sec n={n()} title="Property Details" tone={tone}>
+      <Sec n={n()} title={t('submit_listing_page.sec_property_details')} tone={tone}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { key: 'bedrooms',      label: 'Bedrooms',          ph: '3',    step: '1'   },
-            { key: 'bathrooms',     label: 'Bathrooms',         ph: '1.5',  step: '0.5' },
-            { key: 'area_sqft',     label: 'Living Area (ft²)', ph: '2400', step: '1'   },
-            { key: 'lot_size_sqft', label: 'Lot Size (ft²)',    ph: '5000', step: '1'   },
+            { key: 'bedrooms',      label: t('submit_listing_page.field_bedrooms'),    ph: '3',    step: '1'   },
+            { key: 'bathrooms',     label: t('submit_listing_page.field_bathrooms'),   ph: '1.5',  step: '0.5' },
+            { key: 'area_sqft',     label: t('submit_listing_page.field_living_area'), ph: '2400', step: '1'   },
+            { key: 'lot_size_sqft', label: t('submit_listing_page.field_lot_size'),    ph: '5000', step: '1'   },
           ].map(({ key, label, ph, step }) => (
             <div key={key}>
               <Lbl>{label}</Lbl>
@@ -396,24 +400,24 @@ function FormSections({
       </Sec>
 
       {/* 3 — Construction */}
-      <Sec n={n()} title="Construction" tone={tone}>
+      <Sec n={n()} title={t('submit_listing_page.sec_construction')} tone={tone}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Lbl>Construction Status</Lbl>
+            <Lbl>{t('submit_listing_page.field_construction')}</Lbl>
             <select
               className={inp + ' cursor-pointer'}
               value={construction_status}
               onChange={e => set('construction_status', e.target.value)}
             >
-              <option value="">Not specified</option>
-              <option value="pre_construction">Pre-construction</option>
-              <option value="under_construction">Under construction</option>
-              <option value="completed">Completed</option>
+              <option value="">{t('submit_listing_page.status_not_specified')}</option>
+              <option value="pre_construction">{t('submit_listing_page.status_pre_con')}</option>
+              <option value="under_construction">{t('submit_listing_page.status_under_con')}</option>
+              <option value="completed">{t('submit_listing_page.status_completed')}</option>
             </select>
           </div>
           {construction_status === 'completed' && (
             <div>
-              <Lbl>Year Built</Lbl>
+              <Lbl>{t('submit_listing_page.field_year_built')}</Lbl>
               <input
                 className={inp}
                 type="number"
@@ -428,20 +432,20 @@ function FormSections({
         </div>
       </Sec>
 
-      {/* 4 — Financials (dynamic: sale vs rent) */}
-      <Sec n={n()} title="Financials" tone={tone}>
+      {/* 4 — Financials */}
+      <Sec n={n()} title={t('submit_listing_page.sec_financials')} tone={tone}>
         {isRent ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Toggle
                 value={association}
                 onChange={v => { set('association', v); if (!v) set('association_fee', '') }}
-                label="Association Fee"
+                label={t('submit_listing_page.field_assoc_fee')}
                 tone={tone}
               />
               {association && (
                 <div>
-                  <Lbl>Monthly Association Fee (USD)</Lbl>
+                  <Lbl>{t('submit_listing_page.field_assoc_fee_mo')}</Lbl>
                   <input
                     className={inp}
                     type="number"
@@ -454,7 +458,7 @@ function FormSections({
               )}
             </div>
             <div>
-              <Lbl>Security Deposit</Lbl>
+              <Lbl>{t('submit_listing_page.field_security_dep')}</Lbl>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
                 {DEPOSIT_OPTIONS.map(opt => (
                   <button
@@ -468,7 +472,7 @@ function FormSections({
                       borderColor: form.deposit_policy === opt.value ? tone : '#e2e8f0',
                     }}
                   >
-                    {opt.label}
+                    {t('submit_listing_page.deposit_' + opt.value, { defaultValue: opt.label })}
                   </button>
                 ))}
               </div>
@@ -478,7 +482,7 @@ function FormSections({
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Lbl>Est. Annual ROI (%)</Lbl>
+                <Lbl>{t('submit_listing_page.field_roi')}</Lbl>
                 <input
                   className={inp}
                   type="number"
@@ -492,12 +496,12 @@ function FormSections({
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Toggle value={form.seller_financing as boolean} onChange={v => set('seller_financing', v)} label="Seller Financing Available" tone={tone} />
-              <Toggle value={form.tax_exempt as boolean}       onChange={v => set('tax_exempt', v)}       label="CONFOTUR Tax Exempt"        tone={tone} />
-              <Toggle value={hoa} onChange={v => { set('hoa', v); if (!v) set('hoa_fee', '') }} label="HOA Community" tone={tone} />
+              <Toggle value={form.seller_financing as boolean} onChange={v => set('seller_financing', v)} label={t('submit_listing_page.field_seller_fin')} tone={tone} />
+              <Toggle value={form.tax_exempt as boolean}       onChange={v => set('tax_exempt', v)}       label={t('submit_listing_page.field_tax_exempt')} tone={tone} />
+              <Toggle value={hoa} onChange={v => { set('hoa', v); if (!v) set('hoa_fee', '') }} label={t('submit_listing_page.field_hoa')} tone={tone} />
               {hoa && (
                 <div>
-                  <Lbl>Monthly HOA Fee (USD)</Lbl>
+                  <Lbl>{t('submit_listing_page.field_hoa_fee')}</Lbl>
                   <input
                     className={inp}
                     type="number"
@@ -514,11 +518,11 @@ function FormSections({
       </Sec>
 
       {/* 5 — Community & Features */}
-      <Sec n={n()} title="Community & Features" tone={tone}>
+      <Sec n={n()} title={t('submit_listing_page.sec_community')} tone={tone}>
         <div className="space-y-4">
-          <Toggle value={form.gated_community as boolean} onChange={v => set('gated_community', v)} label="Gated Community" tone={tone} />
+          <Toggle value={form.gated_community as boolean} onChange={v => set('gated_community', v)} label={t('submit_listing_page.field_gated')} tone={tone} />
           <div>
-            <Lbl>Property Features</Lbl>
+            <Lbl>{t('submit_listing_page.field_features')}</Lbl>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
               {FEATURES.map(f => {
                 const active = features.includes(f)
@@ -545,7 +549,7 @@ function FormSections({
                         </svg>
                       )}
                     </div>
-                    {f}
+                    {t(featureKey(f), { defaultValue: f })}
                   </button>
                 )
               })}
@@ -570,7 +574,7 @@ function FormSections({
                 value={customInput}
                 onChange={e => setCustomInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomFeature() } }}
-                placeholder="Add custom feature…"
+                placeholder={t('submit_listing_page.add_custom_feature')}
                 maxLength={50}
               />
               <button
@@ -580,7 +584,7 @@ function FormSections({
                 className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
                 style={{ background: tone, color: 'white' }}
               >
-                Add
+                {t('submit_listing_page.add')}
               </button>
             </div>
           </div>
@@ -589,8 +593,8 @@ function FormSections({
 
       {/* 6 — What is Included (rent only) */}
       {isRent && (
-        <Sec n={n()} title="What is Included" tone={tone}>
-          <p className="text-[12.5px] text-dim mb-3">Select everything included in the monthly rent.</p>
+        <Sec n={n()} title={t('submit_listing_page.sec_included')} tone={tone}>
+          <p className="text-[12.5px] text-dim mb-3">{t('submit_listing_page.field_included_sub')}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {INCLUDED_UTILITIES.map(u => {
               const active = includedUtilities.includes(u)
@@ -617,7 +621,7 @@ function FormSections({
                       </svg>
                     )}
                   </div>
-                  {u}
+                  {t(utilKey(u), { defaultValue: u })}
                 </button>
               )
             })}
@@ -639,27 +643,26 @@ function FormSections({
             <input className={inp + ' flex-1'} type="text" value={customUtilityInput}
               onChange={e => setCustomUtilityInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomUtility() } }}
-              placeholder="e.g. Hot Water, Air Conditioning" />
+              placeholder={t('submit_listing_page.ph_custom_utility')} />
             <button type="button" onClick={addCustomUtility} disabled={!customUtilityInput.trim()}
               className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
-              style={{ background: tone, color: 'white' }}>Add</button>
+              style={{ background: tone, color: 'white' }}>{t('submit_listing_page.add')}</button>
           </div>
         </Sec>
       )}
 
       {/* 7 — Media & Location */}
-      <Sec n={n()} title="Media & Location" tone={tone}>
+      <Sec n={n()} title={t('submit_listing_page.sec_media')} tone={tone}>
         <div className="space-y-4">
           <PhotoSection
             tone={tone} uploadedUrls={uploadedUrls} thumbnail={thumbnail} uploading={uploading}
             fileInputRef={fileInputRef} onFileChange={handleFileChange}
             onRemove={removeImage} onSetThumbnail={setThumbnail}
-            label={photoLabel}
+            label={uploadLabel}
           />
 
-          {/* Video links */}
           <div>
-            <Lbl>Video Links</Lbl>
+            <Lbl>{t('submit_listing_page.field_video_links')}</Lbl>
             <div className="space-y-2">
               {videoLinks.map((url, i) => (
                 <div key={i} className="flex gap-2">
@@ -686,13 +689,12 @@ function FormSections({
               className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold cursor-pointer border-0 bg-transparent transition-opacity hover:opacity-70"
               style={{ color: tone }}
             >
-              <Plus size={14} /> Add video link
+              <Plus size={14} /> {t('submit_listing_page.add_video')}
             </button>
           </div>
 
-          {/* 3D Tour */}
           <div>
-            <Lbl>3D Tour Link</Lbl>
+            <Lbl>{t('submit_listing_page.field_tour_3d')}</Lbl>
             <input
               className={inp}
               type="url"
@@ -703,7 +705,7 @@ function FormSections({
           </div>
 
           <div>
-            <Lbl>Google Maps URL</Lbl>
+            <Lbl>{t('submit_listing_page.field_maps_url')}</Lbl>
             <input
               className={inp}
               type="url"
@@ -712,10 +714,7 @@ function FormSections({
                 const url = e.target.value
                 set('maps_url', url)
                 const coords = parseLatLng(url)
-                if (coords) {
-                  set('latitude', coords.lat)
-                  set('longitude', coords.lng)
-                }
+                if (coords) { set('latitude', coords.lat); set('longitude', coords.lng) }
               }}
               placeholder="https://maps.google.com/…"
             />
@@ -723,86 +722,65 @@ function FormSections({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Lbl>Latitude</Lbl>
-              <input
-                className={inp}
-                type="number"
-                step="any"
-                value={form.latitude as string}
-                onChange={e => set('latitude', e.target.value)}
-                placeholder="e.g. 18.5816"
-              />
+              <Lbl>{t('submit_listing_page.field_latitude')}</Lbl>
+              <input className={inp} type="number" step="any" value={form.latitude as string} onChange={e => set('latitude', e.target.value)} placeholder="e.g. 18.5816" />
             </div>
             <div>
-              <Lbl>Longitude</Lbl>
-              <input
-                className={inp}
-                type="number"
-                step="any"
-                value={form.longitude as string}
-                onChange={e => set('longitude', e.target.value)}
-                placeholder="e.g. -68.4068"
-              />
+              <Lbl>{t('submit_listing_page.field_longitude')}</Lbl>
+              <input className={inp} type="number" step="any" value={form.longitude as string} onChange={e => set('longitude', e.target.value)} placeholder="e.g. -68.4068" />
             </div>
           </div>
-          <p className="text-[11.5px] text-dim -mt-1">
-            Coordinates are auto-filled when you paste a full Google Maps link. You can also enter them manually.
-          </p>
+          <p className="text-[11.5px] text-dim -mt-1">{t('submit_listing_page.coords_hint')}</p>
         </div>
       </Sec>
 
       {/* 8 — Utilities */}
-      <Sec n={n()} title="Utilities" tone={tone}>
-        <Lbl>Utility Notes</Lbl>
+      <Sec n={n()} title={t('submit_listing_page.sec_utilities')} tone={tone}>
+        <Lbl>{t('submit_listing_page.field_utility_notes')}</Lbl>
         <RichTextEditor value={form.utilities as string} onChange={v => set('utilities', v)} tone={tone} />
-        <p className="text-[11.5px] text-dim mt-1">
-          Describe utility availability, backup systems, or anything relevant to the property's services.
-        </p>
+        <p className="text-[11.5px] text-dim mt-1">{t('submit_listing_page.utility_hint')}</p>
       </Sec>
 
       {/* 9 — Co-Listing */}
-      <Sec n={n()} title="Co-Listing" tone={tone}>
+      <Sec n={n()} title={t('submit_listing_page.sec_colisting')} tone={tone}>
         <div className="space-y-4">
           <Toggle
             value={form.co_listing_enabled as boolean}
             onChange={v => {
               set('co_listing_enabled', v)
               if (!v) {
-                set('co_listing_brokerage', '')
-                set('co_listing_agent_name', '')
-                set('co_listing_agent_contact', '')
-                set('co_listing_commission_split', '')
-                set('co_listing_notes', '')
-                set('co_listing_status', '')
+                set('co_listing_brokerage', ''); set('co_listing_agent_name', '')
+                set('co_listing_agent_contact', ''); set('co_listing_commission_split', '')
+                set('co_listing_notes', ''); set('co_listing_status', '')
               }
             }}
-            label="Co-Listing Enabled"
+            label={t('submit_listing_page.toggle_colisting')}
             tone={tone}
           />
           {(form.co_listing_enabled as boolean) && (
             <div className="space-y-4 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Lbl>External Brokerage Name</Lbl>
+                  <Lbl>{t('submit_listing_page.field_ext_brokerage')}</Lbl>
                   <input className={inp} value={form.co_listing_brokerage as string} onChange={e => set('co_listing_brokerage', e.target.value)} placeholder="e.g. Century 21 DR" />
                 </div>
                 <div>
-                  <Lbl>External Agent Name</Lbl>
+                  <Lbl>{t('submit_listing_page.field_ext_agent')}</Lbl>
                   <input className={inp} value={form.co_listing_agent_name as string} onChange={e => set('co_listing_agent_name', e.target.value)} placeholder="e.g. María López" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Lbl>External Agent Contact</Lbl>
+                  <Lbl>{t('submit_listing_page.field_ext_contact')}</Lbl>
                   <input className={inp} value={form.co_listing_agent_contact as string} onChange={e => set('co_listing_agent_contact', e.target.value)} placeholder="Phone or email" />
                 </div>
                 <div>
-                  <Lbl>Commission Split (%)</Lbl>
+                  <Lbl>{t('submit_listing_page.field_commission')}</Lbl>
                   <input className={inp} type="number" step="0.1" min="0" max="100" value={form.co_listing_commission_split as string} onChange={e => set('co_listing_commission_split', e.target.value)} placeholder="e.g. 50" />
                 </div>
               </div>
               <div>
-                <Lbl>Status</Lbl>
+                <Lbl>{t('submit_listing_page.field_co_status')}</Lbl>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {CO_LISTING_STATUSES.map(s => (
                     <button
@@ -816,13 +794,13 @@ function FormSections({
                         borderColor: (form.co_listing_status as string) === s.value ? tone : '#e2e8f0',
                       }}
                     >
-                      {s.label}
+                      {t('submit_listing_page.co_status_' + s.value, { defaultValue: s.label })}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <Lbl>Notes / Agreement Details</Lbl>
+                <Lbl>{t('submit_listing_page.field_co_notes')}</Lbl>
                 <textarea
                   className={inp + ' resize-none'}
                   rows={3}
@@ -837,16 +815,16 @@ function FormSections({
       </Sec>
 
       {/* 10 — Listing Tags */}
-      <Sec n={n()} title="Listing Tags" tone={tone}>
-        <Lbl>Tags (select all that apply)</Lbl>
+      <Sec n={n()} title={t('submit_listing_page.sec_tags')} tone={tone}>
+        <Lbl>{t('submit_listing_page.field_tags')}</Lbl>
         <div className="flex flex-wrap gap-2 mt-1">
-          {ALL_TAGS.map(t => {
-            const active = tags.includes(t)
+          {ALL_TAGS.map(tag => {
+            const active = tags.includes(tag)
             return (
               <button
-                key={t}
+                key={tag}
                 type="button"
-                onClick={() => toggleTag(t)}
+                onClick={() => toggleTag(tag)}
                 className="px-4 py-2 rounded-full border text-[13px] font-semibold cursor-pointer transition-all"
                 style={{
                   borderColor: active ? tone : '#e2e8f0',
@@ -854,7 +832,7 @@ function FormSections({
                   color:       active ? 'white' : '#64748b',
                 }}
               >
-                {t}
+                {t(tagKey(tag), { defaultValue: tag })}
               </button>
             )
           })}
@@ -890,6 +868,7 @@ const EMPTY_FORM = {
 }
 
 export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: string }) {
+  const { t } = useTranslation('realtor')
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
@@ -909,18 +888,14 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
   function set(f: string, v: unknown) { setForm(p => ({ ...p, [f]: v })) }
 
   function toggleFeature(f: string) {
-    set('features', form.features.includes(f)
-      ? form.features.filter(x => x !== f)
-      : [...form.features, f],
-    )
+    set('features', form.features.includes(f) ? form.features.filter(x => x !== f) : [...form.features, f])
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
     if (uploadedUrls.length + files.length > 25) {
-      toast.error('Maximum 25 photos allowed.')
-      return
+      toast.error(t('submit_listing_page.toast_max_photos')); return
     }
     setUploading(true)
     try {
@@ -931,7 +906,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         return merged
       })
     } catch {
-      toast.error('Upload failed. Check file types (JPEG, PNG, WebP) and sizes (max 25 MB).')
+      toast.error(t('submit_listing_page.toast_upload_error'))
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -949,17 +924,12 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!form.title.trim() || !form.location || !form.price) {
-      toast.error('Title, region, and price are required.')
-      return
+      toast.error(t('submit_listing_page.toast_validation')); return
     }
     setSubmitting(true)
     try {
-      const orderedImages = thumbnail
-        ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)]
-        : uploadedUrls
-      const priceUSD = priceCurrency === 'DOP'
-        ? Math.round(parseFloat(form.price) / dopRate)
-        : parseFloat(form.price)
+      const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
+      const priceUSD = priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price)
       const isRent = form.transaction === 'rent'
       await submitListing({
         title:               form.title.trim(),
@@ -975,15 +945,15 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         construction_status: form.construction_status || undefined,
         year_built:          form.year_built    ? parseInt(form.year_built)      : undefined,
         ...(isRent ? {
-          association_fee:   form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
-          deposit_policy:    form.deposit_policy || undefined,
+          association_fee:    form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
+          deposit_policy:     form.deposit_policy || undefined,
           included_utilities: form.included_utilities.length ? form.included_utilities : undefined,
         } : {
-          roi:               form.roi           ? parseFloat(form.roi)           : undefined,
-          seller_financing:  form.seller_financing,
-          hoa:               form.hoa,
-          hoa_fee:           form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
-          tax_exempt:        form.tax_exempt,
+          roi:              form.roi           ? parseFloat(form.roi)           : undefined,
+          seller_financing: form.seller_financing,
+          hoa:              form.hoa,
+          hoa_fee:          form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
+          tax_exempt:       form.tax_exempt,
         }),
         gated_community:     form.gated_community,
         features:            form.features.length ? form.features : undefined,
@@ -992,8 +962,8 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         tour_3d_url:         form.tour_3d_url.trim() || undefined,
         utilities:           form.utilities.trim() || undefined,
         maps_url:            form.maps_url.trim() || undefined,
-        latitude:            form.latitude  ? parseFloat(form.latitude)          : undefined,
-        longitude:           form.longitude ? parseFloat(form.longitude)         : undefined,
+        latitude:            form.latitude  ? parseFloat(form.latitude)  : undefined,
+        longitude:           form.longitude ? parseFloat(form.longitude) : undefined,
         images:              orderedImages.length ? orderedImages : undefined,
         co_listing_enabled:          form.co_listing_enabled,
         co_listing_brokerage:        form.co_listing_enabled && form.co_listing_brokerage        ? form.co_listing_brokerage        : undefined,
@@ -1003,13 +973,11 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         co_listing_notes:            form.co_listing_enabled && form.co_listing_notes            ? form.co_listing_notes            : undefined,
         co_listing_status:           form.co_listing_enabled && form.co_listing_status           ? form.co_listing_status           : undefined,
       })
-      toast.success('Listing submitted! Pending admin review.')
-      setForm(EMPTY_FORM)
-      setUploadedUrls([])
-      setThumbnail(null)
+      toast.success(t('submit_listing_page.toast_success'))
+      setForm(EMPTY_FORM); setUploadedUrls([]); setThumbnail(null)
       go('listings')
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error(t('submit_listing_page.toast_error'))
     } finally {
       setSubmitting(false)
     }
@@ -1022,7 +990,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         onClick={() => go('listings')}
         className="flex items-center gap-1.5 text-dim text-[13px] mb-6 bg-transparent border-0 cursor-pointer hover:text-ink transition-colors"
       >
-        <ArrowLeft size={14} /> Back to Listings
+        <ArrowLeft size={14} /> {t('submit_listing_page.back_to_listings')}
       </button>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -1040,7 +1008,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
             onClick={() => go('listings')}
             className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer"
           >
-            Cancel
+            {t('submit_listing_page.cancel')}
           </button>
           <button
             type="submit"
@@ -1048,7 +1016,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
             className="px-8 py-3 rounded-full text-white text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 transition-opacity"
             style={{ background: tone }}
           >
-            {submitting ? 'Submitting…' : 'Submit Listing for Review'}
+            {submitting ? t('submit_listing_page.submitting') : t('submit_listing_page.submit_btn')}
           </button>
         </div>
       </form>
@@ -1064,6 +1032,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
   onBack: () => void
   onSaved: (updated: Listing) => void
 }) {
+  const { t } = useTranslation('realtor')
   const [form, setFormState] = useState({
     title:               listing.title,
     type:                listing.type,
@@ -1122,18 +1091,14 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
   function set(f: string, v: unknown) { setFormState(p => ({ ...p, [f]: v })) }
 
   function toggleFeature(f: string) {
-    set('features', form.features.includes(f)
-      ? form.features.filter(x => x !== f)
-      : [...form.features, f],
-    )
+    set('features', form.features.includes(f) ? form.features.filter(x => x !== f) : [...form.features, f])
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
     if (uploadedUrls.length + files.length > 25) {
-      toast.error('Maximum 25 photos allowed.')
-      return
+      toast.error(t('submit_listing_page.toast_max_photos')); return
     }
     setUploading(true)
     try {
@@ -1144,7 +1109,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         return merged
       })
     } catch {
-      toast.error('Upload failed. Check file types (JPEG, PNG, WebP) and sizes (max 25 MB).')
+      toast.error(t('submit_listing_page.toast_upload_error'))
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -1162,17 +1127,12 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!form.title.trim() || !form.location || !form.price) {
-      toast.error('Title, region, and price are required.')
-      return
+      toast.error(t('submit_listing_page.toast_validation')); return
     }
     setSubmitting(true)
     try {
-      const orderedImages = thumbnail
-        ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)]
-        : uploadedUrls
-      const priceUSD = priceCurrency === 'DOP'
-        ? Math.round(parseFloat(form.price) / dopRate)
-        : parseFloat(form.price)
+      const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
+      const priceUSD = priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price)
       const isRent = form.transaction === 'rent'
       const updated = await updateListing(listing.id, {
         title:               form.title.trim(),
@@ -1188,15 +1148,15 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         construction_status: form.construction_status || undefined,
         year_built:          form.year_built    ? parseInt(form.year_built)      : undefined,
         ...(isRent ? {
-          association_fee:   form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
-          deposit_policy:    form.deposit_policy || undefined,
+          association_fee:    form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
+          deposit_policy:     form.deposit_policy || undefined,
           included_utilities: form.included_utilities,
         } : {
-          roi:               form.roi           ? parseFloat(form.roi)           : undefined,
-          seller_financing:  form.seller_financing,
-          hoa:               form.hoa,
-          hoa_fee:           form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
-          tax_exempt:        form.tax_exempt,
+          roi:              form.roi           ? parseFloat(form.roi)           : undefined,
+          seller_financing: form.seller_financing,
+          hoa:              form.hoa,
+          hoa_fee:          form.hoa && form.hoa_fee ? parseFloat(form.hoa_fee) : undefined,
+          tax_exempt:       form.tax_exempt,
         }),
         gated_community:     form.gated_community,
         features:            form.features,
@@ -1205,8 +1165,8 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         tour_3d_url:         form.tour_3d_url.trim() || undefined,
         utilities:           form.utilities.trim() || undefined,
         maps_url:            form.maps_url.trim() || undefined,
-        latitude:            form.latitude  ? parseFloat(form.latitude)          : undefined,
-        longitude:           form.longitude ? parseFloat(form.longitude)         : undefined,
+        latitude:            form.latitude  ? parseFloat(form.latitude)  : undefined,
+        longitude:           form.longitude ? parseFloat(form.longitude) : undefined,
         images:              orderedImages,
         co_listing_enabled:          form.co_listing_enabled,
         co_listing_brokerage:        form.co_listing_enabled && form.co_listing_brokerage        ? form.co_listing_brokerage        : undefined,
@@ -1217,14 +1177,14 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         co_listing_status:           form.co_listing_enabled && form.co_listing_status           ? form.co_listing_status           : undefined,
       })
       const msg = listing.status === 'rejected'
-        ? 'Listing resubmitted for review!'
+        ? t('submit_listing_page.toast_edit_rejected')
         : listing.status === 'active'
-          ? 'Changes submitted for review. Your listing stays live until approved.'
-          : 'Changes saved!'
+          ? t('submit_listing_page.toast_edit_active')
+          : t('submit_listing_page.toast_edit_saved')
       toast.success(msg)
       onSaved(updated)
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error(t('submit_listing_page.toast_error'))
     } finally {
       setSubmitting(false)
     }
@@ -1239,10 +1199,10 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         onClick={onBack}
         className="flex items-center gap-1.5 text-dim text-[13px] mb-4 bg-transparent border-0 cursor-pointer hover:text-ink transition-colors"
       >
-        <ArrowLeft size={14} /> Back to Listing
+        <ArrowLeft size={14} /> {t('submit_listing_page.back_to_listing')}
       </button>
 
-      <h2 className="text-[20px] font-bold text-ink mb-4">Edit Listing</h2>
+      <h2 className="text-[20px] font-bold text-ink mb-4">{t('submit_listing_page.edit_title')}</h2>
 
       {isActive && (
         <div className="mb-5 flex items-start gap-3 px-4 py-3.5 rounded-xl border text-[13px]"
@@ -1251,9 +1211,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
             <circle cx="7.5" cy="7.5" r="7" stroke="currentColor" strokeWidth="1.3" />
             <path d="M7.5 5v3.5M7.5 10.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <span>
-            This listing is <strong>live</strong>. Your changes will be reviewed by an admin before going live — the current version stays visible on search until approved.
-          </span>
+          <span>{t('submit_listing_page.live_warning')}</span>
         </div>
       )}
 
@@ -1263,7 +1221,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
           uploadedUrls={uploadedUrls} thumbnail={thumbnail} uploading={uploading}
           fileInputRef={fileInputRef} handleFileChange={handleFileChange}
           removeImage={removeImage} setThumbnail={setThumbnail}
-          photoLabel="Click to add more photos"
+          photoLabel={t('submit_listing_page.photos_edit_label')}
           priceCurrency={priceCurrency} setPriceCurrency={setPriceCurrency} dopRate={dopRate}
         />
 
@@ -1273,7 +1231,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
             onClick={onBack}
             className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer"
           >
-            Cancel
+            {t('submit_listing_page.cancel')}
           </button>
           <button
             type="submit"
@@ -1282,12 +1240,12 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
             style={{ background: tone }}
           >
             {submitting
-              ? 'Submitting…'
+              ? t('submit_listing_page.submitting')
               : isActive
-                ? 'Submit Changes for Review'
+                ? t('submit_listing_page.submit_changes_btn')
                 : listing.status === 'rejected'
-                  ? 'Save & Resubmit for Review'
-                  : 'Save Changes'}
+                  ? t('submit_listing_page.save_resubmit_btn')
+                  : t('submit_listing_page.save_changes_btn')}
           </button>
         </div>
       </form>

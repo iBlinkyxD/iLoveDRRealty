@@ -11,16 +11,16 @@ import { getMySavedHomes, type SavedHome } from '../../api/savedHomes'
 import { getMyInquiries, type Inquiry } from '../../api/inquiries'
 import { getMyBookings, type Booking } from '../../api/bookings'
 
-function fmtRelative(dateStr: string | null | undefined): string {
+function fmtRelative(dateStr: string | null | undefined, t: (key: string, opts?: Record<string, unknown>) => string): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1)  return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1)  return t('rel.just_now')
+  if (mins < 60) return t('rel.mins_ago', { count: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)  return `${hrs}h ago`
+  if (hrs < 24)  return t('rel.hrs_ago', { count: hrs })
   const days = Math.floor(hrs / 24)
-  return `${days}d ago`
+  return t('rel.days_ago', { count: days })
 }
 
 function nightsBetween(a: string, b: string): number {
@@ -139,7 +139,7 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <div className="text-[13px] font-bold text-ink">{fmtPrice(l.listing_price)}</div>
-                      <StatusPill label="Saved" />
+                      <StatusPill label={t('saved_homes.saved_label')} />
                     </div>
                   </div>
                 ))}
@@ -184,10 +184,10 @@ export function BuyerHome({ go }: { go: (v: string) => void }) {
                 {inquiries.slice(0, 3).map((inq, i) => (
                   <div key={inq.id} className={`flex items-center gap-3 py-3 ${i < Math.min(2, inquiries.length - 1) ? 'border-b border-line' : ''}`}>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-semibold text-ink truncate">{inq.listing_title ?? 'General inquiry'}</div>
-                      <div className="text-[11px] text-dim">{fmtRelative(inq.created_at)}</div>
+                      <div className="text-[13px] font-semibold text-ink truncate">{inq.listing_title ?? t('inquiries.general_inquiry')}</div>
+                      <div className="text-[11px] text-dim">{fmtRelative(inq.created_at, t)}</div>
                     </div>
-                    <StatusPill label="Sent" tone="#0b63ab" />
+                    <StatusPill label={t('inquiries.sent_label')} tone="#0b63ab" />
                   </div>
                 ))}
               </div>

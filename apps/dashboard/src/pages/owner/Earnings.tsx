@@ -117,7 +117,7 @@ export function Earnings({ tone, go }: { tone: string; go?: (v: string) => void 
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {([
-          { label: t('earnings_page.kpi_total_year'), value: fmtMoney(totalThisYear), sub: `Jan–${now.toLocaleDateString('en-US', { month: 'short' })} ${now.getFullYear()}`, accent: tone },
+          { label: t('earnings_page.kpi_total_year'), value: fmtMoney(totalThisYear), sub: t('earnings_page.ytd_sub', { end: now.toLocaleDateString('en-US', { month: 'short' }), year: now.getFullYear() }), accent: tone },
           { label: t('earnings_page.kpi_this_month'), value: fmtMoney(thisMonth),     sub: momSub },
           { label: t('earnings_page.kpi_per_property'), value: fmtMoney(perProperty), sub: t('earnings_page.kpi_avg') },
         ] as const).map((k, i) => <RoleKpiCard key={i} {...k} />)}

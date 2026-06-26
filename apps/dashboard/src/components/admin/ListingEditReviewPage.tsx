@@ -6,6 +6,7 @@ import {
   TrendingUp, Wallet, CheckCircle2, Video, Box, Building2, Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { AdminListingEdit } from '../../api/admin'
 import { TONE } from '../../pages/admin/shared'
 
@@ -37,13 +38,6 @@ function youtubeEmbedUrl(url: string): string | null {
   } catch { return null }
 }
 
-const DEPOSIT_LABELS: Record<string, string> = {
-  first:      "First month's rent",
-  last:       "Last month's rent",
-  first_last: "First + Last month's rent",
-  none:       'No deposit required',
-}
-
 const ARRAY_FIELDS = new Set(['features', 'images', 'tags', 'video_links', 'included_utilities'])
 
 function getChangedKeys(
@@ -72,6 +66,7 @@ interface ColProps {
 }
 
 function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
+  const { t } = useTranslation('admin')
   const str  = (key: string) => data[key] as string | null | undefined
   const num  = (key: string) => data[key] as number | null | undefined
   const bool = (key: string) => Boolean(data[key])
@@ -82,20 +77,27 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
   const transaction = str('transaction') ?? ''
   const isRent = transaction === 'rent'
 
+  const DEPOSIT_LABELS: Record<string, string> = {
+    first:      t('edit_review.deposit_first'),
+    last:       t('edit_review.deposit_last'),
+    first_last: t('edit_review.deposit_first_last'),
+    none:       t('edit_review.deposit_none'),
+  }
+
   // Icon grid fields
   type PF = { Icon: LucideIcon; label: string; value: string | number; key: string }
   const propFields: PF[] = ([
-    { Icon: CircleDollarSign, label: 'Price',              key: 'price',           value: num('price') != null ? `$${Number(num('price')).toLocaleString('en-US')}` : null },
-    { Icon: Home,             label: 'Property Type',      key: 'type',            value: str('type') ? fmtType(str('type')!) : null },
-    { Icon: ArrowLeftRight,   label: 'Transaction',        key: 'transaction',     value: str('transaction') ? fmtType(str('transaction')!) : null },
-    { Icon: Calendar,         label: 'Year Built',         key: 'year_built',      value: num('year_built') },
-    { Icon: BedDouble,        label: 'Bedrooms',           key: 'bedrooms',        value: num('bedrooms') },
-    { Icon: Bath,             label: 'Bathrooms',          key: 'bathrooms',       value: num('bathrooms') },
-    { Icon: Ruler,            label: 'Living Area (ft²)',  key: 'area_sqft',       value: num('area_sqft') != null ? Number(num('area_sqft')).toLocaleString('en-US') : null },
-    { Icon: Maximize2,        label: 'Lot Size (ft²)',     key: 'lot_size_sqft',   value: num('lot_size_sqft') != null ? Number(num('lot_size_sqft')).toLocaleString('en-US') : null },
-    { Icon: TrendingUp,       label: 'Est. ROI (%)',       key: 'roi',             value: num('roi') },
-    { Icon: Wallet,           label: 'HOA Fee ($/mo)',     key: 'hoa_fee',         value: num('hoa_fee') != null ? `$${Number(num('hoa_fee')).toLocaleString('en-US')}` : null },
-    { Icon: Building2,        label: 'Assoc. Fee ($/mo)', key: 'association_fee', value: num('association_fee') != null ? `$${Number(num('association_fee')).toLocaleString('en-US')}` : null },
+    { Icon: CircleDollarSign, label: t('edit_review.label_price'),       key: 'price',           value: num('price') != null ? `$${Number(num('price')).toLocaleString('en-US')}` : null },
+    { Icon: Home,             label: t('edit_review.label_type'),        key: 'type',            value: str('type') ? fmtType(str('type')!) : null },
+    { Icon: ArrowLeftRight,   label: t('edit_review.label_transaction'), key: 'transaction',     value: str('transaction') ? fmtType(str('transaction')!) : null },
+    { Icon: Calendar,         label: t('edit_review.label_year_built'),  key: 'year_built',      value: num('year_built') },
+    { Icon: BedDouble,        label: t('edit_review.label_bedrooms'),    key: 'bedrooms',        value: num('bedrooms') },
+    { Icon: Bath,             label: t('edit_review.label_bathrooms'),   key: 'bathrooms',       value: num('bathrooms') },
+    { Icon: Ruler,            label: t('edit_review.label_area'),        key: 'area_sqft',       value: num('area_sqft') != null ? Number(num('area_sqft')).toLocaleString('en-US') : null },
+    { Icon: Maximize2,        label: t('edit_review.label_lot'),         key: 'lot_size_sqft',   value: num('lot_size_sqft') != null ? Number(num('lot_size_sqft')).toLocaleString('en-US') : null },
+    { Icon: TrendingUp,       label: t('edit_review.label_roi'),         key: 'roi',             value: num('roi') },
+    { Icon: Wallet,           label: t('edit_review.label_hoa_fee'),     key: 'hoa_fee',         value: num('hoa_fee') != null ? `$${Number(num('hoa_fee')).toLocaleString('en-US')}` : null },
+    { Icon: Building2,        label: t('edit_review.label_assoc_fee'),   key: 'association_fee', value: num('association_fee') != null ? `$${Number(num('association_fee')).toLocaleString('en-US')}` : null },
   ] as (PF & { value: string | number | null | undefined })[]).filter(
     f => f.value != null && f.value !== ''
   ) as PF[]
@@ -104,10 +106,10 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
   for (let i = 0; i < propFields.length; i += 3) propRows.push(propFields.slice(i, i + 3))
 
   const boolBadges = [
-    { label: 'Seller Financing',    key: 'seller_financing', on: bool('seller_financing') },
-    { label: 'HOA Community',       key: 'hoa',              on: bool('hoa')              },
-    { label: 'CONFOTUR Tax Exempt', key: 'tax_exempt',       on: bool('tax_exempt')       },
-    { label: 'Gated Community',     key: 'gated_community',  on: bool('gated_community')  },
+    { label: t('edit_review.badge_seller_fin'), key: 'seller_financing', on: bool('seller_financing') },
+    { label: t('edit_review.badge_hoa'),        key: 'hoa',              on: bool('hoa')              },
+    { label: t('edit_review.badge_tax'),        key: 'tax_exempt',       on: bool('tax_exempt')       },
+    { label: t('edit_review.badge_gated'),      key: 'gated_community',  on: bool('gated_community')  },
   ].filter(b => b.on)
 
   const features        = arr<string>('features')
@@ -144,7 +146,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
         {/* Property Information */}
         <div>
           <div className="text-[10.5px] font-bold uppercase tracking-widest mb-4 text-dim">
-            Property Information
+            {t('edit_review.section_property_info')}
           </div>
           <div className="divide-y divide-line-soft">
             {propRows.map((row, ri) => (
@@ -170,7 +172,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
               <div className="py-3.5 flex items-center gap-2">
                 <CheckCircle2 size={14} style={{ color: ch('construction_status') ? AMBER : accent }} />
                 <div>
-                  <div className="text-[10.5px] text-dim">Construction</div>
+                  <div className="text-[10.5px] text-dim">{t('edit_review.section_construction')}</div>
                   <div className="text-[13.5px] font-bold capitalize" style={{ color: ch('construction_status') ? AMBER : undefined }}>
                     {ch('construction_status')
                       ? constructionSt.replace(/_/g, ' ')
@@ -203,7 +205,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
         {features.length > 0 && (
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-3" style={{ color: ch('features') ? AMBER : undefined }}>
-              {ch('features') ? 'Features' : <span className="text-dim">Features</span>}
+              {ch('features') ? t('edit_review.section_features') : <span className="text-dim">{t('edit_review.section_features')}</span>}
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               {features.map(f => (
@@ -223,7 +225,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-3"
               style={{ color: (ch('tags') || ch('tag')) ? AMBER : undefined }}>
-              {(ch('tags') || ch('tag')) ? 'Tags' : <span className="text-dim">Tags</span>}
+              {(ch('tags') || ch('tag')) ? t('edit_review.section_tags') : <span className="text-dim">{t('edit_review.section_tags')}</span>}
             </div>
             <div className="flex flex-wrap gap-2">
               {tags.map(t => (
@@ -245,7 +247,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-3"
               style={{ color: ch('included_utilities') ? AMBER : undefined }}>
-              {ch('included_utilities') ? 'What is Included' : <span className="text-dim">What is Included</span>}
+              {ch('included_utilities') ? t('edit_review.section_included') : <span className="text-dim">{t('edit_review.section_included')}</span>}
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               {includedUtils.map(u => (
@@ -266,7 +268,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
             <Calendar size={15} className="shrink-0" style={{ color: ch('deposit_policy') ? AMBER : undefined }} />
             <div>
               <div className="text-[10.5px]" style={{ color: ch('deposit_policy') ? AMBER : undefined }}>
-                {ch('deposit_policy') ? 'Security Deposit' : <span className="text-dim">Security Deposit</span>}
+                {ch('deposit_policy') ? t('edit_review.section_deposit') : <span className="text-dim">{t('edit_review.section_deposit')}</span>}
               </div>
               <div className="text-[13.5px] font-bold" style={{ color: ch('deposit_policy') ? AMBER : undefined }}>
                 {ch('deposit_policy')
@@ -282,7 +284,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-2"
               style={{ color: ch('utilities') ? AMBER : undefined }}>
-              {ch('utilities') ? 'Utilities' : <span className="text-dim">Utilities</span>}
+              {ch('utilities') ? t('edit_review.section_utilities') : <span className="text-dim">{t('edit_review.section_utilities')}</span>}
             </div>
             {(() => {
               const raw  = utilities
@@ -304,7 +306,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-3"
               style={{ color: ch('video_links') ? AMBER : undefined }}>
-              {ch('video_links') ? 'Videos' : <span className="text-dim">Videos</span>}
+              {ch('video_links') ? t('edit_review.section_videos') : <span className="text-dim">{t('edit_review.section_videos')}</span>}
             </div>
             <div className="space-y-2.5">
               {videoLinks.map((url, i) => {
@@ -341,7 +343,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-2"
               style={{ color: ch('tour_3d_url') ? AMBER : undefined }}>
-              {ch('tour_3d_url') ? '3D Tour' : <span className="text-dim">3D Tour</span>}
+              {ch('tour_3d_url') ? t('edit_review.section_3d_tour') : <span className="text-dim">{t('edit_review.section_3d_tour')}</span>}
             </div>
             <a href={safeUrl(tourUrl)!} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border text-[12.5px] font-semibold transition-colors"
@@ -362,7 +364,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
             <a href={safeUrl(mapsUrl)!} target="_blank" rel="noopener noreferrer"
               className="hover:underline truncate"
               style={{ color: ch('maps_url') ? AMBER : '#2563eb' }}>
-              View on Google Maps
+              {t('edit_review.maps_link')}
             </a>
           </div>
         )}
@@ -372,7 +374,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-2"
               style={{ color: ch('description') ? AMBER : undefined }}>
-              {ch('description') ? 'Description' : <span className="text-dim">Description</span>}
+              {ch('description') ? t('edit_review.section_description') : <span className="text-dim">{t('edit_review.section_description')}</span>}
             </div>
             {(() => {
               const raw  = description
@@ -394,11 +396,11 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
           <div>
             <div className="text-[10.5px] font-bold uppercase tracking-widest mb-3"
               style={{ color: ch('co_listing_enabled') ? AMBER : undefined }}>
-              {ch('co_listing_enabled') ? 'Co-Listing' : <span className="text-dim">Co-Listing</span>}
+              {ch('co_listing_enabled') ? t('edit_review.section_co_listing') : <span className="text-dim">{t('edit_review.section_co_listing')}</span>}
             </div>
             {!bool('co_listing_enabled') ? (
               <div className="px-4 py-3 rounded-xl border border-amber-300 bg-amber-50 text-[12.5px] font-semibold text-amber-700">
-                Co-listing will be disabled
+                {t('edit_review.co_disabled')}
               </div>
             ) : (
               <div className="rounded-xl border border-line-soft overflow-hidden divide-y divide-line-soft">
@@ -406,7 +408,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                   <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_brokerage') ? 'bg-amber-50' : ''}`}>
                     <Building2 size={14} style={{ color: ch('co_listing_brokerage') ? AMBER : accent }} className="shrink-0" />
                     <div className="min-w-0">
-                      <div className="text-[10.5px] text-dim">External Brokerage</div>
+                      <div className="text-[10.5px] text-dim">{t('edit_review.co_ext_brokerage')}</div>
                       <div className="text-[13.5px] font-bold truncate" style={{ color: ch('co_listing_brokerage') ? AMBER : 'var(--color-ink)' }}>
                         {str('co_listing_brokerage')}
                       </div>
@@ -417,7 +419,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                   <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_agent_name') ? 'bg-amber-50' : ''}`}>
                     <Users size={14} style={{ color: ch('co_listing_agent_name') ? AMBER : accent }} className="shrink-0" />
                     <div className="min-w-0">
-                      <div className="text-[10.5px] text-dim">External Agent</div>
+                      <div className="text-[10.5px] text-dim">{t('edit_review.co_ext_agent')}</div>
                       <div className="text-[13.5px] font-bold truncate" style={{ color: ch('co_listing_agent_name') ? AMBER : 'var(--color-ink)' }}>
                         {str('co_listing_agent_name')}
                       </div>
@@ -428,7 +430,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                   <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_agent_contact') ? 'bg-amber-50' : ''}`}>
                     <Link2 size={14} style={{ color: ch('co_listing_agent_contact') ? AMBER : accent }} className="shrink-0" />
                     <div className="min-w-0">
-                      <div className="text-[10.5px] text-dim">Contact</div>
+                      <div className="text-[10.5px] text-dim">{t('edit_review.co_contact')}</div>
                       <div className="text-[13.5px] font-bold truncate" style={{ color: ch('co_listing_agent_contact') ? AMBER : 'var(--color-ink)' }}>
                         {str('co_listing_agent_contact')}
                       </div>
@@ -439,7 +441,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                   <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_commission_split') ? 'bg-amber-50' : ''}`}>
                     <TrendingUp size={14} style={{ color: ch('co_listing_commission_split') ? AMBER : accent }} className="shrink-0" />
                     <div className="min-w-0">
-                      <div className="text-[10.5px] text-dim">Commission Split</div>
+                      <div className="text-[10.5px] text-dim">{t('edit_review.co_commission')}</div>
                       <div className="text-[13.5px] font-bold" style={{ color: ch('co_listing_commission_split') ? AMBER : 'var(--color-ink)' }}>
                         {num('co_listing_commission_split')}%
                       </div>
@@ -450,7 +452,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                   <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_status') ? 'bg-amber-50' : ''}`}>
                     <CheckCircle2 size={14} style={{ color: ch('co_listing_status') ? AMBER : accent }} className="shrink-0" />
                     <div className="min-w-0">
-                      <div className="text-[10.5px] text-dim">Status</div>
+                      <div className="text-[10.5px] text-dim">{t('edit_review.co_status')}</div>
                       <div className="text-[13.5px] font-bold capitalize" style={{ color: ch('co_listing_status') ? AMBER : 'var(--color-ink)' }}>
                         {str('co_listing_status')?.replace(/_/g, ' ')}
                       </div>
@@ -459,7 +461,7 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                 )}
                 {str('co_listing_notes') && (
                   <div className={`px-4 py-3 ${ch('co_listing_notes') ? 'bg-amber-50' : ''}`}>
-                    <div className="text-[10.5px] text-dim mb-1">Notes</div>
+                    <div className="text-[10.5px] text-dim mb-1">{t('edit_review.co_notes')}</div>
                     <div className="text-[13px] whitespace-pre-wrap" style={{ color: ch('co_listing_notes') ? AMBER : 'var(--color-ink)' }}>
                       {str('co_listing_notes')}
                     </div>
@@ -485,6 +487,7 @@ interface Props {
 }
 
 export function ListingEditReviewPage({ edit, working, onApprove, onReject, onClose }: Props) {
+  const { t } = useTranslation('admin')
   const [rejectOpen, setRejectOpen] = useState(false)
   const [reason, setReason] = useState('')
 
@@ -499,7 +502,7 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
           onClick={onClose}
           className="flex items-center gap-1.5 text-[13px] font-semibold text-dim hover:text-ink transition-colors cursor-pointer shrink-0"
         >
-          <ArrowLeft size={15} /> Back
+          <ArrowLeft size={15} /> {t('edit_review.back')}
         </button>
 
         <div className="w-px h-5 bg-line shrink-0" />
@@ -512,13 +515,13 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
         </div>
 
         <div className="text-right shrink-0">
-          <div className="text-[10px] text-dim uppercase tracking-wide">Submitted by</div>
+          <div className="text-[10px] text-dim uppercase tracking-wide">{t('edit_review.submitted_by')}</div>
           <div className="text-[13px] font-semibold text-ink">{edit.submitted_by_name ?? '—'}</div>
           <div className="text-[11px] text-dim">{edit.submitted_by_email ?? ''}</div>
         </div>
 
         <div className="text-right shrink-0 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
-          <div className="text-[10px] text-amber-600 uppercase tracking-wide font-semibold">Changes</div>
+          <div className="text-[10px] text-amber-600 uppercase tracking-wide font-semibold">{t('edit_review.changes_label')}</div>
           <div className="text-[22px] font-extrabold leading-tight" style={{ color: AMBER }}>{changedKeys.size}</div>
         </div>
       </div>
@@ -527,16 +530,16 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
       <div className="shrink-0 grid grid-cols-2 border-b border-line">
         <div className="px-5 py-2.5 border-r border-white/10 bg-nav">
           <div className="text-[11px] font-bold uppercase tracking-widest text-white">
-            Current · Live
+            {t('edit_review.col_current')}
           </div>
         </div>
         <div className="px-5 py-2.5 flex items-center gap-2.5" style={{ background: '#451a03' }}>
           <div className="text-[11px] font-bold uppercase tracking-widest text-amber-300">
-            Proposed Changes
+            {t('edit_review.col_proposed')}
           </div>
           {changedKeys.size > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-amber-950">
-              {changedKeys.size} field{changedKeys.size !== 1 ? 's' : ''}
+              {changedKeys.size} {changedKeys.size !== 1 ? t('edit_review.field_plural') : t('edit_review.field_singular')}
             </span>
           )}
         </div>
@@ -559,7 +562,7 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
               value={reason}
               onChange={e => setReason(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && reason.trim() && onReject(reason.trim())}
-              placeholder="Reason for rejection…"
+              placeholder={t('edit_review.reason_ph')}
               className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-red-400"
               autoFocus
             />
@@ -569,13 +572,13 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
               className="px-4 py-2 rounded-lg text-[12px] font-bold text-white disabled:opacity-50 cursor-pointer shrink-0"
               style={{ background: '#e10f1f' }}
             >
-              Confirm Reject
+              {t('edit_review.confirm_reject')}
             </button>
             <button
               onClick={() => setRejectOpen(false)}
               className="px-3 py-2 rounded-lg text-[12px] font-semibold text-ink border border-line cursor-pointer"
             >
-              Cancel
+              {t('edit_review.cancel')}
             </button>
           </div>
         ) : (
@@ -584,7 +587,7 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
               onClick={onClose}
               className="px-5 py-2.5 rounded-xl text-[13px] font-semibold text-dim hover:text-ink border border-line bg-paper cursor-pointer transition-colors"
             >
-              Close
+              {t('edit_review.close')}
             </button>
             <div className="flex-1" />
             <button
@@ -592,7 +595,7 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
               disabled={working}
               className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-bold border border-line bg-paper text-ink cursor-pointer disabled:opacity-50"
             >
-              <X size={14} strokeWidth={2.5} /> Reject Edit
+              <X size={14} strokeWidth={2.5} /> {t('edit_review.reject_btn')}
             </button>
             <button
               onClick={onApprove}
@@ -600,7 +603,7 @@ export function ListingEditReviewPage({ edit, working, onApprove, onReject, onCl
               className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer disabled:opacity-50"
               style={{ background: '#1f7a3d' }}
             >
-              <Check size={14} strokeWidth={2.5} /> Approve & Go Live
+              <Check size={14} strokeWidth={2.5} /> {t('edit_review.approve_btn')}
             </button>
           </>
         )}

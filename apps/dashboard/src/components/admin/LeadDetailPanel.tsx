@@ -1,5 +1,6 @@
 import { X, Mail, Phone, Calendar, Home, Copy, CheckCheck, Check, Search, UserCheck, Zap, ExternalLink, KeyRound } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { assignLead, updateLeadStatus, type Lead } from '../../api/leads'
 import type { AdminUser } from '../../api/admin'
 import { TONE } from '../../pages/admin/shared'
@@ -8,25 +9,11 @@ import { ConfirmModal } from '../shared/ConfirmModal'
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://ilovedrrealty.com'
 
-const TYPE_LABEL: Record<string, string> = {
-  property_inquiry: 'Inquiry',
-  booking:          'Booking',
-  buyer_interest:   'Buyer',
-  seller_interest:  'Seller',
-}
-
 const TYPE_COLOR: Record<string, string> = {
   property_inquiry: '#1f7a3d',
   booking:          '#0d9488',
   buyer_interest:   '#e10f1f',
   seller_interest:  '#f0a800',
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  new:       'New',
-  assigned:  'Assigned',
-  contacted: 'Contacted',
-  closed:    'Closed',
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -59,6 +46,7 @@ function RealtorCombobox({
   onSelect: (id: string) => void
   saving: boolean
 }) {
+  const { t } = useTranslation('admin')
   const current = realtors.find(r => r.id === currentId)
   const [open, setOpen]     = useState(false)
   const [query, setQuery]   = useState('')
@@ -102,10 +90,10 @@ function RealtorCombobox({
         className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-line bg-paper text-[13px] cursor-pointer hover:bg-paper2 transition-colors disabled:opacity-50 text-left"
       >
         <span className={current ? 'text-ink font-medium' : 'text-dim'}>
-          {current ? (current.display_name || current.email) : 'Unassigned'}
+          {current ? (current.display_name || current.email) : t('lead_panel.unassigned')}
         </span>
         {saving
-          ? <span className="text-[11px] text-dim">Saving…</span>
+          ? <span className="text-[11px] text-dim">{t('lead_panel.saving')}</span>
           : <Search size={13} className="text-dim shrink-0" />}
       </button>
 
@@ -119,7 +107,7 @@ function RealtorCombobox({
               ref={inputRef}
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search realtors…"
+              placeholder={t('lead_panel.search_realtors_ph')}
               className="flex-1 bg-transparent text-[13px] text-ink outline-none placeholder:text-dim"
             />
           </div>
@@ -132,11 +120,11 @@ function RealtorCombobox({
               className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-dim hover:bg-paper2 cursor-pointer border-0 bg-transparent text-left"
             >
               {!currentId && <Check size={12} style={{ color: TONE }} />}
-              <span className={!currentId ? 'font-semibold text-ink' : ''}>Unassigned</span>
+              <span className={!currentId ? 'font-semibold text-ink' : ''}>{t('lead_panel.unassigned')}</span>
             </button>
 
             {filtered.length === 0 ? (
-              <div className="px-3 py-2 text-[12px] text-dim">No realtors found</div>
+              <div className="px-3 py-2 text-[12px] text-dim">{t('lead_panel.no_realtors')}</div>
             ) : filtered.map(r => {
               const label    = r.display_name || r.email
               const isActive = r.id === currentId
@@ -174,6 +162,22 @@ interface Props {
 }
 
 export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusUpdated, allowedStatuses, updateStatusFn }: Props) {
+  const { t } = useTranslation('admin')
+
+  const TYPE_LABEL: Record<string, string> = {
+    property_inquiry: t('lead_panel.type_inquiry'),
+    booking:          t('lead_panel.type_booking'),
+    buyer_interest:   t('lead_panel.type_buyer'),
+    seller_interest:  t('lead_panel.type_seller'),
+  }
+
+  const STATUS_LABEL: Record<string, string> = {
+    new:       t('lead_panel.status_new'),
+    assigned:  t('lead_panel.status_assigned'),
+    contacted: t('lead_panel.status_contacted'),
+    closed:    t('lead_panel.status_closed'),
+  }
+
   const [copiedEmail,    setCopiedEmail]    = useState(false)
   const [copiedPhone,    setCopiedPhone]    = useState(false)
   const [assignSaving,   setAssignSaving]   = useState(false)
@@ -307,9 +311,9 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                   <KeyRound size={14} style={{ color: '#7c3aed' }} />
                 </div>
                 <div>
-                  <div className="text-[12.5px] font-bold" style={{ color: '#7c3aed' }}>Owner Dashboard Access Request</div>
+                  <div className="text-[12.5px] font-bold" style={{ color: '#7c3aed' }}>{t('lead_panel.owner_access_title')}</div>
                   <div className="text-[11.5px] text-dim leading-normal mt-0.5">
-                    This person wants to list a property. Assigning a realtor will grant them owner dashboard access.
+                    {t('lead_panel.owner_access_desc')}
                   </div>
                 </div>
               </div>
@@ -317,7 +321,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
 
             {/* Contact */}
             <div>
-              <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">Contact</div>
+              <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">{t('lead_panel.section_contact')}</div>
               <div className="space-y-3.5">
 
                 {lead.from_user_name && (
@@ -326,7 +330,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                       <UserCheck size={13} style={{ color }} />
                     </div>
                     <div>
-                      <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">Account</div>
+                      <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">{t('lead_panel.label_account')}</div>
                       <div className="text-[13px] text-ink">{lead.from_user_name}</div>
                     </div>
                   </div>
@@ -337,7 +341,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                     <Mail size={13} style={{ color }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">Email</div>
+                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">{t('lead_panel.label_email')}</div>
                     <div className="flex items-center gap-1.5">
                       <div className="text-[13px] text-ink truncate">{lead.email}</div>
                       <button
@@ -357,7 +361,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                     <Phone size={13} style={{ color }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">Phone</div>
+                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">{t('lead_panel.label_phone')}</div>
                     {lead.phone ? (() => {
                       const ph = parsePhone(lead.phone)
                       return (
@@ -381,7 +385,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                         </div>
                       )
                     })() : (
-                      <div className="text-[13px] text-dim/60">Not provided</div>
+                      <div className="text-[13px] text-dim/60">{t('lead_panel.not_provided')}</div>
                     )}
                   </div>
                 </div>
@@ -391,7 +395,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                     <Calendar size={13} style={{ color }} />
                   </div>
                   <div>
-                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">Submitted</div>
+                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">{t('lead_panel.label_submitted')}</div>
                     <div className="text-[13px] text-ink">{fmtDate(lead.created_at)}</div>
                   </div>
                 </div>
@@ -401,13 +405,13 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
 
             {/* Timeline */}
             <div>
-              <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">Timeline</div>
+              <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">{t('lead_panel.section_timeline')}</div>
               <div className="flex flex-col">
                 {[
-                  { label: 'Submitted',  ts: lead.created_at,   always: true  },
-                  { label: 'Assigned',   ts: lead.assigned_at,  always: false },
-                  { label: 'Contacted',  ts: lead.contacted_at, always: false },
-                  { label: 'Closed',     ts: lead.closed_at,    always: false },
+                  { label: t('lead_panel.label_submitted'),   ts: lead.created_at,   always: true  },
+                  { label: t('lead_panel.status_assigned'),   ts: lead.assigned_at,  always: false },
+                  { label: t('lead_panel.status_contacted'),  ts: lead.contacted_at, always: false },
+                  { label: t('lead_panel.status_closed'),     ts: lead.closed_at,    always: false },
                 ].map((step, i, arr) => {
                   const done = !!step.ts
                   const last = i === arr.length - 1
@@ -450,7 +454,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
             {/* Property */}
             {lead.property_title && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Property</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('lead_panel.section_property')}</div>
                 {(lead.type === 'property_inquiry' || lead.type === 'booking') && lead.property_id ? (
                   <a
                     href={`${LANDING_URL}/detail?id=${lead.property_id}`}
@@ -480,7 +484,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
             {/* Message */}
             {lead.message && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Message</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('lead_panel.section_message')}</div>
                 <div className="bg-paper2 rounded-xl px-4 py-3 text-[13px] text-ink2 leading-relaxed whitespace-pre-wrap">
                   {lead.message}
                 </div>
@@ -492,7 +496,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
               <div>
                 <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">
                   <UserCheck size={11} />
-                  Assign Realtor
+                  {t('lead_panel.section_assign')}
                 </div>
 
                 {/* Quick-assign: property agent (inquiry + booking only) */}
@@ -501,7 +505,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                   lead.listing_realtor_id !== lead.assigned_realtor_id && (
                   <div className="flex items-center justify-between gap-3 px-3 py-2.5 mb-2 rounded-xl border border-line bg-paper2">
                     <div className="min-w-0">
-                      <div className="text-[10px] font-bold uppercase tracking-wide text-dim mb-0.5">Property Agent</div>
+                      <div className="text-[10px] font-bold uppercase tracking-wide text-dim mb-0.5">{t('lead_panel.label_property_agent')}</div>
                       <div className="text-[13px] font-medium text-ink truncate">{lead.listing_realtor_name}</div>
                     </div>
                     <button
@@ -511,7 +515,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                       style={{ background: TONE }}
                     >
                       <Zap size={11} />
-                      Quick assign
+                      {t('lead_panel.quick_assign')}
                     </button>
                   </div>
                 )}
@@ -527,7 +531,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
 
             {/* Status */}
             <div>
-              <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Status</div>
+              <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('lead_panel.section_status')}</div>
               <div className="flex gap-2 flex-wrap">
                 {(() => {
                   const currentIndex = STATUSES.indexOf(lead.status as typeof STATUSES[number])
@@ -556,7 +560,7 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                   })
                 })()}
               </div>
-              {statusSaving && <div className="text-[11px] text-dim mt-1.5">Saving…</div>}
+              {statusSaving && <div className="text-[11px] text-dim mt-1.5">{t('lead_panel.saving')}</div>}
             </div>
 
           </div>
@@ -572,14 +576,14 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
               className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 hover:bg-line-soft no-underline"
             >
               <ExternalLink size={13} />
-              Open in GHL
+              {t('lead_panel.open_ghl')}
             </a>
           )}
           <button
             onClick={onClose}
             className={`px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent ${lead.ghl_contact_url ? '' : 'w-full'}`}
           >
-            Close
+            {t('lead_panel.close')}
           </button>
         </div>
 
@@ -587,9 +591,9 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
       {/* Owner-access assignment confirmation */}
       {confirmAssignId && (
         <ConfirmModal
-          title="Grant owner dashboard access?"
-          description="Assigning a realtor to this lead will promote the user to an Owner account and grant them access to the owner dashboard. This action cannot be undone."
-          confirmLabel="Yes, assign & grant access"
+          title={t('lead_panel.grant_access_title')}
+          description={t('lead_panel.grant_access_desc')}
+          confirmLabel={t('lead_panel.grant_access_confirm')}
           variant="warning"
           loading={assignSaving}
           onConfirm={async () => {
@@ -608,12 +612,9 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
             onClick={e => e.stopPropagation()}
           >
             <div>
-              <div className="text-[15px] font-bold text-ink mb-1">Skip steps?</div>
+              <div className="text-[15px] font-bold text-ink mb-1">{t('lead_panel.skip_title')}</div>
               <div className="text-[13px] text-ink2 leading-relaxed">
-                You're skipping{' '}
-                <span className="font-semibold text-ink">{skipConfirm.skipped.join(', ')}</span>
-                {' '}and marking this lead as{' '}
-                <span className="font-semibold text-ink">{STATUS_LABEL[skipConfirm.status]}</span>.
+                {t('lead_panel.skip_body', { skipped: skipConfirm.skipped.join(', '), status: STATUS_LABEL[skipConfirm.status] })}
               </div>
             </div>
             <div className="flex gap-2">
@@ -621,14 +622,14 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
                 onClick={() => setSkipConfirm(null)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
               >
-                Cancel
+                {t('lead_panel.cancel')}
               </button>
               <button
                 onClick={() => { const s = skipConfirm.status; setSkipConfirm(null); applyStatus(s) }}
                 className="flex-1 px-4 py-2.5 rounded-xl border-0 text-[13px] font-semibold text-white cursor-pointer"
                 style={{ background: STATUS_COLOR[skipConfirm.status] ?? '#64748b' }}
               >
-                Yes, skip
+                {t('lead_panel.yes_skip')}
               </button>
             </div>
           </div>

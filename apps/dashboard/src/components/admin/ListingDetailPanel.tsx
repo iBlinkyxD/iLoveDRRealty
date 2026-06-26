@@ -8,6 +8,7 @@ import {
   Video, Box, Building2, Sparkles,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { AdminListing } from '../../api/admin'
 import { TONE } from '../../pages/admin/shared'
 
@@ -40,20 +41,6 @@ function youtubeEmbedUrl(url: string): string | null {
   } catch { return null }
 }
 
-const DEPOSIT_LABELS: Record<string, string> = {
-  first:      "First month's rent",
-  last:       "Last month's rent",
-  first_last: "First + Last month's rent",
-  none:       'No deposit required',
-}
-
-const CO_LISTING_STATUS_CHIP: Record<string, { bg: string; color: string; label: string }> = {
-  available: { bg: '#dbeafe', color: '#1d4ed8', label: 'Available for Co-Listing' },
-  active:    { bg: '#dcfce7', color: '#15803d', label: 'Co-Listing Active'        },
-  closed:    { bg: '#f3f4f6', color: '#4b5563', label: 'Closed'                   },
-  cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Cancelled'                },
-}
-
 const STATUS_CHIP: Record<string, { bg: string; color: string; label: string }> = {
   active:           { bg: '#16a34a', color: 'white',   label: 'Active'   },
   pending_approval: { bg: '#fef08a', color: '#854d0e', label: 'Pending'  },
@@ -76,6 +63,7 @@ interface Props {
 export function ListingDetailPanel({
   listing, onClose, onEdit, onApprove, onReject, onArchive, onSetDeal, onClearDeal, working,
 }: Props) {
+  const { t } = useTranslation('admin')
   const [imgIdx,        setImgIdx]        = useState(0)
   const [rejectOpen,    setRejectOpen]    = useState(false)
   const [reason,        setReason]        = useState('')
@@ -83,6 +71,20 @@ export function ListingDetailPanel({
   const [discountType,  setDiscountType]  = useState<'pct' | 'fixed'>('pct')
   const [discountValue, setDiscountValue] = useState('')
   const [dealWorking,   setDealWorking]   = useState(false)
+
+  const DEPOSIT_LABELS: Record<string, string> = {
+    first:      t('listing_panel.deposit_first'),
+    last:       t('listing_panel.deposit_last'),
+    first_last: t('listing_panel.deposit_first_last'),
+    none:       t('listing_panel.deposit_none'),
+  }
+
+  const CO_LISTING_STATUS_CHIP: Record<string, { bg: string; color: string; label: string }> = {
+    available: { bg: '#dbeafe', color: '#1d4ed8', label: t('listing_panel.co_status_available') },
+    active:    { bg: '#dcfce7', color: '#15803d', label: t('listing_panel.co_status_active')    },
+    closed:    { bg: '#f3f4f6', color: '#4b5563', label: t('listing_panel.co_status_closed')    },
+    cancelled: { bg: '#fee2e2', color: '#dc2626', label: t('listing_panel.co_status_cancelled') },
+  }
 
   async function handleSetDeal() {
     if (!onSetDeal) return
@@ -102,24 +104,24 @@ export function ListingDetailPanel({
   const chip      = STATUS_CHIP[listing.status] ?? { bg: '#6b7280', color: 'white', label: listing.status }
 
   const reviewedLabel =
-    listing.status === 'active'   ? 'Approved by' :
-    listing.status === 'rejected' ? 'Rejected by' :
-    listing.status === 'archived' ? 'Archived by' : 'Reviewed by'
+    listing.status === 'active'   ? t('listing_panel.approved_by') :
+    listing.status === 'rejected' ? t('listing_panel.rejected_by') :
+    listing.status === 'archived' ? t('listing_panel.archived_by') : t('listing_panel.reviewed_by')
 
   // Property info — 3-col icon grid
   type PropField = { Icon: LucideIcon; label: string; value: string | number }
   const propFields: PropField[] = ([
-    { Icon: CircleDollarSign, label: 'Price',            value: `$${Number(listing.price).toLocaleString('en-US')}` },
-    { Icon: Home,             label: 'Property Type',    value: fmtType(listing.type) },
-    { Icon: ArrowLeftRight,   label: 'Transaction',      value: fmtType(listing.transaction) },
-    { Icon: Calendar,         label: 'Year Built',       value: listing.year_built },
-    { Icon: BedDouble,        label: 'Bedrooms',         value: listing.bedrooms },
-    { Icon: Bath,             label: 'Bathrooms',        value: listing.bathrooms },
-    { Icon: Ruler,            label: 'Living Area (ft²)', value: listing.area_sqft     != null ? Number(listing.area_sqft).toLocaleString('en-US')     : null },
-    { Icon: Maximize2,        label: 'Lot Size (ft²)',   value: listing.lot_size_sqft != null ? Number(listing.lot_size_sqft).toLocaleString('en-US') : null },
-    { Icon: TrendingUp,       label: 'Est. ROI (%)',     value: listing.roi },
-    { Icon: Wallet,           label: 'HOA Fee ($/mo)',   value: listing.hoa_fee != null ? `$${Number(listing.hoa_fee).toLocaleString('en-US')}` : null },
-    { Icon: Building2,        label: 'Assoc. Fee ($/mo)', value: listing.association_fee != null ? `$${Number(listing.association_fee).toLocaleString('en-US')}` : null },
+    { Icon: CircleDollarSign, label: t('listing_panel.label_price'),       value: `$${Number(listing.price).toLocaleString('en-US')}` },
+    { Icon: Home,             label: t('listing_panel.label_type'),         value: fmtType(listing.type) },
+    { Icon: ArrowLeftRight,   label: t('listing_panel.label_transaction'),  value: fmtType(listing.transaction) },
+    { Icon: Calendar,         label: t('listing_panel.label_year_built'),   value: listing.year_built },
+    { Icon: BedDouble,        label: t('listing_panel.label_bedrooms'),     value: listing.bedrooms },
+    { Icon: Bath,             label: t('listing_panel.label_bathrooms'),    value: listing.bathrooms },
+    { Icon: Ruler,            label: t('listing_panel.label_area'),         value: listing.area_sqft     != null ? Number(listing.area_sqft).toLocaleString('en-US')     : null },
+    { Icon: Maximize2,        label: t('listing_panel.label_lot'),          value: listing.lot_size_sqft != null ? Number(listing.lot_size_sqft).toLocaleString('en-US') : null },
+    { Icon: TrendingUp,       label: t('listing_panel.label_roi'),          value: listing.roi },
+    { Icon: Wallet,           label: t('listing_panel.label_hoa_fee'),      value: listing.hoa_fee != null ? `$${Number(listing.hoa_fee).toLocaleString('en-US')}` : null },
+    { Icon: Building2,        label: t('listing_panel.label_assoc_fee'),    value: listing.association_fee != null ? `$${Number(listing.association_fee).toLocaleString('en-US')}` : null },
   ] as (PropField & { value: string | number | null | undefined })[]).filter(
     f => f.value != null && f.value !== ''
   ) as PropField[]
@@ -128,10 +130,10 @@ export function ListingDetailPanel({
   for (let i = 0; i < propFields.length; i += 3) propRows.push(propFields.slice(i, i + 3))
 
   const boolBadges = [
-    { label: 'Seller Financing',    on: listing.seller_financing },
-    { label: 'HOA Community',       on: listing.hoa              },
-    { label: 'CONFOTUR Tax Exempt', on: listing.tax_exempt       },
-    { label: 'Gated Community',     on: listing.gated_community  },
+    { label: t('listing_panel.badge_seller_fin'), on: listing.seller_financing },
+    { label: t('listing_panel.badge_hoa'),        on: listing.hoa              },
+    { label: t('listing_panel.badge_tax'),        on: listing.tax_exempt       },
+    { label: t('listing_panel.badge_gated'),      on: listing.gated_community  },
   ].filter(b => b.on)
 
   return (
@@ -211,7 +213,7 @@ export function ListingDetailPanel({
                 style={{ background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.35)' }}>
                 <Sparkles size={13} style={{ color: '#fbbf24' }} className="shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-[12px] font-bold" style={{ color: '#fbbf24' }}>Deal of the Week</span>
+                  <span className="text-[12px] font-bold" style={{ color: '#fbbf24' }}>{t('listing_panel.deal_badge')}</span>
                   {listing.deal_discount_value != null && (
                     <span className="ml-2 text-[11px] font-semibold" style={{ color: 'rgba(251,191,36,0.75)' }}>
                       {listing.deal_discount_type === 'pct'
@@ -237,7 +239,7 @@ export function ListingDetailPanel({
                 <div className="min-w-0">
                   <div className="text-[10px] font-bold uppercase tracking-wider mb-0.5"
                     style={{ color: 'rgba(255,255,255,0.45)' }}>
-                    Submitted by
+                    {t('listing_panel.submitted_by')}
                   </div>
                   <div className="text-[13px] font-bold text-white truncate">
                     {listing.submitted_by_name ?? '—'}
@@ -289,7 +291,7 @@ export function ListingDetailPanel({
                 <div className="text-[22px] font-extrabold text-white leading-tight">
                   {(listing.view_count ?? 0).toLocaleString()}
                 </div>
-                <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>Total views</div>
+                <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('listing_panel.total_views')}</div>
               </div>
             </div>
           </div>
@@ -300,7 +302,7 @@ export function ListingDetailPanel({
             {/* Property Information */}
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">
-                Property Information
+                {t('listing_panel.section_property_info')}
               </div>
               <div className="divide-y divide-line-soft">
                 {propRows.map((row, ri) => (
@@ -328,7 +330,7 @@ export function ListingDetailPanel({
                   <div className="py-3.5 flex items-center gap-2">
                     <CheckCircle2 size={14} style={{ color: TONE }} />
                     <div>
-                      <div className="text-[10.5px] text-dim">Construction</div>
+                      <div className="text-[10.5px] text-dim">{t('listing_panel.section_construction')}</div>
                       <div className="text-[13.5px] font-bold text-ink capitalize">
                         {listing.construction_status.replace(/_/g, ' ')}
                       </div>
@@ -355,7 +357,7 @@ export function ListingDetailPanel({
             {/* Features */}
             {listing.features.length > 0 && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Features</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('listing_panel.section_features')}</div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {listing.features.map(f => (
                     <div key={f} className="flex items-center gap-2">
@@ -373,7 +375,7 @@ export function ListingDetailPanel({
               if (!tags.length) return null
               return (
                 <div>
-                  <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Tags</div>
+                  <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('listing_panel.section_tags')}</div>
                   <div className="flex flex-wrap gap-2">
                     {tags.map(t => (
                       <span key={t} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold bg-white border border-line text-ink">
@@ -389,7 +391,7 @@ export function ListingDetailPanel({
             {/* What is Included (rent only) */}
             {listing.transaction === 'rent' && (listing.included_utilities?.length ?? 0) > 0 && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">What is Included</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('listing_panel.section_included')}</div>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                   {listing.included_utilities!.map(u => (
                     <div key={u} className="flex items-center gap-2">
@@ -406,7 +408,7 @@ export function ListingDetailPanel({
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-line-soft bg-paper2">
                 <Calendar size={15} className="text-dim shrink-0" />
                 <div>
-                  <div className="text-[10.5px] text-dim">Security Deposit</div>
+                  <div className="text-[10.5px] text-dim">{t('listing_panel.section_deposit')}</div>
                   <div className="text-[13.5px] font-bold text-ink">
                     {DEPOSIT_LABELS[listing.deposit_policy] ?? listing.deposit_policy}
                   </div>
@@ -417,7 +419,7 @@ export function ListingDetailPanel({
             {/* Utilities */}
             {listing.utilities && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">Utilities</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">{t('listing_panel.section_utilities')}</div>
                 {(() => {
                   const raw = listing.utilities!
                   const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
@@ -430,7 +432,7 @@ export function ListingDetailPanel({
             {/* Video links */}
             {(listing.video_links?.length ?? 0) > 0 && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Videos</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('listing_panel.section_videos')}</div>
                 <div className="space-y-2.5">
                   {listing.video_links!.map((url, i) => {
                     const safe = safeUrl(url)
@@ -465,7 +467,7 @@ export function ListingDetailPanel({
             {/* 3D Tour */}
             {listing.tour_3d_url && safeUrl(listing.tour_3d_url) && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">3D Tour</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">{t('listing_panel.section_3d_tour')}</div>
                 <a
                   href={safeUrl(listing.tour_3d_url)!}
                   target="_blank"
@@ -488,7 +490,7 @@ export function ListingDetailPanel({
                   <div className="flex items-center gap-2 text-[12.5px]">
                     <Link2 size={13} className="text-dim shrink-0" />
                     <a href={u.href} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate">
-                      View on Google Maps
+                      {t('listing_panel.maps_link')}
                     </a>
                   </div>
                 )
@@ -498,7 +500,7 @@ export function ListingDetailPanel({
             {/* Description */}
             {listing.description && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">Description</div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-2">{t('listing_panel.section_description')}</div>
                 {(() => {
                   const raw  = listing.description
                   const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
@@ -514,14 +516,14 @@ export function ListingDetailPanel({
             {listing.co_listing_enabled && (
               <div>
                 <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">
-                  Co-Listing
+                  {t('listing_panel.section_co_listing')}
                 </div>
                 <div className="rounded-xl border border-line-soft bg-paper2 overflow-hidden divide-y divide-line-soft">
                   {listing.co_listing_brokerage && (
                     <div className="px-4 py-3 flex items-center gap-3">
                       <Building2 size={14} style={{ color: TONE }} className="shrink-0" />
                       <div className="min-w-0">
-                        <div className="text-[10.5px] text-dim">External Brokerage</div>
+                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_ext_brokerage')}</div>
                         <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_brokerage}</div>
                       </div>
                     </div>
@@ -530,7 +532,7 @@ export function ListingDetailPanel({
                     <div className="px-4 py-3 flex items-center gap-3">
                       <User size={14} style={{ color: TONE }} className="shrink-0" />
                       <div className="min-w-0">
-                        <div className="text-[10.5px] text-dim">External Agent</div>
+                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_ext_agent')}</div>
                         <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_agent_name}</div>
                       </div>
                     </div>
@@ -539,7 +541,7 @@ export function ListingDetailPanel({
                     <div className="px-4 py-3 flex items-center gap-3">
                       <Link2 size={14} style={{ color: TONE }} className="shrink-0" />
                       <div className="min-w-0">
-                        <div className="text-[10.5px] text-dim">Agent Contact</div>
+                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_agent_contact')}</div>
                         <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_agent_contact}</div>
                       </div>
                     </div>
@@ -548,7 +550,7 @@ export function ListingDetailPanel({
                     <div className="px-4 py-3 flex items-center gap-3">
                       <TrendingUp size={14} style={{ color: TONE }} className="shrink-0" />
                       <div>
-                        <div className="text-[10.5px] text-dim">Commission Split</div>
+                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_commission')}</div>
                         <div className="text-[13.5px] font-bold text-ink">{listing.co_listing_commission_split}%</div>
                       </div>
                     </div>
@@ -561,7 +563,7 @@ export function ListingDetailPanel({
                       <div className="px-4 py-3 flex items-center gap-3">
                         <CheckCircle2 size={14} style={{ color: TONE }} className="shrink-0" />
                         <div>
-                          <div className="text-[10.5px] text-dim">Status</div>
+                          <div className="text-[10.5px] text-dim">{t('listing_panel.co_status')}</div>
                           <span
                             className="inline-flex items-center mt-0.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
                             style={{ background: chip.bg, color: chip.color }}
@@ -574,7 +576,7 @@ export function ListingDetailPanel({
                   })()}
                   {listing.co_listing_notes && (
                     <div className="px-4 py-3">
-                      <div className="text-[10.5px] text-dim mb-1">Notes / Agreement</div>
+                      <div className="text-[10.5px] text-dim mb-1">{t('listing_panel.co_notes')}</div>
                       <div className="text-[13px] text-ink whitespace-pre-line">{listing.co_listing_notes}</div>
                     </div>
                   )}
@@ -590,7 +592,7 @@ export function ListingDetailPanel({
                   value={reason}
                   onChange={e => setReason(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && reason.trim() && onReject(reason.trim())}
-                  placeholder="Reason for rejection…"
+                  placeholder={t('listing_panel.reason_ph')}
                   className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-red-400"
                   autoFocus
                 />
@@ -600,7 +602,7 @@ export function ListingDetailPanel({
                   className="px-4 py-2 rounded-lg text-[12px] font-bold text-white disabled:opacity-50 cursor-pointer shrink-0"
                   style={{ background: '#e10f1f' }}
                 >
-                  Confirm
+                  {t('listing_panel.confirm')}
                 </button>
               </div>
             )}
@@ -610,20 +612,20 @@ export function ListingDetailPanel({
         {/* ── Set as Deal inline form ───────────────────────────────────── */}
         {onSetDeal && dealOpen && (
           <div className="border-t border-amber-200 bg-amber-50/80 px-5 py-4 shrink-0 space-y-3">
-            <div className="text-[12px] font-semibold" style={{ color: '#c07800' }}>Set as Deal of the Week</div>
+            <div className="text-[12px] font-semibold" style={{ color: '#c07800' }}>{t('listing_panel.deal_set_title')}</div>
 
             {/* Discount type toggle */}
             <div className="flex rounded-lg border border-line overflow-hidden text-[12px] font-semibold bg-white">
-              {(['pct', 'fixed'] as const).map(t => (
+              {(['pct', 'fixed'] as const).map(dtype => (
                 <button
-                  key={t}
-                  onClick={() => setDiscountType(t)}
+                  key={dtype}
+                  onClick={() => setDiscountType(dtype)}
                   className="flex-1 py-2 cursor-pointer border-0 transition-colors"
-                  style={discountType === t
+                  style={discountType === dtype
                     ? { background: '#f0a800', color: 'white' }
                     : { background: 'white', color: '#6b7280' }}
                 >
-                  {t === 'pct' ? '% Discount' : '$ Off'}
+                  {dtype === 'pct' ? t('listing_panel.pct_discount') : t('listing_panel.fixed_discount')}
                 </button>
               ))}
             </div>
@@ -643,7 +645,7 @@ export function ListingDetailPanel({
                     : e.target.value.replace(/[^0-9.]/g, '')
                   setDiscountValue(raw)
                 }}
-                placeholder="Optional — leave blank for no discount"
+                placeholder={t('listing_panel.deal_discount_ph')}
                 className="flex-1 px-3 py-2 rounded-lg border border-amber-200 bg-white text-[13px] text-ink outline-none focus:border-amber-400"
               />
             </div>
@@ -656,13 +658,13 @@ export function ListingDetailPanel({
                 className="flex-1 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 border-0"
                 style={{ background: '#f59e0b' }}
               >
-                {dealWorking ? 'Setting…' : 'Confirm Deal'}
+                {dealWorking ? t('listing_panel.deal_setting') : t('listing_panel.deal_confirm')}
               </button>
               <button
                 onClick={() => { setDealOpen(false); setDiscountValue('') }}
                 className="px-4 py-2 rounded-lg text-[12px] font-semibold border border-line bg-white text-ink cursor-pointer"
               >
-                Cancel
+                {t('listing_panel.close')}
               </button>
             </div>
           </div>
@@ -678,14 +680,14 @@ export function ListingDetailPanel({
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer disabled:opacity-50"
                 style={{ background: '#1f7a3d' }}
               >
-                <Check size={14} strokeWidth={2.5} /> Approve
+                <Check size={14} strokeWidth={2.5} /> {t('listing_panel.approve')}
               </button>
               <button
                 onClick={() => setRejectOpen(v => !v)}
                 disabled={working}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-bold border border-line bg-paper text-ink cursor-pointer disabled:opacity-50"
               >
-                <X size={14} strokeWidth={2.5} /> Reject
+                <X size={14} strokeWidth={2.5} /> {t('listing_panel.reject')}
               </button>
             </>
           ) : (
@@ -695,7 +697,7 @@ export function ListingDetailPanel({
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[13px] font-bold text-white cursor-pointer disabled:opacity-50"
               style={{ background: TONE }}
             >
-              <Pencil size={14} /> Edit
+              <Pencil size={14} /> {t('listing_panel.edit')}
             </button>
           )}
           {isPending && (

@@ -13,16 +13,16 @@ function avatarTone(name: string): string {
   return AVATAR_TONES[h % AVATAR_TONES.length]
 }
 
-function fmtRelative(iso: string): string {
+function fmtRelative(iso: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60_000)
-  if (m < 1) return 'just now'
-  if (m < 60) return `${m}m ago`
+  if (m < 1) return t('rel.just_now')
+  if (m < 60) return t('rel.mins_ago', { count: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
+  if (h < 24) return t('rel.hrs_ago', { count: h })
   const d = Math.floor(h / 24)
-  if (d < 30) return `${d}d ago`
-  return `${Math.floor(d / 30)}mo ago`
+  if (d < 30) return t('rel.days_ago', { count: d })
+  return t('rel.months_ago', { count: Math.floor(d / 30) })
 }
 
 export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => void }) {
@@ -81,7 +81,7 @@ export function OwnerLeads({ tone, go }: { tone: string; go?: (v: string) => voi
                     <div className="text-[13.5px] font-bold text-ink">{l.name}</div>
                     <div className="text-[12.5px] text-ink2 leading-[1.35] my-0.75 line-clamp-2">{l.message}</div>
                     <div className="text-[11.5px] text-dim truncate">
-                      {l.listing_title ?? 'General inquiry'} · {fmtRelative(l.created_at)}
+                      {l.listing_title ?? t('leads_page.general_inquiry')} · {fmtRelative(l.created_at, t)}
                     </div>
                   </div>
                   <a

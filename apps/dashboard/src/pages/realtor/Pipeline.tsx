@@ -20,7 +20,7 @@ export function Pipeline() {
                 <span className="text-xs font-bold py-0.75 px-2.25 rounded-full" style={{ color: st, background: `${st}20` }}>{items.length}</span>
               </div>
               <div className="text-xs text-dim mt-0.75">
-                ${total >= 1_000_000 ? (total / 1_000_000).toFixed(2) + 'M' : (total / 1_000).toFixed(0) + 'K'} total
+                ${total >= 1_000_000 ? (total / 1_000_000).toFixed(2) + 'M' : (total / 1_000).toFixed(0) + 'K'} {t('pipeline_page.total')}
               </div>
             </div>
             <div className="p-3.5 flex flex-col gap-2.5">

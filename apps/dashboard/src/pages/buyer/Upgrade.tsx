@@ -109,7 +109,7 @@ function OwnerLeadForm({ onBack, onDone }: { onBack: () => void; onDone: () => v
       })
       onDone()
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error(t('upgrade_page.error'))
     } finally {
       setSubmitting(false)
     }
@@ -218,7 +218,7 @@ export function RealtorModal({ onClose, onDone }: { onClose: () => void; onDone:
       onDone(req)
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      toast.error(msg ?? 'Something went wrong. Please try again.')
+      toast.error(msg ?? t('upgrade_page.error'))
     } finally {
       setSubmitting(false)
     }

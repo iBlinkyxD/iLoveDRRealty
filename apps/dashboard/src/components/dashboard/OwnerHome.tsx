@@ -20,17 +20,16 @@ const STATUS_TONE_MAP: Record<string, string> = {
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function fmtRelative(dateStr: string): string {
+function fmtRelative(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1)    return 'just now'
-  if (mins < 60)   return `${mins}m ago`
+  if (mins < 1)   return t('rel.just_now')
+  if (mins < 60)  return t('rel.mins_ago', { count: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)    return `${hrs}h ago`
+  if (hrs < 24)   return t('rel.hrs_ago', { count: hrs })
   const days = Math.floor(hrs / 24)
-  if (days === 1)  return 'Yesterday'
-  if (days < 7)    return `${days}d ago`
-  return new Date(dateStr).toLocaleDateString()
+  if (days < 30)  return t('rel.days_ago', { count: days })
+  return t('rel.months_ago', { count: Math.floor(days / 30) })
 }
 
 function buildRevenueBar(bookings: Booking[]) {
@@ -285,7 +284,7 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
                   <div key={i} className="py-3 px-3.5 rounded-[10px] bg-[#F8F9FC] border border-line">
                     <div className="flex justify-between items-center mb-1">
                       <div className="text-[13px] font-bold text-ink">{b.guest_name ?? t('bookings.guest_fallback')}</div>
-                      <StatusPill label={b.status.charAt(0).toUpperCase() + b.status.slice(1)} />
+                      <StatusPill label={t(`bookings_page.status_${b.status}`, { defaultValue: b.status.charAt(0).toUpperCase() + b.status.slice(1) })} />
                     </div>
                     <div className="text-[11.5px] text-dim truncate">{b.listing_title} · {b.check_in} → {b.check_out}</div>
                   </div>
@@ -322,7 +321,7 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
                     <div className="flex-1 overflow-hidden">
                       <div className="text-[13px] font-bold text-ink">{l.name}</div>
                       <div className="text-xs text-ink2 leading-[1.35] mt-0.5 mb-0.75 line-clamp-2">{l.message}</div>
-                      <div className="text-[11px] text-dim">{fmtRelative(l.created_at)}</div>
+                      <div className="text-[11px] text-dim">{fmtRelative(l.created_at, t)}</div>
                     </div>
                   </div>
                 ))}

@@ -70,14 +70,24 @@
     "section_past":     "Past",
     "section_cancelled":"Cancelled",
     "action_required":  "Action required",
-    "accept":           "Accept",
-    "decline":          "Decline"
+    "accept":             "Accept",
+    "decline":            "Decline",
+    "guest_fallback":     "Guest",
+    "property_fallback":  "Property",
+    "night_one":          "{{count}} night",
+    "night_other":        "{{count}} nights",
+    "guest_count_one":    "{{count}} guest",
+    "guest_count_other":  "{{count}} guests",
+    "status_pending":     "Pending",
+    "status_confirmed":   "Confirmed",
+    "status_cancelled":   "Cancelled"
   },
   "leads_page": {
-    "title":       "All Leads",
-    "empty_title": "No leads yet",
-    "empty_sub":   "Buyer inquiries will show up here once your listing is live.",
-    "reply":       "Reply"
+    "title":           "All Leads",
+    "empty_title":     "No leads yet",
+    "empty_sub":       "Buyer inquiries will show up here once your listing is live.",
+    "reply":           "Reply",
+    "general_inquiry": "General inquiry"
   },
   "earnings_page": {
     "empty_title":        "No earnings yet",
@@ -88,7 +98,8 @@
     "kpi_avg":            "Avg/year",
     "chart_title":        "Monthly Revenue",
     "no_data_last_month": "No data last month",
-    "mom_vs":             "{{pct}}% vs last month"
+    "mom_vs":             "{{pct}}% vs last month",
+    "ytd_sub":            "Jan–{{end}} {{year}}"
   },
   "calendar_page": {
     "title":             "Booking Calendar",
@@ -106,6 +117,7 @@
     "empty_title":          "No listings yet",
     "empty_sub":            "Your realtor will add listings on your behalf once assigned.",
     "unassigned":           "Unassigned",
+    "no_realtor":           "No realtor",
     "search_ph":            "Search listings…",
     "request_change":       "Request Change",
     "deal_of_week":         "Deal of the Week",
@@ -128,6 +140,18 @@
     "header_views":         "Views",
     "header_leads":         "Leads",
     "header_realtor":       "Realtor",
-    "header_updated":       "Updated"
+    "header_updated":       "Updated",
+    "no_results":           "No results for \"{{query}}\"",
+    "no_filter_listings":   "No {{filter}} listings.",
+    "toast_request_sent":   "Request sent to your realtor.",
+    "toast_error":          "Something went wrong. Please try again."
+  },
+  "rel": {
+    "just_now":   "just now",
+    "mins_ago":   "{{count}}m ago",
+    "hrs_ago":    "{{count}}h ago",
+    "days_ago":   "{{count}}d ago",
+    "months_ago": "{{count}}mo ago",
+    "years_ago":  "{{count}}y ago"
   }
 }

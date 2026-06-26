@@ -26,14 +26,24 @@
     "view_all":       "View all →",
     "empty_heading":  "No saved homes yet",
     "empty_sub":      "Browse listings and heart the ones you love.",
-    "browse":         "Browse listings"
+    "browse":         "Browse listings",
+    "saved_label":    "Saved"
   },
   "inquiries": {
-    "title":          "My Inquiries",
-    "all":            "All →",
-    "empty_heading":  "No inquiries yet",
-    "empty_sub":      "Find a listing and reach out to get started.",
-    "browse":         "Browse listings"
+    "title":            "My Inquiries",
+    "all":              "All →",
+    "empty_heading":    "No inquiries yet",
+    "empty_sub":        "Find a listing and reach out to get started.",
+    "browse":           "Browse listings",
+    "general_inquiry":  "General inquiry",
+    "sent_label":       "Sent"
+  },
+  "rel": {
+    "just_now":  "just now",
+    "mins_ago":  "{{count}}m ago",
+    "hrs_ago":   "{{count}}h ago",
+    "days_ago":  "{{count}}d ago",
+    "months_ago":"{{count}}mo ago"
   },
   "upcoming_trip": {
     "title":   "Upcoming Trip",
@@ -58,7 +68,8 @@
     "table_message":   "Message",
     "table_sent":      "Sent",
     "table_status":    "Status",
-    "status_pending":  "Pending"
+    "status_pending":  "Pending",
+    "loading":         "Loading…"
   },
   "bookings_page": {
     "tab_all":              "All",
@@ -130,6 +141,7 @@
     "optional":             "(optional)",
     "cancel":               "Cancel",
     "submit_application":   "Submit Application",
-    "submitting":           "Submitting…"
+    "submitting":           "Submitting…",
+    "error":                "Something went wrong. Please try again."
   }
 }

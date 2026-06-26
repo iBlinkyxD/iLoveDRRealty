@@ -58,14 +58,14 @@ function fmtPhone(raw: string) {
   if (digits.length === 11) return `+${digits[0]} (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`
   return raw
 }
-function fmtRelative(iso: string) {
+function fmtRelative(iso: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 1)  return 'just now'
-  if (m < 60) return `${m}m ago`
+  if (m < 1)  return t('rel.just_now')
+  if (m < 60) return t('rel.mins_ago', { count: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
+  if (h < 24) return t('rel.hrs_ago', { count: h })
+  return t('rel.days_ago', { count: Math.floor(h / 24) })
 }
 function roleColor(role: string) {
   return ROLE_COLOR[role.charAt(0).toUpperCase() + role.slice(1)] ?? '#7884a0'
@@ -139,7 +139,7 @@ export function AdminUsers() {
     try {
       await suspendUser(u.id)
       setUsers(prev => prev.map(x => x.id === u.id ? { ...x, status: 'suspended' } : x))
-      toast.success(`${u.display_name ?? u.email} suspended.`)
+      toast.success(t('users_page.toast_suspended', { name: u.display_name ?? u.email }))
     } finally { setWorking(null) }
   }
 
@@ -148,7 +148,7 @@ export function AdminUsers() {
     try {
       await unsuspendUser(u.id)
       setUsers(prev => prev.map(x => x.id === u.id ? { ...x, status: 'active' } : x))
-      toast.success(`${u.display_name ?? u.email} restored.`)
+      toast.success(t('users_page.toast_restored', { name: u.display_name ?? u.email }))
     } finally { setWorking(null) }
   }
 
@@ -157,7 +157,7 @@ export function AdminUsers() {
     try {
       await approveUpgradeRequest(reqId)
       await load()
-      toast.success('Upgrade request approved.')
+      toast.success(t('users_page.toast_upgrade_approved'))
     } finally { setWorking(null) }
   }
 
@@ -167,7 +167,7 @@ export function AdminUsers() {
       await rejectUpgradeRequest(reqId, reason)
       setRejectOpenReqId(null)
       await load()
-      toast.success('Upgrade request rejected.')
+      toast.success(t('users_page.toast_upgrade_rejected'))
     } finally { setWorking(null) }
   }
 
@@ -308,12 +308,12 @@ export function AdminUsers() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
-                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize" style={{ background: `${avColor}14`, color: avColor }}>
-                          {currentRole}
+                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${avColor}14`, color: avColor }}>
+                          {t(`role_labels.${currentRole}`, { defaultValue: currentRole })}
                         </span>
                         <span className="text-[10px] text-dim">→</span>
-                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize" style={{ background: `${reqColor}14`, color: reqColor }}>
-                          {req.requested_role}
+                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${reqColor}14`, color: reqColor }}>
+                          {t(`role_labels.${req.requested_role}`, { defaultValue: req.requested_role })}
                         </span>
                         <button
                           onClick={() => handleApproveUpgrade(req.id)}
@@ -321,14 +321,14 @@ export function AdminUsers() {
                           className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0"
                           style={{ background: '#1f7a3d' }}
                         >
-                          <Check size={11} /> Approve
+                          <Check size={11} /> {t('users_page.approve')}
                         </button>
                         <button
                           onClick={() => { if (currentUser) setSelectedUser(currentUser); setRejectOpenReqId(req.id) }}
                           disabled={!!working}
                           className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink2 bg-paper cursor-pointer disabled:opacity-50"
                         >
-                          <X size={11} /> Reject
+                          <X size={11} /> {t('users_page.reject')}
                         </button>
                       </div>
                     </div>
@@ -402,14 +402,14 @@ export function AdminUsers() {
                     <div className="text-[12px] text-ink2">{fmt(u.created_at)}</div>
                     {/* Role */}
                     <div>
-                      <span className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full capitalize" style={{ color: rc, background: `${rc}18` }}>
-                        {u.role}
+                      <span className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full" style={{ color: rc, background: `${rc}18` }}>
+                        {t(`role_labels.${u.role}`, { defaultValue: u.role })}
                       </span>
                     </div>
                     {/* Status */}
                     <div>
                       <span className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full" style={{ color: st.color, background: st.bg }}>
-                        {st.label}
+                        {t(`users_page.account_status_${u.status}`, { defaultValue: st.label })}
                       </span>
                     </div>
                     {/* Actions */}
@@ -465,12 +465,12 @@ export function AdminUsers() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5 shrink-0">
-                        <span className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full" style={{ color: st.color, background: st.bg }}>{st.label}</span>
-                        <span className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full capitalize" style={{ color: rc, background: `${rc}18` }}>{u.role}</span>
+                        <span className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full" style={{ color: st.color, background: st.bg }}>{t(`users_page.account_status_${u.status}`, { defaultValue: st.label })}</span>
+                        <span className="text-[11.5px] font-bold px-2.5 py-0.75 rounded-full" style={{ color: rc, background: `${rc}18` }}>{t(`role_labels.${u.role}`, { defaultValue: u.role })}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-2.5">
-                      <span className="text-[11px] text-dim">Joined {fmtShort(u.created_at)}</span>
+                      <span className="text-[11px] text-dim">{t('users_page.joined', { date: fmtShort(u.created_at) })}</span>
                       {u.user_code != null && (
                         <span className="font-mono text-[10.5px] text-dim/60">· #{String(u.user_code).padStart(7, '0')}</span>
                       )}
@@ -515,7 +515,7 @@ export function AdminUsers() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[12px] text-ink leading-snug">{entry.description}</div>
-                    <div className="text-[10.5px] text-dim mt-0.5">{fmtRelative(entry.created_at)}</div>
+                    <div className="text-[10.5px] text-dim mt-0.5">{fmtRelative(entry.created_at, t)}</div>
                   </div>
                 </div>
               )

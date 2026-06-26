@@ -42,7 +42,7 @@ function BookingRow({
   acting: boolean
 }) {
   const { t } = useTranslation('owner')
-  const name = booking.guest_name ?? 'Guest'
+  const name = booking.guest_name ?? t('bookings_page.guest_fallback')
   const nights = nightsBetween(booking.check_in, booking.check_out)
 
   return (
@@ -59,20 +59,20 @@ function BookingRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[13.5px] font-semibold text-ink">{name}</span>
-          <StatusPill label={booking.status.charAt(0).toUpperCase() + booking.status.slice(1)} />
+          <StatusPill label={t(`bookings_page.status_${booking.status}`, { defaultValue: booking.status.charAt(0).toUpperCase() + booking.status.slice(1) })} />
           {actionable && (
             <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{t('bookings_page.action_required')}</span>
           )}
         </div>
-        <div className="text-[12px] text-ink2 mt-0.5 truncate font-medium">{booking.listing_title ?? 'Property'}</div>
+        <div className="text-[12px] text-ink2 mt-0.5 truncate font-medium">{booking.listing_title ?? t('bookings_page.property_fallback')}</div>
         <div className="flex items-center gap-3 mt-1 text-[11.5px] text-dim flex-wrap">
           <span className="flex items-center gap-1">
             <CalendarDays size={10} className="shrink-0" />
-            {fmtDate(booking.check_in)} – {fmtDate(booking.check_out)} · {nights} night{nights !== 1 ? 's' : ''}
+            {fmtDate(booking.check_in)} – {fmtDate(booking.check_out)} · {t('bookings_page.night', { count: nights })}
           </span>
           <span className="flex items-center gap-1">
             <Users size={10} className="shrink-0" />
-            {booking.guests} guest{booking.guests !== 1 ? 's' : ''}
+            {t('bookings_page.guest_count', { count: booking.guests })}
           </span>
         </div>
       </div>

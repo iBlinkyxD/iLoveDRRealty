@@ -18,6 +18,7 @@
   "analytics": "Analíticas",
   "owner-bookings": "Reservas de huéspedes",
   "portal_eyebrow": "Portal {{role}} · {{name}}",
+  "lang_toggle": "Idioma",
   "roles": {
     "Buyer": "Comprador",
     "Owner": "Propietario",

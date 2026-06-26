@@ -77,38 +77,47 @@ function LeadAvatar({ name, avatarUrl, color }: { name: string; avatarUrl: strin
   )
 }
 
-function fmtRelative(iso: string): string {
+const TYPE_KEY: Record<string, string> = {
+  property_inquiry: 'inquiry',
+  booking:          'booking',
+  buyer_interest:   'buyer',
+  seller_interest:  'seller',
+}
+
+function fmtRelative(iso: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60_000)
-  if (m < 1) return 'just now'
-  if (m < 60) return `${m}m ago`
+  if (m < 1) return t('rel.just_now')
+  if (m < 60) return t('rel.mins_ago', { count: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
+  if (h < 24) return t('rel.hrs_ago', { count: h })
   const d = Math.floor(h / 24)
-  if (d < 30) return `${d}d ago`
-  return `${Math.floor(d / 30)}mo ago`
+  if (d < 30) return t('rel.days_ago', { count: d })
+  return t('rel.months_ago', { count: Math.floor(d / 30) })
 }
 
 function TypeBadge({ type }: { type: string }) {
+  const { t } = useTranslation('realtor')
   const color = TYPE_COLOR[type] ?? '#64748b'
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold"
       style={{ background: `${color}18`, color }}
     >
-      {TYPE_LABEL[type] ?? type}
+      {t(`hot_leads.type_${TYPE_KEY[type] ?? type}`, { defaultValue: TYPE_LABEL[type] ?? type })}
     </span>
   )
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation('realtor')
   const color = STATUS_COLOR[status] ?? '#64748b'
   return (
     <span
       className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
       style={{ background: `${color}18`, color }}
     >
-      {STATUS_LABEL[status] ?? status}
+      {t(`leads_page.status_${status}`, { defaultValue: STATUS_LABEL[status] ?? status })}
     </span>
   )
 }
@@ -337,7 +346,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                   <div className="text-[12px] text-ink2 line-clamp-2">{lead.message ?? '—'}</div>
                   <div className="flex flex-col gap-1">
                     <StatusBadge status={lead.status} />
-                    <div className="text-[10.5px] text-dim">{fmtRelative(lead.created_at)}</div>
+                    <div className="text-[10.5px] text-dim">{fmtRelative(lead.created_at, t)}</div>
                   </div>
                 </div>
               ))}
@@ -353,7 +362,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <TypeBadge type={lead.type} />
-                    <div className="text-[11px] text-dim">{fmtRelative(lead.created_at)}</div>
+                    <div className="text-[11px] text-dim">{fmtRelative(lead.created_at, t)}</div>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <LeadAvatar name={lead.name} avatarUrl={lead.from_user_avatar_url} color={TYPE_COLOR[lead.type] ?? '#64748b'} />

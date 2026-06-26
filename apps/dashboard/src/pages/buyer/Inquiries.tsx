@@ -13,16 +13,16 @@ const STATUS_COLOR: Record<string, string> = {
   closed: '#94a3b8',
 }
 
-function fmtRelative(iso: string): string {
+function fmtRelative(iso: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const m = Math.floor(diff / 60_000)
-  if (m < 1) return 'just now'
-  if (m < 60) return `${m}m ago`
+  if (m < 1) return t('rel.just_now')
+  if (m < 60) return t('rel.mins_ago', { count: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
+  if (h < 24) return t('rel.hrs_ago', { count: h })
   const d = Math.floor(h / 24)
-  if (d < 30) return `${d}d ago`
-  return `${Math.floor(d / 30)}mo ago`
+  if (d < 30) return t('rel.days_ago', { count: d })
+  return t('rel.months_ago', { count: Math.floor(d / 30) })
 }
 
 export function Inquiries() {
@@ -40,7 +40,7 @@ export function Inquiries() {
   return (
     <Card title={<><MessageCircle size={14} />{t('inquiries_page.title')}</>} padded={false}>
       {loading ? (
-        <div className="px-5 py-8 text-[13px] text-dim text-center">Loading…</div>
+        <div className="px-5 py-8 text-[13px] text-dim text-center">{t('inquiries_page.loading')}</div>
       ) : inquiries.length === 0 ? (
         <div className="py-10 flex flex-col items-center gap-3">
           <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#e10f1f18' }}>
@@ -74,13 +74,13 @@ export function Inquiries() {
               {inquiries.map((inq, i) => (
                 <tr key={inq.id}>
                   <td className={`px-5 py-3 text-[13px] text-ink font-semibold max-w-45 truncate ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
-                    {inq.property_title ?? 'General inquiry'}
+                    {inq.property_title ?? t('inquiries.general_inquiry')}
                   </td>
                   <td className={`px-5 py-3 text-[13px] text-ink2 max-w-55 truncate ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
                     {inq.message ?? '—'}
                   </td>
                   <td className={`px-5 py-3 text-[13px] text-dim whitespace-nowrap ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
-                    {fmtRelative(inq.created_at)}
+                    {fmtRelative(inq.created_at, t)}
                   </td>
                   <td className={`px-5 py-3 ${i < inquiries.length - 1 ? 'border-b border-line' : ''}`}>
                     <span

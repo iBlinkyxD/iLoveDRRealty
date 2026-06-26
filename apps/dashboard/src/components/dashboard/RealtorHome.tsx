@@ -51,17 +51,16 @@ const STATUS_TONE_MAP: Record<string, string> = {
   active: '#1f7a3d', pending_approval: '#f0a800', rejected: '#e10f1f', archived: '#9ca3af',
 }
 
-function fmtRelative(dateStr: string): string {
+function fmtRelative(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1)   return 'just now'
-  if (mins < 60)  return `${mins}m ago`
+  if (mins < 1)  return t('rel.just_now')
+  if (mins < 60) return t('rel.mins_ago', { count: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)   return `${hrs}h ago`
+  if (hrs < 24)  return t('rel.hrs_ago', { count: hrs })
   const days = Math.floor(hrs / 24)
-  if (days === 1) return 'Yesterday'
-  if (days < 7)   return `${days}d ago`
-  return new Date(dateStr).toLocaleDateString()
+  if (days < 30) return t('rel.days_ago', { count: days })
+  return t('rel.months_ago', { count: Math.floor(days / 30) })
 }
 
 function avatarTone(name: string): string {
@@ -249,7 +248,7 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
                       <div className="flex-1 overflow-hidden">
                         <div className="flex justify-between items-center gap-2">
                           <div className="text-[13px] font-bold text-ink truncate">{lead.name}</div>
-                          <div className="text-[11px] text-dim shrink-0">{fmtRelative(lead.assigned_at ?? lead.created_at)}</div>
+                          <div className="text-[11px] text-dim shrink-0">{fmtRelative(lead.assigned_at ?? lead.created_at, t)}</div>
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-[10.5px] font-semibold px-1.5 py-px rounded-full" style={{ background: `${c}18`, color: c }}>

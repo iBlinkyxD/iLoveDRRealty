@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Camera, Save } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PhoneInput } from 'react-international-phone'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import 'react-international-phone/style.css'
@@ -11,6 +12,7 @@ import { updateProfile, uploadAvatar } from '../api/auth'
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488] disabled:bg-[#f4f5f7] disabled:text-dim'
 
 export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone: string }) {
+  const { t } = useTranslation('common')
   const [displayName, setDisplayName] = useState(user.display_name)
   const [phone, setPhone] = useState(user.phone ?? '')
   const [avatarSrc, setAvatarSrc] = useState(user.avatar_url ?? '')
@@ -29,10 +31,10 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
     try {
       const { avatar_url } = await uploadAvatar(file)
       setAvatarSrc(avatar_url)
-      toast.success('Profile picture updated')
+      toast.success(t('profile.toast_avatar_ok'))
     } catch (err: unknown) {
       setAvatarSrc(user.avatar_url ?? '')
-      toast.error(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(err instanceof Error ? err.message : t('profile.toast_upload_fail'))
     } finally {
       setAvatarUploading(false)
       e.target.value = ''
@@ -41,14 +43,14 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!displayName.trim()) { toast.error('Full name is required'); return }
-    if (phone && !isValidPhoneNumber(phone)) { toast.error('Enter a valid phone number'); return }
+    if (!displayName.trim()) { toast.error(t('profile.toast_name_required')); return }
+    if (phone && !isValidPhoneNumber(phone)) { toast.error(t('profile.toast_phone_invalid')); return }
     setSaving(true)
     try {
       await updateProfile({ display_name: displayName.trim(), phone: phone || undefined })
-      toast.success('Profile saved')
+      toast.success(t('profile.toast_profile_ok'))
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save profile')
+      toast.error(err instanceof Error ? err.message : t('profile.toast_save_fail'))
     } finally {
       setSaving(false)
     }
@@ -61,7 +63,7 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
         {/* Header */}
         <div className="px-5.5 py-4 border-b border-line flex items-center gap-2">
           <Camera size={15} className="text-ink2" />
-          <div className="font-sans text-[16px] font-bold text-ink">Profile</div>
+          <div className="font-sans text-[16px] font-bold text-ink">{t('profile.title')}</div>
         </div>
 
         {/* Avatar + identity */}
@@ -109,7 +111,7 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
               className="mt-1.5 text-[11.5px] font-semibold border-0 bg-transparent cursor-pointer p-0 transition-opacity disabled:opacity-50"
               style={{ color: tone }}
             >
-              {avatarUploading ? 'Uploading…' : 'Change photo'}
+              {avatarUploading ? t('profile.uploading') : t('profile.change_photo')}
             </button>
           </div>
         </div>
@@ -119,7 +121,7 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Full name</label>
+              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.label_name')}</label>
               <input
                 className={inp}
                 value={displayName}
@@ -129,7 +131,7 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
               />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Phone</label>
+              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.label_phone')}</label>
               <PhoneInput
                 defaultCountry="do"
                 value={phone}
@@ -145,11 +147,11 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Email</label>
+              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.label_email')}</label>
               <input className={inp} value={user.email} disabled />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">Role</label>
+              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">{t('profile.label_role')}</label>
               <input className={inp} value={role} disabled />
             </div>
           </div>
@@ -162,7 +164,7 @@ export function Profile({ user, role, tone }: { user: UserInfo; role: Role; tone
               style={{ background: tone }}
             >
               <Save size={13} />
-              {saving ? 'Saving…' : 'Save changes'}
+              {saving ? t('profile.saving') : t('profile.save')}
             </button>
           </div>
 

@@ -22,36 +22,37 @@ function fmtPrice(price: number): string {
   return `$${price}`
 }
 
-function fmtType(t: string) {
-  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()
+function fmtType(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
 }
 
-function fmtRelative(dateStr: string | null | undefined): string {
+function fmtRelative(dateStr: string | null | undefined, t: (key: string, opts?: Record<string, unknown>) => string): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1)    return 'just now'
-  if (mins < 60)   return `${mins}m ago`
+  if (mins < 1)    return t('rel.just_now')
+  if (mins < 60)   return t('rel.mins_ago', { count: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)    return `${hrs}h ago`
+  if (hrs < 24)    return t('rel.hrs_ago', { count: hrs })
   const days = Math.floor(hrs / 24)
-  if (days < 30)   return `${days}d ago`
+  if (days < 30)   return t('rel.days_ago', { count: days })
   const months = Math.floor(days / 30)
-  if (months < 12) return `${months}mo ago`
-  return `${Math.floor(months / 12)}y ago`
+  if (months < 12) return t('rel.months_ago', { count: months })
+  return t('rel.years_ago', { count: Math.floor(months / 12) })
 }
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
 
 function StatusChip({ status }: { status: string }) {
+  const { t } = useTranslation('common')
   const s = STATUS_MAP[status] ?? { label: status, bg: '#f3f4f6', color: '#6b7280' }
   return (
     <span
       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
       style={{ background: s.bg, color: s.color }}
     >
-      {s.label}
+      {t(`status_labels.${status}`, { defaultValue: s.label })}
     </span>
   )
 }
@@ -79,10 +80,10 @@ function RequestChangeModal({ listing, onClose }: { listing: Listing; onClose: (
         property_id: listing.id,
         message: message.trim(),
       })
-      toast.success('Request sent to your realtor.')
+      toast.success(t('listings_page.toast_request_sent'))
       onClose()
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error(t('listings_page.toast_error'))
     } finally {
       setSubmitting(false)
     }
@@ -420,7 +421,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
           </div>
         ) : visible.length === 0 ? (
           <div className="py-12 text-center text-sm text-dim">
-            {query.trim() ? `No results for "${query}"` : `No ${filter.toLowerCase()} listings.`}
+            {query.trim() ? t('listings_page.no_results', { query }) : t('listings_page.no_filter_listings', { filter: filter.toLowerCase() })}
           </div>
         ) : (
           <div className="divide-y divide-line-soft">
@@ -460,7 +461,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                     {l.submitted_by_name ?? t('listings_page.unassigned')}
                   </div>
                   {/* Updated */}
-                  <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at)}</div>
+                  <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at, t)}</div>
                   {/* Actions */}
                   <div onClick={e => e.stopPropagation()}>
                     <ActionMenu
@@ -495,7 +496,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                     </div>
                   </div>
                   <div className="text-[11px] text-dim mt-2">
-                    {fmtType(l.type)} · {l.view_count} views · {l.leads_count} leads · {l.submitted_by_name ? `Realtor: ${l.submitted_by_name}` : 'No realtor'} · Updated {fmtRelative(l.updated_at)}
+                    {fmtType(l.type)} · {l.view_count} {t('listings.views')} · {l.leads_count} {t('listings.leads')} · {l.submitted_by_name ? `${t('listings_page.header_realtor')}: ${l.submitted_by_name}` : t('listings_page.no_realtor')} · {t('listings_page.header_updated')} {fmtRelative(l.updated_at, t)}
                   </div>
                 </div>
               </div>

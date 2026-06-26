@@ -17,37 +17,39 @@ type ApprovalItem = {
   flag?: string
 }
 
-function fmtRelative(dateStr: string | null | undefined): string {
+type TFn = (key: string, opts?: Record<string, unknown>) => string
+
+function fmtRelative(dateStr: string | null | undefined, t: TFn): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1)  return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1)  return t('rel.just_now')
+  if (mins < 60) return t('rel.mins_ago', { count: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)  return `${hrs}h ago`
+  if (hrs < 24)  return t('rel.hrs_ago', { count: hrs })
   const days = Math.floor(hrs / 24)
-  if (days < 30) return `${days}d ago`
-  return `${Math.floor(days / 30)}mo ago`
+  if (days < 30) return t('rel.days_ago', { count: days })
+  return t('rel.months_ago', { count: Math.floor(days / 30) })
 }
 
-function toApprovalItem(l: AdminListing): ApprovalItem {
+function toApprovalItem(l: AdminListing, t: TFn): ApprovalItem {
   return {
     id: l.id,
     type: 'Listing',
     title: l.title,
     submittedBy: l.submitted_by_name ?? l.submitted_by,
-    time: fmtRelative(l.updated_at),
+    time: fmtRelative(l.updated_at, t),
   }
 }
 
-function upgradeToApprovalItem(r: AdminUpgradeRequest): ApprovalItem {
+function upgradeToApprovalItem(r: AdminUpgradeRequest, t: TFn): ApprovalItem {
   const role = r.requested_role.charAt(0).toUpperCase() + r.requested_role.slice(1)
   return {
     id: r.user_id,
     type: 'User',
-    title: `New ${role}: ${r.user_display_name}`,
+    title: t('home_page.new_role_item', { role, name: r.user_display_name }),
     submittedBy: r.user_email,
-    time: fmtRelative(r.created_at),
+    time: fmtRelative(r.created_at, t),
   }
 }
 
@@ -58,7 +60,7 @@ const LEAD_TYPE_LABEL: Record<string, string> = {
   seller_interest:  'Seller Interest',
 }
 
-function leadToApprovalItem(l: Lead): ApprovalItem {
+function leadToApprovalItem(l: Lead, t: TFn): ApprovalItem {
   const typeLabel = LEAD_TYPE_LABEL[l.type] ?? l.type
   const sub = [l.email, l.property_title].filter(Boolean).join(' · ')
   return {
@@ -66,7 +68,7 @@ function leadToApprovalItem(l: Lead): ApprovalItem {
     type: 'Lead',
     title: `${typeLabel}: ${l.name}`,
     submittedBy: sub,
-    time: fmtRelative(l.created_at),
+    time: fmtRelative(l.created_at, t),
   }
 }
 
@@ -143,9 +145,9 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
   }, [])
 
   const approvalQueue: ApprovalItem[] = [
-    ...newLeads.map(leadToApprovalItem),
-    ...pendingListings.map(toApprovalItem),
-    ...pendingUpgrades.map(upgradeToApprovalItem),
+    ...newLeads.map(l => leadToApprovalItem(l, t)),
+    ...pendingListings.map(l => toApprovalItem(l, t)),
+    ...pendingUpgrades.map(r => upgradeToApprovalItem(r, t)),
   ]
 
   const filtered = approvalQueue.filter(a => filter === 'All' || a.type === filter)
@@ -157,7 +159,7 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
     {
       label: t('home_page.kpi_pending'),
       value: pendingCount,
-      sub: `${newLeads.length} leads · ${pendingListings.length} listings · ${pendingUpgrades.length} requests`,
+      sub: t('home_page.kpi_pending_detail', { leads: newLeads.length, listings: pendingListings.length, requests: pendingUpgrades.length }),
       accent: pendingCount > 0 ? '#d97706' : undefined as string | undefined,
     },
     {
@@ -330,7 +332,7 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
                       <Icon size={15} className="shrink-0 mt-0.5" color={tone} />
                       <div className="flex-1">
                         <div className="text-[12.5px] text-ink leading-snug">{entry.description}</div>
-                        <div className="text-[11px] text-dim mt-0.5">{fmtRelative(entry.created_at)}</div>
+                        <div className="text-[11px] text-dim mt-0.5">{fmtRelative(entry.created_at, t)}</div>
                       </div>
                     </div>
                   )

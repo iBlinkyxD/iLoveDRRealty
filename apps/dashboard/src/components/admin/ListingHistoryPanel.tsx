@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   X, CheckCircle2, XCircle, Archive, Send, GitCompare, Clock, ChevronDown, ChevronUp,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getListingHistory } from '../../api/admin'
 import type { ListingEvent } from '../../api/admin'
 
@@ -36,17 +37,6 @@ type EventMeta = {
   color: string
   bg: string
 }
-
-const EVENT_META: Record<string, EventMeta> = {
-  submitted:      { label: 'Submitted',        Icon: Send,          color: '#0ea5e9', bg: '#e0f2fe' },
-  approved:       { label: 'Approved',          Icon: CheckCircle2,  color: '#16a34a', bg: '#dcfce7' },
-  rejected:       { label: 'Rejected',          Icon: XCircle,       color: '#dc2626', bg: '#fee2e2' },
-  archived:       { label: 'Archived',          Icon: Archive,       color: '#6b7280', bg: '#f3f4f6' },
-  edit_submitted: { label: 'Edit Submitted',    Icon: GitCompare,    color: '#7c3aed', bg: '#ede9fe' },
-  edit_approved:  { label: 'Edit Approved',     Icon: CheckCircle2,  color: '#16a34a', bg: '#dcfce7' },
-  edit_rejected:  { label: 'Edit Rejected',     Icon: XCircle,       color: '#dc2626', bg: '#fee2e2' },
-}
-const DEFAULT_META: EventMeta = { label: 'Event', Icon: Clock, color: '#6b7280', bg: '#f3f4f6' }
 
 // ── Diff labels (mirrors ListingEditDiffPanel) ─────────────────────────────────
 
@@ -88,14 +78,15 @@ function getChangedKeys(
 // ── Inline diff table ──────────────────────────────────────────────────────────
 
 function InlineDiff({ before, after }: { before: Record<string, unknown>; after: Record<string, unknown> }) {
+  const { t } = useTranslation('admin')
   const changed = getChangedKeys(before, after)
-  if (changed.length === 0) return <p className="text-[12px] text-dim">No field changes detected.</p>
+  if (changed.length === 0) return <p className="text-[12px] text-dim">{t('history_panel.no_changes')}</p>
   return (
     <div className="mt-3 rounded-xl border border-line overflow-hidden">
       <div className="grid grid-cols-[1fr_1fr_1fr] px-3 py-2 bg-nav/5 border-b border-line">
-        <div className="text-[10px] font-bold uppercase tracking-wide text-dim">Field</div>
-        <div className="text-[10px] font-bold uppercase tracking-wide text-dim">Before</div>
-        <div className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#d97706' }}>After</div>
+        <div className="text-[10px] font-bold uppercase tracking-wide text-dim">{t('history_panel.col_field')}</div>
+        <div className="text-[10px] font-bold uppercase tracking-wide text-dim">{t('history_panel.col_before')}</div>
+        <div className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#d97706' }}>{t('history_panel.col_after')}</div>
       </div>
       <div className="divide-y divide-line-soft">
         {changed.map(key => (
@@ -113,7 +104,20 @@ function InlineDiff({ before, after }: { before: Record<string, unknown>; after:
 // ── Event row ─────────────────────────────────────────────────────────────────
 
 function EventRow({ event }: { event: ListingEvent }) {
+  const { t } = useTranslation('admin')
   const [expanded, setExpanded] = useState(false)
+
+  const EVENT_META: Record<string, EventMeta> = {
+    submitted:      { label: t('history_panel.event_submitted'),      Icon: Send,         color: '#0ea5e9', bg: '#e0f2fe' },
+    approved:       { label: t('history_panel.event_approved'),       Icon: CheckCircle2, color: '#16a34a', bg: '#dcfce7' },
+    rejected:       { label: t('history_panel.event_rejected'),       Icon: XCircle,      color: '#dc2626', bg: '#fee2e2' },
+    archived:       { label: t('history_panel.event_archived'),       Icon: Archive,      color: '#6b7280', bg: '#f3f4f6' },
+    edit_submitted: { label: t('history_panel.event_edit_submitted'), Icon: GitCompare,   color: '#7c3aed', bg: '#ede9fe' },
+    edit_approved:  { label: t('history_panel.event_edit_approved'),  Icon: CheckCircle2, color: '#16a34a', bg: '#dcfce7' },
+    edit_rejected:  { label: t('history_panel.event_edit_rejected'),  Icon: XCircle,      color: '#dc2626', bg: '#fee2e2' },
+  }
+  const DEFAULT_META: EventMeta = { label: 'Event', Icon: Clock, color: '#6b7280', bg: '#f3f4f6' }
+
   const meta = EVENT_META[event.event_type] ?? DEFAULT_META
   const { Icon } = meta
   const hasDiff = (event.event_type === 'edit_approved') && event.snapshot_before && event.snapshot_after
@@ -166,7 +170,9 @@ function EventRow({ event }: { event: ListingEvent }) {
             style={{ color: '#d97706' }}
           >
             {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-            {expanded ? 'Hide changes' : `Show changes (${getChangedKeys(event.snapshot_before!, event.snapshot_after!).length} fields)`}
+            {expanded
+              ? t('history_panel.hide_changes')
+              : t('history_panel.show_changes', { count: getChangedKeys(event.snapshot_before!, event.snapshot_after!).length })}
           </button>
         )}
 
@@ -187,6 +193,7 @@ interface Props {
 }
 
 export function ListingHistoryPanel({ listingId, listingTitle, onClose }: Props) {
+  const { t } = useTranslation('admin')
   const [events, setEvents] = useState<ListingEvent[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -209,7 +216,7 @@ export function ListingHistoryPanel({ listingId, listingTitle, onClose }: Props)
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[14px] font-bold text-ink truncate">{listingTitle}</div>
-            <div className="text-[11px] text-dim">Listing History</div>
+            <div className="text-[11px] text-dim">{t('history_panel.subtitle')}</div>
           </div>
           <button
             onClick={onClose}
@@ -234,7 +241,7 @@ export function ListingHistoryPanel({ listingId, listingTitle, onClose }: Props)
               ))}
             </div>
           ) : events.length === 0 ? (
-            <div className="py-12 text-center text-sm text-dim">No history recorded yet.</div>
+            <div className="py-12 text-center text-sm text-dim">{t('history_panel.no_history')}</div>
           ) : (
             <div>
               {events.map(ev => <EventRow key={ev.id} event={ev} />)}

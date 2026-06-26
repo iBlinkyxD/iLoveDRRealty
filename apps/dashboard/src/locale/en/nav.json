@@ -18,6 +18,7 @@
   "analytics": "Analytics",
   "owner-bookings": "Guest Bookings",
   "portal_eyebrow": "{{role}} Portal · {{name}}",
+  "lang_toggle": "Language",
   "roles": {
     "Buyer": "Buyer",
     "Owner": "Owner",

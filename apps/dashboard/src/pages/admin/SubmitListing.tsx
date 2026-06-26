@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ImagePlus, X, Star, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { submitListing, updateListing, uploadListingImages } from '../../api/listings'
@@ -18,10 +19,10 @@ const FEATURES = [
 const BASE_TAGS = ['Luxury', 'New', 'Investment', 'Commercial', 'Pet Friendly', 'Short Term', 'Long Term', 'Furnished', 'Ocean View', 'Mountain View']
 const INCLUDED_UTILITIES = ['Water', 'Electricity', 'Gas', 'WiFi', 'Cable TV', 'Trash Removal', 'Pool Maintenance', 'Gardening', 'Security', 'Parking', 'Laundry']
 const DEPOSIT_OPTIONS = [
-  { value: 'first', label: 'First month' },
-  { value: 'last', label: 'Last month' },
+  { value: 'first',      label: 'First month' },
+  { value: 'last',       label: 'Last month' },
   { value: 'first_last', label: 'First + Last' },
-  { value: 'none', label: 'None' },
+  { value: 'none',       label: 'None' },
 ]
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488]'
@@ -62,15 +63,18 @@ function PhotoUploader({ tone, uploadedUrls, thumbnail, uploading, fileInputRef,
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onRemove: (url: string) => void; onSetThumbnail: (url: string) => void
 }) {
+  const { t } = useTranslation('admin')
   return (
     <div>
-      <Lbl>Property Photos</Lbl>
+      <Lbl>{t('submit_listing.lbl_property_photos')}</Lbl>
       <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
         className="w-full flex flex-col items-center gap-2 py-7 rounded-xl border-2 border-dashed cursor-pointer transition-colors disabled:opacity-50"
         style={{ borderColor: tone + '55', background: tone + '06' }}>
         <ImagePlus size={22} style={{ color: tone }} />
-        <span className="text-[13px] font-semibold" style={{ color: tone }}>{uploading ? 'Uploading…' : 'Click to upload photos'}</span>
-        <span className="text-[11.5px] text-dim">JPEG, JPG, PNG, WebP · max 25 MB each · up to 25 photos</span>
+        <span className="text-[13px] font-semibold" style={{ color: tone }}>
+          {uploading ? t('submit_listing.uploading') : t('submit_listing.upload_cta')}
+        </span>
+        <span className="text-[11.5px] text-dim">{t('submit_listing.upload_hint')}</span>
       </button>
       <input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/heic" multiple className="hidden" onChange={onFileChange} />
       {uploadedUrls.length > 0 && (
@@ -89,7 +93,9 @@ function PhotoUploader({ tone, uploadedUrls, thumbnail, uploading, fileInputRef,
                   <X size={11} color="white" />
                 </button>
                 {isThumb && (
-                  <div className="absolute bottom-0 inset-x-0 text-center text-[10px] font-bold text-white py-0.5" style={{ background: tone + 'cc' }}>Thumbnail</div>
+                  <div className="absolute bottom-0 inset-x-0 text-center text-[10px] font-bold text-white py-0.5" style={{ background: tone + 'cc' }}>
+                    {t('submit_listing.thumbnail')}
+                  </div>
                 )}
               </div>
             )
@@ -135,10 +141,11 @@ function AdminFormBody({
   customTags: string[]
   customUtilityInput: string; setCustomUtilityInput: (v: string) => void
   customUtilities: string[]
-  addCustomFeature: () => void; addCustomTag: () => void; removeCustomTag: (t: string) => void
+  addCustomFeature: () => void; addCustomTag: () => void; removeCustomTag: (tag: string) => void
   toggleFeature: (f: string) => void
   addCustomUtility: () => void; removeCustomUtility: (u: string) => void
 }) {
+  const { t } = useTranslation('admin')
   const features          = form.features as string[]
   const tags              = form.tags as string[]
   const videoLinks        = form.video_links as string[]
@@ -147,10 +154,10 @@ function AdminFormBody({
   const hoa               = form.hoa as boolean
   const association       = form.association as boolean
 
-  const allTagOptions = [...BASE_TAGS, ...customTags.filter(t => !BASE_TAGS.includes(t))]
+  const allTagOptions = [...BASE_TAGS, ...customTags.filter(tag => !BASE_TAGS.includes(tag))]
 
-  function toggleTag(t: string) {
-    set('tags', tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t])
+  function toggleTag(tag: string) {
+    set('tags', tags.includes(tag) ? tags.filter(x => x !== tag) : [...tags, tag])
   }
 
   function toggleIncluded(u: string) {
@@ -183,33 +190,37 @@ function AdminFormBody({
     setHoaFeeCurrency(newCurrency)
   }
 
+  const featureKey = (f: string) => `submit_listing.feature_${f.toLowerCase().replace(/ /g, '_')}`
+  const tagKey     = (tag: string) => `submit_listing.tag_${tag.toLowerCase().replace(/ /g, '_')}`
+  const utilKey    = (u: string) => `submit_listing.util_${u.toLowerCase().replace(/ /g, '_')}`
+
   let sn = 0
   const n = () => ++sn
 
   return (
     <>
       {/* 1 — Basic Info */}
-      <Sec n={n()} title="Basic Info" tone={tone}>
+      <Sec n={n()} title={t('submit_listing.sec_basic')} tone={tone}>
         <div className="space-y-4">
           <div>
-            <Lbl>Property Title *</Lbl>
+            <Lbl>{t('submit_listing.lbl_property_title')}</Lbl>
             <input className={inp} value={form.title as string} onChange={e => set('title', e.target.value)} placeholder="e.g. Oceanfront Villa with Infinity Pool" required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Lbl>Property Type</Lbl>
+              <Lbl>{t('submit_listing.lbl_property_type')}</Lbl>
               <select className={inp + ' cursor-pointer'} value={form.type as string} onChange={e => set('type', e.target.value)}>
-                {TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+                {TYPES.map(tp => <option key={tp} value={tp}>{t(`submit_listing.type_${tp}`, { defaultValue: tp.charAt(0).toUpperCase() + tp.slice(1) })}</option>)}
               </select>
             </div>
             <div>
-              <Lbl>Purpose</Lbl>
+              <Lbl>{t('submit_listing.lbl_purpose')}</Lbl>
               <div className="flex gap-2">
                 {(['sale', 'rent'] as const).map(p => (
                   <button key={p} type="button" onClick={() => set('transaction', p)}
                     className="flex-1 py-2.5 rounded-lg text-[13px] font-semibold border cursor-pointer transition-all"
                     style={{ background: form.transaction === p ? tone : 'white', color: form.transaction === p ? 'white' : '#64748b', borderColor: form.transaction === p ? tone : '#e2e8f0' }}>
-                    For {p.charAt(0).toUpperCase() + p.slice(1)}
+                    {p === 'sale' ? t('submit_listing.for_sale') : t('submit_listing.for_rent')}
                   </button>
                 ))}
               </div>
@@ -218,16 +229,16 @@ function AdminFormBody({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="flex items-center h-7 mb-1.5">
-                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Region *</div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing.lbl_region')}</div>
               </div>
               <select className={inp + ' cursor-pointer'} value={form.location as string} onChange={e => set('location', e.target.value)} required>
-                <option value="">Select region…</option>
+                <option value="">{t('submit_listing.select_region')}</option>
                 {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Price *</div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing.lbl_price')}</div>
                 <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
                   {(['USD', 'DOP'] as const).map(c => (
                     <button key={c} type="button" onClick={() => handleCurrencyToggle(c)} className="px-2.5 py-1 transition-colors cursor-pointer"
@@ -242,30 +253,30 @@ function AdminFormBody({
               {(form.price as string) ? (
                 <p className="text-[11.5px] text-dim mt-1">
                   {priceCurrency === 'USD'
-                    ? `≈ RD$${Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US')} DOP`
-                    : `≈ $${Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US')} USD · rate: ${dopRate.toFixed(1)} DOP/USD`}
+                    ? t('submit_listing.price_hint_dop', { amount: Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US') })
+                    : t('submit_listing.price_hint_usd_rate', { amount: Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US'), rate: dopRate.toFixed(1) })}
                 </p>
               ) : null}
             </div>
           </div>
           <div>
-            <Lbl>Description</Lbl>
+            <Lbl>{t('submit_listing.lbl_description')}</Lbl>
             <RichTextEditor value={form.description as string} onChange={v => set('description', v)} tone={tone} />
           </div>
         </div>
       </Sec>
 
       {/* 2 — Property Details */}
-      <Sec n={n()} title="Property Details" tone={tone}>
+      <Sec n={n()} title={t('submit_listing.sec_details')} tone={tone}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { key: 'bedrooms',      label: 'Bedrooms',          ph: '3',    step: '1'   },
-            { key: 'bathrooms',     label: 'Bathrooms',         ph: '1.5',  step: '0.5' },
-            { key: 'area_sqft',     label: 'Living Area (ft²)', ph: '2400', step: '1'   },
-            { key: 'lot_size_sqft', label: 'Lot Size (ft²)',    ph: '5000', step: '1'   },
-          ].map(({ key, label, ph, step }) => (
+            { key: 'bedrooms',      lbl: t('submit_listing.lbl_bedrooms'),  ph: '3',    step: '1'   },
+            { key: 'bathrooms',     lbl: t('submit_listing.lbl_bathrooms'), ph: '1.5',  step: '0.5' },
+            { key: 'area_sqft',     lbl: t('submit_listing.lbl_area'),      ph: '2400', step: '1'   },
+            { key: 'lot_size_sqft', lbl: t('submit_listing.lbl_lot'),       ph: '5000', step: '1'   },
+          ].map(({ key, lbl, ph, step }) => (
             <div key={key}>
-              <Lbl>{label}</Lbl>
+              <Lbl>{lbl}</Lbl>
               <input className={inp} type="number" step={step} value={form[key] as string} onChange={e => set(key, e.target.value)} placeholder={ph} min="0" />
             </div>
           ))}
@@ -273,20 +284,20 @@ function AdminFormBody({
       </Sec>
 
       {/* 3 — Construction */}
-      <Sec n={n()} title="Construction" tone={tone}>
+      <Sec n={n()} title={t('submit_listing.sec_construction')} tone={tone}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Lbl>Construction Status</Lbl>
+            <Lbl>{t('submit_listing.lbl_construction_status')}</Lbl>
             <select className={inp + ' cursor-pointer'} value={form.construction_status as string} onChange={e => set('construction_status', e.target.value)}>
-              <option value="">Not specified</option>
-              <option value="pre_construction">Pre-construction</option>
-              <option value="under_construction">Under construction</option>
-              <option value="completed">Completed</option>
+              <option value="">{t('submit_listing.construction_none')}</option>
+              <option value="pre_construction">{t('submit_listing.construction_pre')}</option>
+              <option value="under_construction">{t('submit_listing.construction_under')}</option>
+              <option value="completed">{t('submit_listing.construction_done')}</option>
             </select>
           </div>
           {form.construction_status === 'completed' && (
             <div>
-              <Lbl>Year Built</Lbl>
+              <Lbl>{t('submit_listing.lbl_year_built')}</Lbl>
               <input className={inp} type="number" value={form.year_built as string} onChange={e => set('year_built', e.target.value)} placeholder="e.g. 2019" min="1900" max={new Date().getFullYear()} />
             </div>
           )}
@@ -294,27 +305,27 @@ function AdminFormBody({
       </Sec>
 
       {/* 4 — Financials (dynamic based on sale/rent) */}
-      <Sec n={n()} title="Financials" tone={tone}>
+      <Sec n={n()} title={t('submit_listing.sec_financials')} tone={tone}>
         {isRent ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <FormToggle value={association} onChange={v => { set('association', v); if (!v) set('association_fee', '') }} label="Association Fee" tone={tone} />
+              <FormToggle value={association} onChange={v => { set('association', v); if (!v) set('association_fee', '') }} label={t('submit_listing.toggle_assoc_fee')} tone={tone} />
               {association && (
                 <div>
-                  <Lbl>Monthly Association Fee (USD)</Lbl>
+                  <Lbl>{t('submit_listing.lbl_assoc_fee')}</Lbl>
                   <input className={inp} type="number" value={form.association_fee as string} onChange={e => set('association_fee', e.target.value)} placeholder="e.g. 200" min="0" />
                 </div>
               )}
             </div>
             <div>
-              <Lbl>Security Deposit</Lbl>
+              <Lbl>{t('submit_listing.lbl_deposit')}</Lbl>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
                 {DEPOSIT_OPTIONS.map(opt => (
                   <button key={opt.value} type="button"
                     onClick={() => set('deposit_policy', form.deposit_policy === opt.value ? '' : opt.value)}
                     className="py-2.5 rounded-lg text-[13px] font-semibold border cursor-pointer transition-all"
                     style={{ background: form.deposit_policy === opt.value ? tone : 'white', color: form.deposit_policy === opt.value ? 'white' : '#64748b', borderColor: form.deposit_policy === opt.value ? tone : '#e2e8f0' }}>
-                    {opt.label}
+                    {t(`submit_listing.deposit_${opt.value}`, { defaultValue: opt.label })}
                   </button>
                 ))}
               </div>
@@ -324,18 +335,18 @@ function AdminFormBody({
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Lbl>Est. Annual ROI (%)</Lbl>
+                <Lbl>{t('submit_listing.lbl_roi')}</Lbl>
                 <input className={inp} type="number" step="0.1" value={form.roi as string} onChange={e => set('roi', e.target.value)} placeholder="e.g. 8.5" min="0" max="100" />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <FormToggle value={form.seller_financing as boolean} onChange={v => set('seller_financing', v)} label="Seller Financing Available" tone={tone} />
-              <FormToggle value={form.tax_exempt as boolean} onChange={v => set('tax_exempt', v)} label="CONFOTUR Tax Exempt" tone={tone} />
-              <FormToggle value={hoa} onChange={v => { set('hoa', v); if (!v) { set('hoa_fee', ''); setHoaFeeCurrency('USD') } }} label="HOA Community" tone={tone} />
+              <FormToggle value={form.seller_financing as boolean} onChange={v => set('seller_financing', v)} label={t('submit_listing.toggle_seller_fin')} tone={tone} />
+              <FormToggle value={form.tax_exempt as boolean} onChange={v => set('tax_exempt', v)} label={t('submit_listing.toggle_tax_exempt')} tone={tone} />
+              <FormToggle value={hoa} onChange={v => { set('hoa', v); if (!v) { set('hoa_fee', ''); setHoaFeeCurrency('USD') } }} label={t('submit_listing.toggle_hoa')} tone={tone} />
               {hoa && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Monthly HOA Fee</div>
+                    <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing.lbl_hoa_fee')}</div>
                     <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
                       {(['USD', 'DOP'] as const).map(c => (
                         <button key={c} type="button" onClick={() => handleHoaFeeCurrencyToggle(c)} className="px-2.5 py-1 transition-colors cursor-pointer"
@@ -350,8 +361,8 @@ function AdminFormBody({
                   {(form.hoa_fee as string) ? (
                     <p className="text-[11.5px] text-dim mt-1">
                       {hoaFeeCurrency === 'USD'
-                        ? `≈ RD$${Math.round(parseFloat(form.hoa_fee as string) * dopRate).toLocaleString('en-US')} DOP`
-                        : `≈ $${Math.round(parseFloat(form.hoa_fee as string) / dopRate).toLocaleString('en-US')} USD`}
+                        ? t('submit_listing.price_hint_dop', { amount: Math.round(parseFloat(form.hoa_fee as string) * dopRate).toLocaleString('en-US') })
+                        : t('submit_listing.price_hint_usd', { amount: Math.round(parseFloat(form.hoa_fee as string) / dopRate).toLocaleString('en-US') })}
                     </p>
                   ) : null}
                 </div>
@@ -362,11 +373,11 @@ function AdminFormBody({
       </Sec>
 
       {/* 5 — Community & Features */}
-      <Sec n={n()} title="Community & Features" tone={tone}>
+      <Sec n={n()} title={t('submit_listing.sec_features')} tone={tone}>
         <div className="space-y-4">
-          <FormToggle value={form.gated_community as boolean} onChange={v => set('gated_community', v)} label="Gated Community" tone={tone} />
+          <FormToggle value={form.gated_community as boolean} onChange={v => set('gated_community', v)} label={t('submit_listing.toggle_gated')} tone={tone} />
           <div>
-            <Lbl>Property Features</Lbl>
+            <Lbl>{t('submit_listing.lbl_property_features')}</Lbl>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
               {FEATURES.map(f => {
                 const active = features.includes(f)
@@ -377,7 +388,7 @@ function AdminFormBody({
                     <div className="w-3.5 h-3.5 rounded border shrink-0 grid place-items-center transition-colors" style={{ borderColor: active ? tone : '#cbd5e1', background: active ? tone : 'white' }}>
                       {active && <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                     </div>
-                    {f}
+                    {t(featureKey(f), { defaultValue: f })}
                   </button>
                 )
               })}
@@ -399,10 +410,10 @@ function AdminFormBody({
               <input className={inp + ' flex-1'} type="text" value={customInput}
                 onChange={e => setCustomInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomFeature() } }}
-                placeholder="e.g. Pool, Ocean View, Smart Home" />
+                placeholder={t('submit_listing.ph_feature')} />
               <button type="button" onClick={addCustomFeature} disabled={!customInput.trim()}
                 className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
-                style={{ background: tone, color: 'white' }}>Add</button>
+                style={{ background: tone, color: 'white' }}>{t('submit_listing.add')}</button>
             </div>
           </div>
         </div>
@@ -410,8 +421,8 @@ function AdminFormBody({
 
       {/* 6 — What is Included (rent only) */}
       {isRent && (
-        <Sec n={n()} title="What is Included" tone={tone}>
-          <p className="text-[12.5px] text-dim mb-3">Select everything included in the monthly rent.</p>
+        <Sec n={n()} title={t('submit_listing.sec_included')} tone={tone}>
+          <p className="text-[12.5px] text-dim mb-3">{t('submit_listing.included_hint')}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {INCLUDED_UTILITIES.map(u => {
               const active = includedUtilities.includes(u)
@@ -422,7 +433,7 @@ function AdminFormBody({
                   <div className="w-3.5 h-3.5 rounded border shrink-0 grid place-items-center transition-colors" style={{ borderColor: active ? tone : '#cbd5e1', background: active ? tone : 'white' }}>
                     {active && <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                   </div>
-                  {u}
+                  {t(utilKey(u), { defaultValue: u })}
                 </button>
               )
             })}
@@ -444,16 +455,16 @@ function AdminFormBody({
             <input className={inp + ' flex-1'} type="text" value={customUtilityInput}
               onChange={e => setCustomUtilityInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomUtility() } }}
-              placeholder="e.g. Hot Water, Air Conditioning" />
+              placeholder={t('submit_listing.ph_utility')} />
             <button type="button" onClick={addCustomUtility} disabled={!customUtilityInput.trim()}
               className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
-              style={{ background: tone, color: 'white' }}>Add</button>
+              style={{ background: tone, color: 'white' }}>{t('submit_listing.add')}</button>
           </div>
         </Sec>
       )}
 
       {/* 7 — Media & Location */}
-      <Sec n={n()} title="Media & Location" tone={tone}>
+      <Sec n={n()} title={t('submit_listing.sec_media')} tone={tone}>
         <div className="space-y-4">
           <PhotoUploader
             tone={tone} uploadedUrls={uploadedUrls} thumbnail={thumbnail} uploading={uploading}
@@ -462,7 +473,7 @@ function AdminFormBody({
 
           {/* Video links */}
           <div>
-            <Lbl>Video Links</Lbl>
+            <Lbl>{t('submit_listing.lbl_video_links')}</Lbl>
             <div className="space-y-2">
               {videoLinks.map((url, i) => (
                 <div key={i} className="flex gap-2">
@@ -478,18 +489,18 @@ function AdminFormBody({
             <button type="button" onClick={addVideoLink}
               className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold cursor-pointer border-0 bg-transparent transition-opacity hover:opacity-70"
               style={{ color: tone }}>
-              <Plus size={14} /> Add video link
+              <Plus size={14} /> {t('submit_listing.add_video')}
             </button>
           </div>
 
           {/* 3D Tour */}
           <div>
-            <Lbl>3D Tour Link</Lbl>
+            <Lbl>{t('submit_listing.lbl_3d_tour')}</Lbl>
             <input className={inp} type="url" value={form.tour_3d_url as string} onChange={e => set('tour_3d_url', e.target.value)} placeholder="https://my.matterport.com/show/…" />
           </div>
 
           <div>
-            <Lbl>Google Maps URL</Lbl>
+            <Lbl>{t('submit_listing.lbl_maps_url')}</Lbl>
             <input className={inp} type="url" value={form.maps_url as string} onChange={e => {
               const url = e.target.value; set('maps_url', url)
               const coords = parseLatLng(url)
@@ -498,27 +509,27 @@ function AdminFormBody({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Lbl>Latitude</Lbl>
+              <Lbl>{t('submit_listing.lbl_latitude')}</Lbl>
               <input className={inp} type="number" step="any" value={form.latitude as string} onChange={e => set('latitude', e.target.value)} placeholder="e.g. 18.5816" />
             </div>
             <div>
-              <Lbl>Longitude</Lbl>
+              <Lbl>{t('submit_listing.lbl_longitude')}</Lbl>
               <input className={inp} type="number" step="any" value={form.longitude as string} onChange={e => set('longitude', e.target.value)} placeholder="e.g. -68.4068" />
             </div>
           </div>
-          <p className="text-[11.5px] text-dim -mt-1">Coordinates are auto-filled when you paste a full Google Maps link. You can also enter them manually.</p>
+          <p className="text-[11.5px] text-dim -mt-1">{t('submit_listing.maps_hint')}</p>
         </div>
       </Sec>
 
       {/* 8 — Utilities */}
-      <Sec n={n()} title="Utilities" tone={tone}>
-        <Lbl>Utility Notes</Lbl>
+      <Sec n={n()} title={t('submit_listing.sec_utilities')} tone={tone}>
+        <Lbl>{t('submit_listing.lbl_utility_notes')}</Lbl>
         <RichTextEditor value={form.utilities as string} onChange={v => set('utilities', v)} tone={tone} />
-        <p className="text-[11.5px] text-dim mt-1">Describe utility availability, backup systems, or anything relevant to the property's services.</p>
+        <p className="text-[11.5px] text-dim mt-1">{t('submit_listing.utilities_hint')}</p>
       </Sec>
 
       {/* 9 — Co-Listing */}
-      <Sec n={n()} title="Co-Listing" tone={tone}>
+      <Sec n={n()} title={t('submit_listing.sec_colisting')} tone={tone}>
         <div className="space-y-4">
           <FormToggle
             value={form.co_listing_enabled as boolean}
@@ -533,33 +544,33 @@ function AdminFormBody({
                 set('co_listing_status', '')
               }
             }}
-            label="Co-Listing Enabled"
+            label={t('submit_listing.toggle_colisting')}
             tone={tone}
           />
           {(form.co_listing_enabled as boolean) && (
             <div className="space-y-4 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Lbl>External Brokerage Name</Lbl>
+                  <Lbl>{t('submit_listing.lbl_ext_brokerage')}</Lbl>
                   <input className={inp} value={form.co_listing_brokerage as string} onChange={e => set('co_listing_brokerage', e.target.value)} placeholder="e.g. Century 21 DR" />
                 </div>
                 <div>
-                  <Lbl>External Agent Name</Lbl>
+                  <Lbl>{t('submit_listing.lbl_ext_agent')}</Lbl>
                   <input className={inp} value={form.co_listing_agent_name as string} onChange={e => set('co_listing_agent_name', e.target.value)} placeholder="e.g. María López" />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Lbl>External Agent Contact</Lbl>
+                  <Lbl>{t('submit_listing.lbl_ext_contact')}</Lbl>
                   <input className={inp} value={form.co_listing_agent_contact as string} onChange={e => set('co_listing_agent_contact', e.target.value)} placeholder="Phone or email" />
                 </div>
                 <div>
-                  <Lbl>Commission Split (%)</Lbl>
+                  <Lbl>{t('submit_listing.lbl_commission')}</Lbl>
                   <input className={inp} type="number" step="0.1" min="0" max="100" value={form.co_listing_commission_split as string} onChange={e => set('co_listing_commission_split', e.target.value)} placeholder="e.g. 50" />
                 </div>
               </div>
               <div>
-                <Lbl>Status</Lbl>
+                <Lbl>{t('submit_listing.lbl_co_status')}</Lbl>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {CO_LISTING_STATUSES.map(s => (
                     <button
@@ -573,13 +584,13 @@ function AdminFormBody({
                         borderColor: form.co_listing_status === s.value ? tone : '#e2e8f0',
                       }}
                     >
-                      {s.label}
+                      {t(`submit_listing.co_status_${s.value}`, { defaultValue: s.label })}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <Lbl>Notes / Agreement Details</Lbl>
+                <Lbl>{t('submit_listing.lbl_co_notes')}</Lbl>
                 <textarea
                   className={inp + ' resize-none'}
                   rows={3}
@@ -594,18 +605,20 @@ function AdminFormBody({
       </Sec>
 
       {/* 10 — Listing Tags */}
-      <Sec n={n()} title="Listing Tags" tone={tone}>
-        <Lbl>Tags (select all that apply)</Lbl>
+      <Sec n={n()} title={t('submit_listing.sec_tags')} tone={tone}>
+        <Lbl>{t('submit_listing.lbl_tags')}</Lbl>
         <div className="flex flex-wrap gap-2 mt-1">
-          {allTagOptions.map(t => {
-            const active = tags.includes(t)
-            const isCustom = !BASE_TAGS.includes(t)
+          {allTagOptions.map(tag => {
+            const active = tags.includes(tag)
+            const isCustom = !BASE_TAGS.includes(tag)
             return (
-              <span key={t} className="inline-flex items-center rounded-full border text-[13px] font-semibold transition-all"
+              <span key={tag} className="inline-flex items-center rounded-full border text-[13px] font-semibold transition-all"
                 style={{ borderColor: active ? tone : '#e2e8f0', background: active ? tone : 'white', color: active ? 'white' : '#64748b' }}>
-                <button type="button" onClick={() => toggleTag(t)} className="pl-4 pr-2 py-2 cursor-pointer bg-transparent border-0 font-semibold text-[13px]" style={{ color: 'inherit' }}>{t}</button>
+                <button type="button" onClick={() => toggleTag(tag)} className="pl-4 pr-2 py-2 cursor-pointer bg-transparent border-0 font-semibold text-[13px]" style={{ color: 'inherit' }}>
+                  {isCustom ? tag : t(tagKey(tag), { defaultValue: tag })}
+                </button>
                 {isCustom && (
-                  <button type="button" onClick={() => { removeCustomTag(t); set('tags', tags.filter(x => x !== t)) }}
+                  <button type="button" onClick={() => { removeCustomTag(tag); set('tags', tags.filter(x => x !== tag)) }}
                     className="pr-3 py-2 cursor-pointer bg-transparent border-0 text-[11px] leading-none" style={{ color: 'inherit' }}>×</button>
                 )}
                 {!isCustom && <span className="pr-4" />}
@@ -617,10 +630,10 @@ function AdminFormBody({
           <input className={inp + ' flex-1'} type="text" value={customTagInput}
             onChange={e => setCustomTagInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTag() } }}
-            placeholder="Add custom tag…" />
+            placeholder={t('submit_listing.add_custom_tag')} />
           <button type="button" onClick={addCustomTag} disabled={!customTagInput.trim()}
             className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
-            style={{ background: tone, color: 'white' }}>Add</button>
+            style={{ background: tone, color: 'white' }}>{t('submit_listing.add')}</button>
         </div>
       </Sec>
     </>
@@ -660,6 +673,7 @@ const EMPTY_FORM = {
 }
 
 export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone: string }) {
+  const { t } = useTranslation('admin')
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
@@ -703,8 +717,8 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
     setCustomTagInput('')
   }
 
-  function removeCustomTag(t: string) {
-    setCustomTags(prev => prev.filter(x => x !== t))
+  function removeCustomTag(tag: string) {
+    setCustomTags(prev => prev.filter(x => x !== tag))
   }
 
   function addCustomUtility() {
@@ -724,12 +738,12 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
-    if (uploadedUrls.length + files.length > 25) { toast.error('Maximum 25 photos allowed.'); return }
+    if (uploadedUrls.length + files.length > 25) { toast.error(t('submit_listing.toast_max_photos')); return }
     setUploading(true)
     try {
       const newUrls = await uploadListingImages(files)
       setUploadedUrls(prev => { const merged = [...prev, ...newUrls]; if (!thumbnail) setThumbnail(merged[0]); return merged })
-    } catch { toast.error('Upload failed. Check file types (JPEG, PNG, WebP) and sizes (max 25 MB).') }
+    } catch { toast.error(t('submit_listing.toast_upload_fail')) }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
@@ -739,7 +753,7 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.title.trim() || !form.location || !form.price) { toast.error('Title, region, and price are required.'); return }
+    if (!form.title.trim() || !form.location || !form.price) { toast.error(t('submit_listing.toast_required')); return }
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
@@ -783,10 +797,10 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
         co_listing_notes: form.co_listing_notes.trim() || undefined,
         co_listing_status: form.co_listing_status || undefined,
       })
-      toast.success('Listing published successfully.')
+      toast.success(t('submit_listing.toast_published'))
       setForm(EMPTY_FORM); setUploadedUrls([]); setThumbnail(null)
       go('listings')
-    } catch { toast.error('Something went wrong. Please try again.') }
+    } catch { toast.error(t('submit_listing.toast_error')) }
     finally { setSubmitting(false) }
   }
 
@@ -794,7 +808,7 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
     <div className="max-w-3xl mx-auto">
       <button type="button" onClick={() => go('listings')}
         className="flex items-center gap-1.5 text-dim text-[13px] mb-6 bg-transparent border-0 cursor-pointer hover:text-ink transition-colors">
-        <ArrowLeft size={14} /> Back to Listings
+        <ArrowLeft size={14} /> {t('submit_listing.back_to_listings')}
       </button>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -813,9 +827,11 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
           customUtilities={customUtilities} addCustomUtility={addCustomUtility} removeCustomUtility={removeCustomUtility}
         />
         <div className="flex gap-3 pt-2 pb-6">
-          <button type="button" onClick={() => go('listings')} className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer">Cancel</button>
+          <button type="button" onClick={() => go('listings')} className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer">
+            {t('submit_listing.cancel')}
+          </button>
           <button type="submit" disabled={submitting} className="px-8 py-3 rounded-full text-white text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 transition-opacity" style={{ background: tone }}>
-            {submitting ? 'Publishing…' : 'Publish Listing'}
+            {submitting ? t('submit_listing.publishing') : t('submit_listing.publish')}
           </button>
         </div>
       </form>
@@ -828,6 +844,7 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
 export function AdminEditListing({ listing, onBack, onSaved }: {
   listing: AdminListing; onBack: () => void; onSaved: (updated: AdminListing) => void
 }) {
+  const { t } = useTranslation('admin')
   const [form, setFormState] = useState({
     title:               listing.title,
     type:                listing.type,
@@ -878,7 +895,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
   const [customInput, setCustomInput] = useState('')
   const [customTagInput, setCustomTagInput] = useState('')
   const [customTags, setCustomTags] = useState<string[]>(() =>
-    (listing.tags ?? []).filter(t => !BASE_TAGS.includes(t))
+    (listing.tags ?? []).filter(tag => !BASE_TAGS.includes(tag))
   )
   const [customUtilityInput, setCustomUtilityInput] = useState('')
   const [customUtilities, setCustomUtilities] = useState<string[]>(() =>
@@ -914,8 +931,8 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
     setCustomTagInput('')
   }
 
-  function removeCustomTag(t: string) {
-    setCustomTags(prev => prev.filter(x => x !== t))
+  function removeCustomTag(tag: string) {
+    setCustomTags(prev => prev.filter(x => x !== tag))
   }
 
   function addCustomUtility() {
@@ -935,12 +952,12 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
-    if (uploadedUrls.length + files.length > 25) { toast.error('Maximum 25 photos allowed.'); return }
+    if (uploadedUrls.length + files.length > 25) { toast.error(t('submit_listing.toast_max_photos')); return }
     setUploading(true)
     try {
       const newUrls = await uploadListingImages(files)
       setUploadedUrls(prev => { const merged = [...prev, ...newUrls]; if (!thumbnail) setThumbnail(merged[0]); return merged })
-    } catch { toast.error('Upload failed. Check file types (JPEG, PNG, WebP) and sizes (max 25 MB).') }
+    } catch { toast.error(t('submit_listing.toast_upload_fail')) }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
@@ -950,7 +967,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!form.title.trim() || !form.location || !form.price) { toast.error('Title, region, and price are required.'); return }
+    if (!form.title.trim() || !form.location || !form.price) { toast.error(t('submit_listing.toast_required')); return }
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
@@ -994,7 +1011,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
         co_listing_notes: (form.co_listing_notes as string).trim() || undefined,
         co_listing_status: (form.co_listing_status as string) || undefined,
       })
-      toast.success('Changes saved!')
+      toast.success(t('submit_listing.toast_saved'))
       onSaved({
         ...listing, ...updated,
         submitted_by: listing.submitted_by,
@@ -1004,7 +1021,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
         reviewed_by_email: listing.reviewed_by_email,
         reviewed_at: listing.reviewed_at,
       })
-    } catch { toast.error('Something went wrong. Please try again.') }
+    } catch { toast.error(t('submit_listing.toast_error')) }
     finally { setSubmitting(false) }
   }
 
@@ -1012,9 +1029,9 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
     <div className="max-w-3xl mx-auto">
       <button type="button" onClick={onBack}
         className="flex items-center gap-1.5 text-dim text-[13px] mb-4 bg-transparent border-0 cursor-pointer hover:text-ink transition-colors">
-        <ArrowLeft size={14} /> Back to Listing
+        <ArrowLeft size={14} /> {t('submit_listing.back_to_listing')}
       </button>
-      <h2 className="text-[20px] font-bold text-ink mb-5">Edit Listing</h2>
+      <h2 className="text-[20px] font-bold text-ink mb-5">{t('submit_listing.edit_heading')}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <AdminFormBody
@@ -1032,9 +1049,11 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
           customUtilities={customUtilities} addCustomUtility={addCustomUtility} removeCustomUtility={removeCustomUtility}
         />
         <div className="flex gap-3 pt-2 pb-6">
-          <button type="button" onClick={onBack} className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer">Cancel</button>
+          <button type="button" onClick={onBack} className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer">
+            {t('submit_listing.cancel')}
+          </button>
           <button type="submit" disabled={submitting} className="px-8 py-3 rounded-full text-white text-[13.5px] font-bold border-0 cursor-pointer disabled:opacity-50 transition-opacity" style={{ background: TONE }}>
-            {submitting ? 'Saving…' : 'Save Changes'}
+            {submitting ? t('submit_listing.saving') : t('submit_listing.save')}
           </button>
         </div>
       </form>

@@ -268,7 +268,7 @@ export default function DashLayout({ role, view, go, onLogout, user, children }:
           >
             <span className="flex items-center gap-1.5">
               <Globe size={13} />
-              Language
+              {t('lang_toggle')}
             </span>
             <div className="flex items-center gap-0.5 text-[12px] font-bold">
               <span style={{ color: lang === 'en' ? '#fff' : 'rgba(255,255,255,.38)' }}>EN</span>

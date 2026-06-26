@@ -39,29 +39,30 @@ function fmtType(t: string) {
   return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()
 }
 
-function fmtRelative(dateStr: string | null | undefined): string {
+function fmtRelative(dateStr: string | null | undefined, t: (key: string, opts?: Record<string, unknown>) => string): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1)    return 'just now'
-  if (mins < 60)   return `${mins}m ago`
+  if (mins < 1)    return t('rel.just_now')
+  if (mins < 60)   return t('rel.mins_ago', { count: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)    return `${hrs}h ago`
+  if (hrs < 24)    return t('rel.hrs_ago', { count: hrs })
   const days = Math.floor(hrs / 24)
-  if (days < 30)   return `${days}d ago`
+  if (days < 30)   return t('rel.days_ago', { count: days })
   const months = Math.floor(days / 30)
-  if (months < 12) return `${months}mo ago`
-  return `${Math.floor(months / 12)}y ago`
+  if (months < 12) return t('rel.months_ago', { count: months })
+  return t('rel.years_ago', { count: Math.floor(months / 12) })
 }
 
 function StatusChip({ status }: { status: string }) {
+  const { t } = useTranslation('admin')
   const s = STATUS_STYLE[status] ?? { color: '#6b7280', bg: '#f3f4f6', label: status }
   return (
     <span
       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11.5px] font-bold"
       style={{ background: s.bg, color: s.color }}
     >
-      {s.label}
+      {t(`listings_page.status_${status}`, { defaultValue: s.label })}
     </span>
   )
 }
@@ -261,7 +262,7 @@ export function AdminListings() {
     setSelected(null)
     await load()
     setWorking(false)
-    toast.success('Listing approved.')
+    toast.success(t('listings_page.toast_approved'))
   }
 
   async function handleReject(id: string, reason: string) {
@@ -270,7 +271,7 @@ export function AdminListings() {
     setSelected(null)
     await load()
     setWorking(false)
-    toast.success('Listing rejected.')
+    toast.success(t('listings_page.toast_rejected'))
   }
 
   async function handleApproveEdit(id: string) {
@@ -279,7 +280,7 @@ export function AdminListings() {
     setSelectedEdit(null)
     await load()
     setWorking(false)
-    toast.success('Edit approved — listing updated.')
+    toast.success(t('listings_page.toast_edit_approved'))
   }
 
   async function handleRejectEdit(id: string, reason: string) {
@@ -288,7 +289,7 @@ export function AdminListings() {
     setSelectedEdit(null)
     await load()
     setWorking(false)
-    toast.success('Edit rejected.')
+    toast.success(t('listings_page.toast_edit_rejected'))
   }
 
   async function handleArchive(id: string) {
@@ -297,7 +298,7 @@ export function AdminListings() {
     setSelected(null)
     await load()
     setWorking(false)
-    toast.success('Listing archived.')
+    toast.success(t('listings_page.toast_archived'))
   }
 
   async function handleApproveDeal(id: string) {
@@ -305,7 +306,7 @@ export function AdminListings() {
     try {
       await approveDealRequest(id)
       await load()
-      toast.success('Deal of the Week set!')
+      toast.success(t('listings_page.toast_deal_set'))
     } finally { setWorking(false) }
   }
 
@@ -316,7 +317,7 @@ export function AdminListings() {
       setRejectingDealId(null)
       setDealRejectReason('')
       await load()
-      toast.success('Deal request rejected.')
+      toast.success(t('listings_page.toast_deal_request_rejected'))
     } finally { setWorking(false) }
   }
 
@@ -330,7 +331,7 @@ export function AdminListings() {
       setSetDealValue('')
       setSetDealType('pct')
       await load()
-      toast.success('Deal of the Week set!')
+      toast.success(t('listings_page.toast_deal_set'))
     } finally { setWorking(false) }
   }
 
@@ -339,7 +340,7 @@ export function AdminListings() {
     try {
       await clearListingDeal(id)
       await load()
-      toast.success('Deal cleared.')
+      toast.success(t('listings_page.toast_deal_cleared'))
     } finally { setWorking(false) }
   }
 
@@ -485,15 +486,15 @@ export function AdminListings() {
                       <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{l.location}</div>
                     </div>
                     <div className="text-[12px] text-dim shrink-0 hidden sm:block">
-                      {l.submitted_by_name ?? '—'} · {fmtRelative(l.updated_at)}
+                      {l.submitted_by_name ?? '—'} · {fmtRelative(l.updated_at, t)}
                     </div>
                     {/* Desktop: text buttons */}
                     <div className="hidden sm:flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
                       <button onClick={() => handleApprove(l.id)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#1f7a3d' }}>
-                        <Check size={11} /> Approve
+                        <Check size={11} /> {t('listings_page.approve')}
                       </button>
                       <button onClick={() => setSelected(l)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50">
-                        <X size={11} /> Reject
+                        <X size={11} /> {t('listings_page.reject')}
                       </button>
                     </div>
                     {/* Mobile: icon-only buttons */}
@@ -535,15 +536,15 @@ export function AdminListings() {
                       <div className="text-[11px] text-dim flex items-center gap-1 truncate"><MapPin size={9} />{edit.listing_location}</div>
                     </div>
                     <div className="text-[12px] text-dim shrink-0 hidden sm:block">
-                      {edit.submitted_by_name ?? '—'} · {fmtRelative(edit.submitted_at)}
+                      {edit.submitted_by_name ?? '—'} · {fmtRelative(edit.submitted_at, t)}
                     </div>
                     {/* Desktop: text buttons */}
                     <div className="hidden sm:flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
                       <button onClick={() => handleApproveEdit(edit.id)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#1f7a3d' }}>
-                        <Check size={11} /> Approve
+                        <Check size={11} /> {t('listings_page.approve')}
                       </button>
                       <button onClick={() => setSelectedEdit(edit)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50">
-                        <GitCompare size={11} /> Review
+                        <GitCompare size={11} /> {t('listings_page.review')}
                       </button>
                     </div>
                     {/* Mobile: icon-only buttons */}
@@ -587,14 +588,16 @@ export function AdminListings() {
                         <MapPin size={9} />{l.location}
                         {l.deal_discount_value && (
                           <span className="ml-1 font-semibold" style={{ color: '#c07800' }}>
-                            · {l.deal_discount_type === 'fixed' ? `−$${Number(l.deal_discount_value).toLocaleString()} off` : `−${l.deal_discount_value}% off`}
+                            · {l.deal_discount_type === 'fixed'
+                              ? t('listings_page.discount_off_fixed', { value: Number(l.deal_discount_value).toLocaleString() })
+                              : t('listings_page.discount_off_pct', { value: l.deal_discount_value })}
                           </span>
                         )}
                       </div>
                     </div>
                     {/* Desktop: text button */}
                     <button onClick={e => { e.stopPropagation(); setConfirmClearDealId(l.id) }} disabled={working} className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-red-500 bg-paper hover:bg-red-50 cursor-pointer disabled:opacity-50 shrink-0">
-                      <X size={11} /> Clear Deal
+                      <X size={11} /> {t('listings_page.clear_deal')}
                     </button>
                     {/* Mobile: icon button */}
                     <button onClick={e => { e.stopPropagation(); setConfirmClearDealId(l.id) }} disabled={working} className="sm:hidden w-8 h-8 rounded-full flex items-center justify-center border border-red-200 bg-red-50 cursor-pointer disabled:opacity-50 shrink-0">
@@ -635,21 +638,21 @@ export function AdminListings() {
                             <span className="mx-1">·</span>
                             <span className="font-semibold" style={{ color: '#c07800' }}>
                               {req.discount_type === 'fixed'
-                                ? `−$${Number(req.discount_value).toLocaleString()} off`
-                                : `−${req.discount_value}% off`}
+                                ? t('listings_page.discount_off_fixed', { value: Number(req.discount_value).toLocaleString() })
+                                : t('listings_page.discount_off_pct', { value: req.discount_value })}
                             </span>
                           </div>
                         </div>
                         <div className="text-[11px] text-dim shrink-0 hidden sm:block">
-                          {req.requested_by_name ?? req.requested_by_email} · {fmtRelative(req.created_at)}
+                          {req.requested_by_name ?? req.requested_by_email} · {fmtRelative(req.created_at, t)}
                         </div>
                         {/* Desktop: text buttons */}
                         <div className="hidden sm:flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
                           <button onClick={() => handleApproveDeal(req.id)} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#f0a800' }}>
-                            <Check size={11} /> Approve
+                            <Check size={11} /> {t('listings_page.approve')}
                           </button>
                           <button onClick={() => { setRejectingDealId(isRejectOpen ? null : req.id); setDealRejectReason('') }} disabled={working} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-line text-[12px] font-semibold text-ink bg-paper cursor-pointer disabled:opacity-50">
-                            <X size={11} /> Reject
+                            <X size={11} /> {t('listings_page.reject')}
                           </button>
                         </div>
                         {/* Mobile: icon buttons */}
@@ -664,9 +667,9 @@ export function AdminListings() {
                       </div>
                       {isRejectOpen && (
                         <div className="mt-2.5 flex gap-2">
-                          <input type="text" value={dealRejectReason} onChange={e => setDealRejectReason(e.target.value)} placeholder="Reason for rejection…" className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[12.5px] text-ink outline-none focus:border-amber-400" autoFocus />
+                          <input type="text" value={dealRejectReason} onChange={e => setDealRejectReason(e.target.value)} placeholder={t('listings_page.reason_ph')} className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[12.5px] text-ink outline-none focus:border-amber-400" autoFocus />
                           <button onClick={() => handleRejectDeal(req.id, dealRejectReason)} disabled={!dealRejectReason.trim() || working} className="px-4 py-2 rounded-lg text-[12px] font-bold text-white cursor-pointer disabled:opacity-50 border-0" style={{ background: '#e10f1f' }}>
-                            Confirm
+                            {t('listings_page.confirm')}
                           </button>
                         </div>
                       )}
@@ -741,7 +744,7 @@ export function AdminListings() {
                       <div className="text-[11px] text-dim truncate">{l.submitted_by_email ?? ''}</div>
                     </div>
                     {/* Updated */}
-                    <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at)}</div>
+                    <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at, t)}</div>
                     {/* Actions */}
                     <div onClick={e => e.stopPropagation()}>
                       <ActionMenu
@@ -778,7 +781,7 @@ export function AdminListings() {
                         <div className="text-[11px] text-dim">{fmtPrice(l.price)}</div>
                       </div>
                     </div>
-                    <div className="text-[11px] text-dim mt-2">{fmtType(l.type)} · Updated {fmtRelative(l.updated_at)}</div>
+                    <div className="text-[11px] text-dim mt-2">{t('listings_page.mobile_row_sub', { type: fmtType(l.type), time: fmtRelative(l.updated_at, t) })}</div>
                   </div>
                 </div>
               ))}
@@ -818,7 +821,7 @@ export function AdminListings() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[12px] text-ink leading-snug">{entry.description}</div>
-                    <div className="text-[10.5px] text-dim mt-0.5">{fmtRelative(entry.created_at)}</div>
+                    <div className="text-[10.5px] text-dim mt-0.5">{fmtRelative(entry.created_at, t)}</div>
                   </div>
                 </div>
               )
@@ -840,7 +843,7 @@ export function AdminListings() {
             ? async (value, type) => {
                 await setListingDeal(selected.id, value, type)
                 await load()
-                toast.success('Deal of the Week set!')
+                toast.success(t('listings_page.toast_deal_set'))
               }
             : undefined}
           onClearDeal={selected.is_deal ? () => setConfirmClearDealId(selected.id) : undefined}
@@ -872,7 +875,7 @@ export function AdminListings() {
       {confirmArchive && (
         <ConfirmModal
           title={t('listings_page.confirm_archive_title')}
-          description={`"${titleCase(confirmArchive.title)}" will be removed from the site and marked as archived. This can be reversed by contacting a developer.`}
+          description={t('listings_page.confirm_archive_desc', { title: titleCase(confirmArchive.title) })}
           confirmLabel={t('listings_page.confirm_archive_btn')}
           variant="danger"
           loading={working}
@@ -906,23 +909,23 @@ export function AdminListings() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles size={16} style={{ color: '#f59e0b' }} />
-              <div className="font-bold text-[15px] text-ink">Set as Deal of the Week</div>
+              <div className="font-bold text-[15px] text-ink">{t('listings_page.set_deal_title')}</div>
             </div>
             <div className="text-[12.5px] text-dim mb-4 truncate">{titleCase(setDealTarget.title)}</div>
 
             <div className="space-y-3">
               <div>
-                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-[.06em] mb-1.5">Discount type</div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-[.06em] mb-1.5">{t('listings_page.discount_type')}</div>
                 <div className="flex rounded-lg border border-line overflow-hidden text-[12px] font-semibold">
-                  {(['pct', 'fixed'] as const).map(t => (
+                  {(['pct', 'fixed'] as const).map(dtype => (
                     <button
-                      key={t}
+                      key={dtype}
                       type="button"
-                      onClick={() => setSetDealType(t)}
+                      onClick={() => setSetDealType(dtype)}
                       className="flex-1 py-2 cursor-pointer transition-colors"
-                      style={{ background: setDealType === t ? '#f59e0b' : 'white', color: setDealType === t ? 'white' : '#6b7280' }}
+                      style={{ background: setDealType === dtype ? '#f59e0b' : 'white', color: setDealType === dtype ? 'white' : '#6b7280' }}
                     >
-                      {t === 'pct' ? 'Percentage (%)' : 'Fixed ($)'}
+                      {dtype === 'pct' ? t('listings_page.discount_pct') : t('listings_page.discount_fixed')}
                     </button>
                   ))}
                 </div>
@@ -930,7 +933,7 @@ export function AdminListings() {
 
               <div>
                 <div className="text-[11.5px] font-semibold text-dim uppercase tracking-[.06em] mb-1.5">
-                  Discount value <span className="normal-case font-normal">(optional)</span>
+                  {t('listings_page.discount_value')} <span className="normal-case font-normal">{t('listings_page.discount_optional')}</span>
                 </div>
                 <div className="flex items-center border border-line rounded-lg overflow-hidden">
                   <span className="px-3 text-[13px] text-dim bg-line-soft border-r border-line py-2">
@@ -948,7 +951,7 @@ export function AdminListings() {
                         : e.target.value.replace(/[^0-9.]/g, '')
                       setSetDealValue(raw)
                     }}
-                    placeholder="Leave blank for no discount"
+                    placeholder={t('listings_page.discount_value_ph')}
                     className="flex-1 px-3 py-2 text-[13px] text-ink outline-none bg-white"
                   />
                 </div>
@@ -963,14 +966,14 @@ export function AdminListings() {
                 style={{ background: '#f59e0b' }}
               >
                 <Star size={13} className="inline mr-1.5" fill="white" />
-                Set as Deal
+                {t('listings_page.set_deal_btn')}
               </button>
               <button
                 onClick={() => setSetDealTarget(null)}
                 disabled={working}
                 className="px-4 py-2.5 rounded-xl text-[13px] font-semibold text-ink border border-line bg-paper cursor-pointer disabled:opacity-50"
               >
-                Cancel
+                {t('listings_page.cancel')}
               </button>
             </div>
           </div>

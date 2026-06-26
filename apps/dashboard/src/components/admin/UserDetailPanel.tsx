@@ -1,11 +1,11 @@
 import { X, Check, ChevronDown, Key, Building2, Mail, Phone, Calendar, Copy, CheckCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ROLE_COLOR } from '../../pages/admin/shared'
 import type { AdminUser, AdminUpgradeRequest } from '../../api/admin'
 import { ConfirmModal } from '../shared/ConfirmModal'
 
 const UPGRADE_ROLE_ICON: Record<string, typeof Key>  = { owner: Key, realtor: Building2 }
-const UPGRADE_ROLE_LABEL: Record<string, string>     = { owner: 'Property Owner', realtor: 'Realtor' }
 const UPGRADE_ROLE_COLOR: Record<string, string>     = { owner: '#f0a800', realtor: '#1f7a3d' }
 const UPGRADE_STATUS_CLASS: Record<string, string>   = {
   pending:  'bg-amber-50  text-amber-700  border-amber-200',
@@ -48,6 +48,13 @@ export function UserDetailPanel({
   user, requests, working, openRejectId, onClose,
   onSuspend, onUnsuspend, onApproveUpgrade, onRejectUpgrade,
 }: Props) {
+  const { t } = useTranslation('admin')
+
+  const UPGRADE_ROLE_LABEL: Record<string, string> = {
+    owner:   t('user_panel.role_owner'),
+    realtor: t('user_panel.role_realtor'),
+  }
+
   const [rejectingId,   setRejectingId]   = useState<string | null>(null)
   const [rejectReason,  setRejectReason]  = useState('')
   const [copied,        setCopied]        = useState(false)
@@ -149,7 +156,7 @@ export function UserDetailPanel({
             {/* Contact Information */}
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">
-                Contact Information
+                {t('user_panel.section_contact')}
               </div>
               <div className="space-y-3.5">
                 <div className="flex items-center gap-3">
@@ -160,7 +167,7 @@ export function UserDetailPanel({
                     <Mail size={13} style={{ color: rc }} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">Email</div>
+                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">{t('user_panel.label_email')}</div>
                     <div className="flex items-center gap-1.5">
                       <div className="text-[13px] text-ink truncate">{user.email}</div>
                       <button
@@ -185,9 +192,9 @@ export function UserDetailPanel({
                     <Phone size={13} style={{ color: rc }} />
                   </div>
                   <div>
-                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">Phone</div>
+                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">{t('user_panel.label_phone')}</div>
                     <div className="text-[13px] text-ink">
-                      {user.phone ? fmtPhone(user.phone) : <span className="text-dim/60">Not provided</span>}
+                      {user.phone ? fmtPhone(user.phone) : <span className="text-dim/60">{t('user_panel.not_provided')}</span>}
                     </div>
                   </div>
                 </div>
@@ -200,7 +207,7 @@ export function UserDetailPanel({
                     <Calendar size={13} style={{ color: rc }} />
                   </div>
                   <div>
-                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">Member Since</div>
+                    <div className="text-[10.5px] text-dim font-semibold uppercase tracking-wide">{t('user_panel.label_member_since')}</div>
                     <div className="text-[13px] text-ink">{fmt(user.created_at)}</div>
                   </div>
                 </div>
@@ -210,11 +217,11 @@ export function UserDetailPanel({
             {/* Upgrade Request History */}
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">
-                Upgrade Request History
+                {t('user_panel.section_upgrades')}
               </div>
 
               {userReqs.length === 0 ? (
-                <div className="text-[12.5px] text-dim py-2">No upgrade requests for this user.</div>
+                <div className="text-[12.5px] text-dim py-2">{t('user_panel.no_upgrades')}</div>
               ) : (
                 <div className="space-y-2.5">
                   {userReqs.map(req => {
@@ -241,13 +248,13 @@ export function UserDetailPanel({
                         {/* Meta rows */}
                         <div className="px-4 py-3 space-y-2.5">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">Requested</span>
+                            <span className="text-[11px] font-semibold uppercase tracking-wide text-dim">{t('user_panel.label_requested')}</span>
                             <span className="text-[12.5px] text-ink">{fmt(req.created_at)}</span>
                           </div>
                           {req.reviewed_by_name ? (
                             <div className="flex items-center justify-between gap-2">
                               <span className="text-[11px] font-semibold uppercase tracking-wide text-dim shrink-0">
-                                {req.status === 'approved' ? 'Approved by' : 'Reviewed by'}
+                                {req.status === 'approved' ? t('user_panel.approved_by') : t('user_panel.reviewed_by')}
                               </span>
                               <span className="text-[12.5px] text-ink text-right">
                                 {req.reviewed_by_name}
@@ -257,7 +264,7 @@ export function UserDetailPanel({
                           ) : null}
                           {req.rejection_reason && (
                             <div className="flex items-start justify-between gap-2">
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-dim shrink-0">Reason</span>
+                              <span className="text-[11px] font-semibold uppercase tracking-wide text-dim shrink-0">{t('user_panel.label_reason')}</span>
                               <span className="text-[12.5px] text-red-600 text-right">{req.rejection_reason}</span>
                             </div>
                           )}
@@ -270,14 +277,14 @@ export function UserDetailPanel({
                                 className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border-0 cursor-pointer text-[12.5px] font-semibold text-white disabled:opacity-50"
                                 style={{ background: '#1f7a3d' }}
                               >
-                                <Check size={12} /> Approve
+                                <Check size={12} /> {t('user_panel.approve')}
                               </button>
                               <button
                                 onClick={() => { setRejectingId(isRejectOpen ? null : req.id); setRejectReason('') }}
                                 disabled={!!working}
                                 className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg border border-line cursor-pointer text-[12.5px] font-semibold text-ink2 bg-paper disabled:opacity-50"
                               >
-                                <X size={12} /> Reject
+                                <X size={12} /> {t('user_panel.reject')}
                                 <ChevronDown
                                   size={10}
                                   style={{ transform: isRejectOpen ? 'rotate(180deg)' : undefined, transition: 'transform 150ms' }}
@@ -293,7 +300,7 @@ export function UserDetailPanel({
                               type="text"
                               value={rejectReason}
                               onChange={e => setRejectReason(e.target.value)}
-                              placeholder="Reason for rejection…"
+                              placeholder={t('user_panel.reason_ph')}
                               className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[12.5px] text-ink outline-none focus:border-coral"
                               autoFocus
                             />
@@ -303,7 +310,7 @@ export function UserDetailPanel({
                               className="px-4 py-2 rounded-lg border-0 cursor-pointer text-[12px] font-bold text-white disabled:opacity-50"
                               style={{ background: '#e10f1f' }}
                             >
-                              Confirm
+                              {t('user_panel.confirm')}
                             </button>
                           </div>
                         )}
@@ -324,7 +331,7 @@ export function UserDetailPanel({
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent"
           >
-            Close
+            {t('user_panel.close')}
           </button>
           {user.role !== 'admin' && (
             user.status === 'suspended' ? (
@@ -334,7 +341,7 @@ export function UserDetailPanel({
                 className="flex-1 px-4 py-2.5 rounded-xl border-0 text-[13px] font-semibold text-white cursor-pointer disabled:opacity-50"
                 style={{ background: '#1f7a3d' }}
               >
-                Restore Account
+                {t('user_panel.restore')}
               </button>
             ) : (
               <button
@@ -343,7 +350,7 @@ export function UserDetailPanel({
                 className="flex-1 px-4 py-2.5 rounded-xl border-0 text-[13px] font-semibold text-white cursor-pointer disabled:opacity-50"
                 style={{ background: '#dc2626' }}
               >
-                Suspend Account
+                {t('user_panel.suspend')}
               </button>
             )
           )}
@@ -352,12 +359,12 @@ export function UserDetailPanel({
       </div>
       {confirmSuspend && (
         <ConfirmModal
-          title={user.status === 'suspended' ? 'Restore this account?' : 'Suspend this account?'}
+          title={user.status === 'suspended' ? t('users_page.confirm_restore_title') : t('users_page.confirm_suspend_title')}
           description={user.status === 'suspended'
-            ? `${user.display_name ?? user.email} will regain access to the platform.`
-            : `${user.display_name ?? user.email} will lose access to the platform immediately.`
+            ? t('users_page.confirm_restore_desc', { name: user.display_name ?? user.email })
+            : t('users_page.confirm_suspend_desc', { name: user.display_name ?? user.email })
           }
-          confirmLabel={user.status === 'suspended' ? 'Restore' : 'Suspend'}
+          confirmLabel={user.status === 'suspended' ? t('users_page.confirm_restore_btn') : t('users_page.confirm_suspend_btn')}
           variant={user.status === 'suspended' ? 'warning' : 'danger'}
           loading={working === user.id}
           onConfirm={() => {
