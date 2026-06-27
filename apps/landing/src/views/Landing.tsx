@@ -25,6 +25,7 @@ function CurrencyToggle({ currency, onChange }: { currency: 'USD' | 'DOP'; onCha
 }
 
 function HeroListingCard({ prop, go }: { prop: Listing; go: GoFn }) {
+  const { t } = useTranslation('landing')
   const fmtP = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`
   return (
     <div
@@ -34,9 +35,9 @@ function HeroListingCard({ prop, go }: { prop: Listing; go: GoFn }) {
     >
       <div className="absolute inset-0 bg-linear-to-t from-ink/80 via-ink/20 to-transparent" />
       {prop.is_deal ? (
-        <span className="absolute top-3 right-3 bg-coral text-white text-2.75 font-bold px-2.25 py-0.75 rounded-md font-sans">Deal</span>
+        <span className="absolute top-3 right-3 bg-coral text-white text-2.75 font-bold px-2.25 py-0.75 rounded-md font-sans">{t('card.deal_badge')}</span>
       ) : prop.roi > 0 ? (
-        <span className="absolute top-3 right-3 bg-amber-600 text-white text-2.75 font-bold px-2.25 py-0.75 rounded-md font-sans">{prop.roi}% ROI</span>
+        <span className="absolute top-3 right-3 bg-amber-600 text-white text-2.75 font-bold px-2.25 py-0.75 rounded-md font-sans">{t('card.roi_badge', { roi: prop.roi })}</span>
       ) : null}
       <div className="absolute bottom-3.5 left-3.5 right-3.5">
         <div className="text-white/70 text-2.5 font-sans flex items-center gap-1 mb-0.75"><MapPin size={9} /> {prop.region}</div>
@@ -44,8 +45,8 @@ function HeroListingCard({ prop, go }: { prop: Listing; go: GoFn }) {
         <div className="flex items-center justify-between">
           <div className="text-white font-bold font-sans text-4">{fmtP(prop.price)}<span className="text-white/60 text-2.75 font-normal ml-1">USD</span></div>
           <div className="text-white/60 text-2.75 font-sans flex gap-2">
-            {prop.bd > 0 && <span>{prop.bd} bd</span>}
-            {prop.ba > 0 && <span>{prop.ba} ba</span>}
+            {prop.bd > 0 && <span>{prop.bd} {t('card.bd')}</span>}
+            {prop.ba > 0 && <span>{prop.ba} {t('card.ba')}</span>}
           </div>
         </div>
       </div>
@@ -54,6 +55,7 @@ function HeroListingCard({ prop, go }: { prop: Listing; go: GoFn }) {
 }
 
 function PropertyCard({ prop, go, currency, dopRate }: { prop: Listing; go: GoFn; currency: 'USD' | 'DOP'; dopRate: number }) {
+  const { t } = useTranslation('landing')
   const fmtP = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`
   const fmtDOP = (n: number) => n >= 1_000_000 ? `RD$${(n / 1_000_000).toFixed(1)}M` : `RD$${Math.round(n / 1_000)}K`
   const tag = prop.tags?.[0]?.[0] ?? ''
@@ -82,13 +84,13 @@ function PropertyCard({ prop, go, currency, dopRate }: { prop: Listing; go: GoFn
           <span className="absolute top-3 right-3 text-2.75 font-bold bg-coral text-white px-2.25 py-0.75 rounded-md font-sans">
             {prop.deal_discount_type === 'fixed'
               ? currency === 'DOP'
-                ? `−${fmtDOP(Math.round(prop.deal_discount_value * dopRate))} off`
-                : `−$${Number(prop.deal_discount_value).toLocaleString()} off`
-              : `−${prop.deal_discount_value}% off`}
+                ? `−${fmtDOP(Math.round(prop.deal_discount_value * dopRate))} ${t('card.off')}`
+                : `−$${Number(prop.deal_discount_value).toLocaleString()} ${t('card.off')}`
+              : `−${prop.deal_discount_value}% ${t('card.off')}`}
           </span>
         ) : prop.roi > 0 ? (
           <span className="absolute top-3 right-3 text-2.75 font-bold bg-amber-600 text-white px-2.25 py-0.75 rounded-md font-sans">
-            {prop.roi}% ROI
+            {t('card.roi_badge', { roi: prop.roi })}
           </span>
         ) : null}
       </div>
@@ -98,8 +100,8 @@ function PropertyCard({ prop, go, currency, dopRate }: { prop: Listing; go: GoFn
           {prop.title}
         </div>
         <div className="flex gap-3.5 text-3 text-dim font-sans mb-3">
-          {prop.bd > 0 && <span>{prop.bd} bd</span>}
-          {prop.ba > 0 && <span>{prop.ba} ba</span>}
+          {prop.bd > 0 && <span>{prop.bd} {t('card.bd')}</span>}
+          {prop.ba > 0 && <span>{prop.ba} {t('card.ba')}</span>}
           {prop.m2 > 0 && <span>{prop.m2} m²</span>}
         </div>
         <div className="flex items-baseline gap-2">
@@ -354,9 +356,9 @@ export default function Landing() {
                       <span className="bg-coral text-white text-2.75 font-extrabold tracking-[0.08em] uppercase px-2.75 py-1.25 rounded-full font-sans">
                         {deal.deal_discount_type === 'fixed'
                           ? currency === 'DOP'
-                            ? `−RD$${Math.round(deal.deal_discount_value * dopRate).toLocaleString()} off`
-                            : `−$${Number(deal.deal_discount_value).toLocaleString()} USD off`
-                          : `−${deal.deal_discount_value}% off`}
+                            ? `−RD$${Math.round(deal.deal_discount_value * dopRate).toLocaleString()} ${t('card.off')}`
+                            : `−$${Number(deal.deal_discount_value).toLocaleString()} USD ${t('card.off')}`
+                          : `−${deal.deal_discount_value}% ${t('card.off')}`}
                       </span>
                     )}
                     <span className="bg-ink/80 text-white text-[10.5px] font-bold px-2.75 py-1.25 rounded-full backdrop-blur-1.5 font-sans inline-flex items-center gap-1">

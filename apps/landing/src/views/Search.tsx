@@ -265,9 +265,9 @@ export default function Search() {
   const chips: { label: string; clear: () => void }[] = []
   if (purpose !== 'sale') chips.push({ label: purpose === 'rent' ? t('chips.rent') : t('chips.investment'), clear: () => setPurpose('sale') })
   if (type !== 'All')     chips.push({ label: type, clear: () => setType('All') })
-  if (beds !== 'any')     chips.push({ label: `${beds}+ beds`, clear: () => setBeds('any') })
+  if (beds !== 'any')     chips.push({ label: t('chip_beds', { beds }), clear: () => setBeds('any') })
   if (region)             chips.push({ label: region, clear: () => setRegion(null) })
-  if (minROI > 0)         chips.push({ label: `ROI ${minROI}%+`, clear: () => setMinROI(0) })
+  if (minROI > 0)         chips.push({ label: t('chip_roi', { roi: minROI }), clear: () => setMinROI(0) })
   amenities.forEach(a => chips.push({ label: a, clear: () => { const n = new Set(amenities); n.delete(a); setAmenities(n) } }))
   invFlags.forEach(f  => chips.push({ label: f, clear: () => { const n = new Set(invFlags);  n.delete(f); setInvFlags(n)  } }))
   if (minPrice > 0 || maxPrice < 3_000_000)

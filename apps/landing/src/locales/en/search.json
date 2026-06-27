@@ -11,6 +11,8 @@
     "roi": "Best ROI"
   },
   "clear_all": "Clear all",
+  "chip_beds": "{{beds}}+ beds",
+  "chip_roi": "ROI {{roi}}%+",
   "empty": "No properties match these filters. Try widening your price range or clearing a region.",
   "yield": "% yield",
   "per_month": " / mo",
@@ -25,5 +27,46 @@
   "discount": {
     "fixed": "−${{amount}} off",
     "percent": "−{{amount}}% off"
+  },
+  "map": {
+    "loading":          "Loading map…",
+    "mapped_one":       "{{count}} property mapped · hover a card",
+    "mapped_other":     "{{count}} properties mapped · hover a card",
+    "tap_region":       "Tap a region to filter",
+    "snapshot":         "Market snapshot",
+    "snapshot_in":      "In {{region}} · updated for current filters",
+    "snapshot_across":  "Across all results · updated for current filters",
+    "insight_count":    "Matching listings",
+    "insight_median":   "Median price",
+    "insight_yield":    "Avg rental yield",
+    "also_like":        "You might also like",
+    "also_like_sub":    "Just outside your current filters",
+    "team_badge":       "Local team online",
+    "team_heading":     "Need help narrowing down?",
+    "team_body":        "Our local agents will short-list 3–5 properties that match your goals — usually within 24 hours.",
+    "team_cta":         "Talk to an agent"
+  },
+  "sidebar": {
+    "property_type":      "Property Type",
+    "purpose":            "Purpose",
+    "for_sale":           "For Sale",
+    "for_rent":           "For Rent",
+    "investment":         "Investment",
+    "price_range":        "Price Range (USD)",
+    "bedrooms":           "Bedrooms",
+    "any":                "Any",
+    "region":             "Region",
+    "amenities":          "Amenities",
+    "investment_filters": "Investment Filters",
+    "managed":            "Managed",
+    "clear_all_filters":  "Clear all filters",
+    "show_results":       "Show {{count}} results",
+    "apply":              "Apply ({{count}})",
+    "type_all":           "All",
+    "type_villa":         "Villa",
+    "type_apartment":     "Apartment",
+    "type_condo":         "Condo",
+    "type_land":          "Land",
+    "type_commercial":    "Commercial"
   }
 }

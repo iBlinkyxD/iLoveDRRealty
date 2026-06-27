@@ -53,6 +53,13 @@
     "roi_cta": "Calcular ROI",
     "disclaimer": "Cómo elegimos: cada semana nuestro equipo selecciona una propiedad donde la ubicación, el estilo de vida y el precio por m² realmente se destacan. <strong>Propietarios y agentes pueden enviar una propiedad para consideración</strong> — nuestro equipo revisa cada propuesta por valor y calidad antes de destacarla."
   },
+  "card": {
+    "deal_badge": "Oferta",
+    "roi_badge": "{{roi}}% ROI",
+    "off": "dto.",
+    "bd": "hab",
+    "ba": "baños"
+  },
   "founder": {
     "eyebrow": "★ Por qué lo construimos",
     "heading": "Alguna vez estuvimos donde <em>tú estás ahora.</em>",

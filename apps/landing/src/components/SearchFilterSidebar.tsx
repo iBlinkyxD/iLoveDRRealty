@@ -1,5 +1,6 @@
 'use client'
 import { type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 
 const TYPES       = ['All', 'Villa', 'Apartment', 'Condo', 'Land', 'Commercial']
@@ -60,6 +61,7 @@ export interface FilterSidebarProps {
 }
 
 export function SearchFilterSidebar(props: FilterSidebarProps) {
+  const { t } = useTranslation('search')
   const {
     type, purpose, minPrice, maxPrice, beds, region, minROI, amenities, invFlags,
     setType, setPurpose, setMinPrice, setMaxPrice, setBeds, setRegion, setMinROI, setAmenities, setInvFlags,
@@ -68,19 +70,23 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
 
   const filterContent = (
     <>
-      <FilterGroup label="Property Type">
-        {TYPES.map(t => <Chip key={t} active={type === t} onClick={() => setType(t)}>{t}</Chip>)}
-      </FilterGroup>
-
-      <FilterGroup label="Purpose">
-        {(['sale', 'rent', 'investment'] as const).map(k => (
-          <Chip key={k} active={purpose === k} onClick={() => setPurpose(k)} tone="coral">
-            {k === 'sale' ? 'For Sale' : k === 'rent' ? 'For Rent' : 'Investment'}
+      <FilterGroup label={t('sidebar.property_type')}>
+        {TYPES.map(tp => (
+          <Chip key={tp} active={type === tp} onClick={() => setType(tp)}>
+            {t(`sidebar.type_${tp.toLowerCase()}`)}
           </Chip>
         ))}
       </FilterGroup>
 
-      <FilterGroup label="Price Range (USD)">
+      <FilterGroup label={t('sidebar.purpose')}>
+        {(['sale', 'rent', 'investment'] as const).map(k => (
+          <Chip key={k} active={purpose === k} onClick={() => setPurpose(k)} tone="coral">
+            {k === 'sale' ? t('sidebar.for_sale') : k === 'rent' ? t('sidebar.for_rent') : t('sidebar.investment')}
+          </Chip>
+        ))}
+      </FilterGroup>
+
+      <FilterGroup label={t('sidebar.price_range')}>
         <div className="flex items-center gap-2">
           <input type="text" value={minPrice ? minPrice.toLocaleString() : ''} placeholder="Min"
             onChange={e => setMinPrice(+e.target.value.replace(/[^0-9]/g, '') || 0)}
@@ -98,13 +104,15 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
         </div>
       </FilterGroup>
 
-      <FilterGroup label="Bedrooms">
+      <FilterGroup label={t('sidebar.bedrooms')}>
         {['any', '1', '2', '3', '4', '5'].map(v => (
-          <Chip key={v} active={beds === v} onClick={() => setBeds(v)}>{v === 'any' ? 'Any' : `${v}+`}</Chip>
+          <Chip key={v} active={beds === v} onClick={() => setBeds(v)}>
+            {v === 'any' ? t('sidebar.any') : `${v}+`}
+          </Chip>
         ))}
       </FilterGroup>
 
-      <FilterGroup label="Region">
+      <FilterGroup label={t('sidebar.region')}>
         {ALL_REGIONS.map(r => {
           const key = r === 'Samaná' ? 'Las Terrenas' : r
           return (
@@ -115,7 +123,7 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
         })}
       </FilterGroup>
 
-      <FilterGroup label="Amenities">
+      <FilterGroup label={t('sidebar.amenities')}>
         <div className="grid grid-cols-2 gap-x-2.5 gap-y-1.5">
           {allAmenities.map(a => {
             const checked = amenities.has(a)
@@ -133,12 +141,12 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
         </div>
       </FilterGroup>
 
-      <FilterGroup label="Investment Filters">
+      <FilterGroup label={t('sidebar.investment_filters')}>
         {([
           ['roi6', 'ROI 6%+',  () => setMinROI(minROI === 6 ? 0 : 6),  minROI === 6],
           ['roi8', 'ROI 8%+',  () => setMinROI(minROI === 8 ? 0 : 8),  minROI === 8],
           ['conf', 'CONFOTUR', () => { const n = new Set(invFlags); n.has('CONFOTUR') ? n.delete('CONFOTUR') : n.add('CONFOTUR'); setInvFlags(n) }, invFlags.has('CONFOTUR')],
-          ['mgd',  'Managed',  () => { const n = new Set(invFlags); n.has('Managed')  ? n.delete('Managed')  : n.add('Managed');  setInvFlags(n) }, invFlags.has('Managed')],
+          ['mgd',  t('sidebar.managed'), () => { const n = new Set(invFlags); n.has('Managed') ? n.delete('Managed') : n.add('Managed'); setInvFlags(n) }, invFlags.has('Managed')],
         ] as [string, string, () => void, boolean][]).map(([k, label, onClick, active]) => (
           <Chip key={k} active={active} onClick={onClick} tone="brand">{label}</Chip>
         ))}
@@ -150,7 +158,7 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-paper lg:hidden">
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-line-soft shrink-0">
-          <div className="font-sans text-4.5 font-bold text-ink">Filters / Filtros</div>
+          <div className="font-sans text-4.5 font-bold text-ink">{t('filters')}</div>
           <div className="flex items-center gap-2">
             {chips.length > 0 && (
               <span className="text-2.5 font-bold py-0.75 px-2 rounded-full bg-coral text-white">{chips.length}</span>
@@ -167,11 +175,11 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
         <div className="shrink-0 px-4 py-4 border-t border-line-soft flex flex-col gap-2.5">
           <button onClick={clearAll}
             className="w-full py-2.5 px-3.5 rounded-lg bg-transparent text-dim border border-line font-sans text-3.25 font-semibold cursor-pointer">
-            Clear all filters
+            {t('sidebar.clear_all_filters')}
           </button>
           <button onClick={onClose}
             className="w-full py-2.5 px-3.5 rounded-lg bg-coral text-white border-none font-sans text-3.25 font-semibold cursor-pointer">
-            Show {resultsCount} results
+            {t('sidebar.show_results', { count: resultsCount })}
           </button>
         </div>
       </div>
@@ -181,7 +189,7 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
   return (
     <aside className="hidden lg:block self-start sticky top-22.5 max-h-[calc(100vh-110px)] overflow-y-auto bg-paper border border-line-soft rounded-2xl p-4.5">
       <div className="flex items-center justify-between mb-4.5 pb-3 border-b border-line-soft">
-        <div className="font-sans text-4.5 font-bold text-ink">Filters</div>
+        <div className="font-sans text-4.5 font-bold text-ink">{t('filters')}</div>
         {chips.length > 0 &&
           <span className="text-2.5 font-bold py-0.75 px-2 rounded-full bg-coral text-white">
             {chips.length}
@@ -191,11 +199,11 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
       <div className="flex flex-col gap-2 mt-4.5 pt-3.5 border-t border-line-soft">
         <button onClick={clearAll}
           className="w-full py-2.5 px-3.5 rounded-lg bg-transparent text-dim border border-line font-sans text-3.25 font-semibold cursor-pointer">
-          Clear all filters
+          {t('sidebar.clear_all_filters')}
         </button>
         <button
           className="w-full py-2.5 px-3.5 rounded-lg bg-coral text-white border-none font-sans text-3.25 font-semibold cursor-pointer">
-          Apply ({resultsCount})
+          {t('sidebar.apply', { count: resultsCount })}
         </button>
       </div>
     </aside>

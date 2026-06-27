@@ -351,7 +351,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
       await createBooking({ listing_id: id, check_in: bookingForm.checkIn, check_out: bookingForm.checkOut, guests: bookingForm.guests, notes: bookingForm.notes || undefined })
       setBookingSent(true)
     } catch (err: any) {
-      setBookingError(err?.response?.status === 401 ? 'Please log in to request a booking.' : 'Something went wrong. Please try again.')
+      setBookingError(err?.response?.status === 401 ? t('booking.error_auth') : t('booking.error_generic'))
     } finally { setBookingSending(false) }
   }
 
@@ -702,13 +702,13 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                 icon: <MapPin size={18} />,
                 label: t('details.hoa_fee'),
                 value: currency === 'DOP'
-                  ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
-                  : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
+                  ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} ${t('unit.per_mo')}`
+                  : `$${Number(listing.hoa_fee).toLocaleString()} ${t('unit.per_mo')}`,
               },
               listing.roi && {
                 icon: <Star size={18} />,
                 label: t('details.est_roi'),
-                value: `${listing.roi}% / yr`,
+                value: `${listing.roi}% ${t('unit.per_yr')}`,
               },
               listing.seller_financing && {
                 icon: <CheckCircle2 size={18} />,
@@ -867,7 +867,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                 {/* Results */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                   {[
-                    [t('mortgage.monthly'), `${fmtM(mortgage.monthly)}/mo`],
+                    [t('mortgage.monthly'), `${fmtM(mortgage.monthly)} ${t('unit.per_mo')}`],
                     [t('mortgage.loan_amount'), fmtM(mortgage.loan)],
                     [t('mortgage.down_amount'), fmtM(mortgage.down)],
                     [t('mortgage.total_interest'), fmtM(mortgage.totalInterest)],
@@ -1048,12 +1048,12 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               })()}
 
               {[
-                listing.roi && [t('sidebar.est_roi'), `${listing.roi}% / yr`],
+                listing.roi && [t('sidebar.est_roi'), `${listing.roi}% ${t('unit.per_yr')}`],
                 listing.hoa_fee && [
                   t('sidebar.hoa_fee'),
                   currency === 'DOP'
-                    ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
-                    : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
+                    ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} ${t('unit.per_mo')}`
+                    : `$${Number(listing.hoa_fee).toLocaleString()} ${t('unit.per_mo')}`,
                 ],
                 listing.tax_exempt && [t('sidebar.tax_label'), t('sidebar.tax_val')],
               ]
@@ -1086,21 +1086,21 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               </div>
               <div className="text-[12.5px] text-ink2 mt-0.5">
                 {currency === 'DOP'
-                  ? `≈ ${fmt(listing.price)} USD / mo`
-                  : `≈ RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")} DOP / mo`}
+                  ? `≈ ${fmt(listing.price)} USD ${t('unit.per_mo')}`
+                  : `≈ RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")} DOP ${t('unit.per_mo')}`}
               </div>
               {[
                 listing.hoa_fee && [
                   t('sidebar.hoa_fee'),
                   currency === 'DOP'
-                    ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} / mo`
-                    : `$${Number(listing.hoa_fee).toLocaleString()} / mo`,
+                    ? `RD$${Math.round(Number(listing.hoa_fee) * dopRate).toLocaleString('en-US')} ${t('unit.per_mo')}`
+                    : `$${Number(listing.hoa_fee).toLocaleString()} ${t('unit.per_mo')}`,
                 ],
                 listing.association_fee && [
                   t('sidebar.assoc_fee'),
                   currency === 'DOP'
-                    ? `RD$${Math.round(Number(listing.association_fee) * dopRate).toLocaleString('en-US')} / mo`
-                    : `$${Number(listing.association_fee).toLocaleString()} / mo`,
+                    ? `RD$${Math.round(Number(listing.association_fee) * dopRate).toLocaleString('en-US')} ${t('unit.per_mo')}`
+                    : `$${Number(listing.association_fee).toLocaleString()} ${t('unit.per_mo')}`,
                 ],
                 listing.deposit_policy && listing.deposit_policy !== 'none' && [
                   t('sidebar.deposit'),
@@ -1254,11 +1254,12 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
 }
 
 export default function PropertyDetail({ id }: { id?: string } = {}) {
+  const { t } = useTranslation('property_detail')
   return (
     <Suspense
       fallback={
         <div className="min-h-[60vh] flex items-center justify-center text-muted font-sans text-[14px]">
-          Loading property…
+          {t('loading')}
         </div>
       }
     >

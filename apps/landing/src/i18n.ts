@@ -29,6 +29,8 @@ import enVerify from './locales/en/verify.json'
 import esVerify from './locales/es/verify.json'
 import enPropertyDetail from './locales/en/property_detail.json'
 import esPropertyDetail from './locales/es/property_detail.json'
+import enLeadCapture from './locales/en/lead_capture.json'
+import esLeadCapture from './locales/es/lead_capture.json'
 
 i18n.use(initReactI18next).init({
   resources: {
@@ -47,6 +49,7 @@ i18n.use(initReactI18next).init({
       not_found: enNotFound,
       verify: enVerify,
       property_detail: enPropertyDetail,
+      lead_capture: enLeadCapture,
     },
     es: {
       common: esCommon,
@@ -63,11 +66,12 @@ i18n.use(initReactI18next).init({
       not_found: esNotFound,
       verify: esVerify,
       property_detail: esPropertyDetail,
+      lead_capture: esLeadCapture,
     },
   },
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['common', 'landing', 'auth', 'footer', 'search', 'buying', 'selling', 'contact', 'blog', 'team', 'calculator', 'not_found', 'verify', 'property_detail'],
+  ns: ['common', 'landing', 'auth', 'footer', 'search', 'buying', 'selling', 'contact', 'blog', 'team', 'calculator', 'not_found', 'verify', 'property_detail', 'lead_capture'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
 })

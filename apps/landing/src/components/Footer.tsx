@@ -72,7 +72,7 @@ export default function Footer() {
             {t('contact.heading')}
           </div>
           <div className="flex flex-col gap-2.5 text-3.5 text-paper2/65">
-            <span>📍 Sosúa, Puerto Plata, DR</span>
+            <span>📍 Dominican Republic</span>
             <span>📞 +1 (829) 800-1234</span>
             <span>✉️ ilovedrrealty@gmail.com</span>
           </div>

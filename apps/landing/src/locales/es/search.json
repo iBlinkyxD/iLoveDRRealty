@@ -11,6 +11,8 @@
     "roi": "Mejor ROI"
   },
   "clear_all": "Limpiar todo",
+  "chip_beds": "{{beds}}+ hab",
+  "chip_roi": "ROI {{roi}}%+",
   "empty": "Ninguna propiedad coincide con estos filtros. Amplía el rango de precios o elimina una región.",
   "yield": "% rendimiento",
   "per_month": " / mes",
@@ -25,5 +27,46 @@
   "discount": {
     "fixed": "−${{amount}} dto.",
     "percent": "−{{amount}}% dto."
+  },
+  "map": {
+    "loading":          "Cargando mapa…",
+    "mapped_one":       "{{count}} propiedad en el mapa · pasa el cursor sobre una tarjeta",
+    "mapped_other":     "{{count}} propiedades en el mapa · pasa el cursor sobre una tarjeta",
+    "tap_region":       "Toca una región para filtrar",
+    "snapshot":         "Panorama del mercado",
+    "snapshot_in":      "En {{region}} · actualizado con los filtros actuales",
+    "snapshot_across":  "En todos los resultados · actualizado con los filtros actuales",
+    "insight_count":    "Propiedades coincidentes",
+    "insight_median":   "Precio mediano",
+    "insight_yield":    "Rendimiento promedio",
+    "also_like":        "También te puede gustar",
+    "also_like_sub":    "Fuera de tus filtros actuales",
+    "team_badge":       "Equipo local en línea",
+    "team_heading":     "¿Necesitas ayuda para decidir?",
+    "team_body":        "Nuestros agentes locales te seleccionarán 3–5 propiedades que se ajusten a tus objetivos, generalmente en 24 horas.",
+    "team_cta":         "Hablar con un agente"
+  },
+  "sidebar": {
+    "property_type":      "Tipo de propiedad",
+    "purpose":            "Propósito",
+    "for_sale":           "En venta",
+    "for_rent":           "En alquiler",
+    "investment":         "Inversión",
+    "price_range":        "Rango de precio (USD)",
+    "bedrooms":           "Dormitorios",
+    "any":                "Cualquiera",
+    "region":             "Región",
+    "amenities":          "Comodidades",
+    "investment_filters": "Filtros de inversión",
+    "managed":            "Gestionado",
+    "clear_all_filters":  "Limpiar todos los filtros",
+    "show_results":       "Ver {{count}} resultados",
+    "apply":              "Aplicar ({{count}})",
+    "type_all":           "Todos",
+    "type_villa":         "Villa",
+    "type_apartment":     "Apartamento",
+    "type_condo":         "Condominio",
+    "type_land":          "Terreno",
+    "type_commercial":    "Comercial"
   }
 }

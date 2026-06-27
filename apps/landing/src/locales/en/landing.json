@@ -53,6 +53,13 @@
     "roi_cta": "Run ROI numbers",
     "disclaimer": "How we pick: each week our team selects one property where location, lifestyle, and price-per-m² genuinely stand out. <strong>Owners and realtors can submit a property for consideration</strong> — our team reviews every submission for value and quality before featuring it."
   },
+  "card": {
+    "deal_badge": "Deal",
+    "roi_badge": "{{roi}}% ROI",
+    "off": "off",
+    "bd": "bd",
+    "ba": "ba"
+  },
   "founder": {
     "eyebrow": "★ Why we built this",
     "heading": "We were once where <em>you are now.</em>",

@@ -1,5 +1,6 @@
 'use client'
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X, Home, TrendingUp, CheckCircle2 } from 'lucide-react'
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
@@ -13,6 +14,7 @@ interface LeadCaptureModalProps {
 }
 
 export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProps) {
+  const { t } = useTranslation('lead_capture')
   const [tab, setTab] = useState<'buyer' | 'seller'>('buyer')
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' })
   const [sending, setSending] = useState(false)
@@ -74,26 +76,26 @@ export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProp
             I Love DR Realty
           </div>
           <h2 className="text-[20px] font-extrabold text-white tracking-tight leading-snug mb-1">
-            Ready to make your move?
+            {t('heading')}
           </h2>
           <p className="text-[13px]" style={{ color: 'rgba(255,255,255,.6)' }}>
-            Tell us what you're looking for and we'll connect you with the right agent.
+            {t('subheading')}
           </p>
 
           {/* Tabs */}
           <div className="flex gap-2 mt-4">
-            {(['buyer', 'seller'] as const).map(t => (
+            {(['buyer', 'seller'] as const).map(tab_key => (
               <button
-                key={t}
-                onClick={() => setTab(t)}
+                key={tab_key}
+                onClick={() => setTab(tab_key)}
                 className="flex items-center gap-1.5 px-3.5 py-1.75 rounded-full text-[12.5px] font-bold border-0 cursor-pointer transition-all"
                 style={{
-                  background: tab === t ? '#e10f1f' : 'rgba(255,255,255,.1)',
-                  color: tab === t ? 'white' : 'rgba(255,255,255,.6)',
+                  background: tab === tab_key ? '#e10f1f' : 'rgba(255,255,255,.1)',
+                  color: tab === tab_key ? 'white' : 'rgba(255,255,255,.6)',
                 }}
               >
-                {t === 'buyer' ? <Home size={13} /> : <TrendingUp size={13} />}
-                {t === 'buyer' ? "I'm buying" : "I'm selling"}
+                {tab_key === 'buyer' ? <Home size={13} /> : <TrendingUp size={13} />}
+                {tab_key === 'buyer' ? t('tab_buying') : t('tab_selling')}
               </button>
             ))}
           </div>
@@ -110,15 +112,15 @@ export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProp
                 <CheckCircle2 size={24} style={{ color: '#1f7a3d' }} />
               </div>
               <div>
-                <div className="text-[15px] font-bold text-ink mb-1">You're on the list!</div>
-                <div className="text-[13px] text-dim">We'll reach out within 24 hours to discuss your goals.</div>
+                <div className="text-[15px] font-bold text-ink mb-1">{t('success_heading')}</div>
+                <div className="text-[13px] text-dim">{t('success_sub')}</div>
               </div>
               <button
                 onClick={handleClose}
                 className="mt-2 px-5 py-2 rounded-full text-[13px] font-bold text-white border-0 cursor-pointer"
                 style={{ background: '#e10f1f' }}
               >
-                Close
+                {t('close')}
               </button>
             </div>
           ) : (
@@ -126,7 +128,7 @@ export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProp
               <div className="grid grid-cols-2 gap-3">
                 <input
                   required
-                  placeholder="Your name"
+                  placeholder={t('ph_name')}
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="w-full text-[13px] border border-line rounded-xl px-3 py-2.5 font-sans outline-none focus:border-current"
@@ -135,7 +137,7 @@ export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProp
                 <input
                   required
                   type="email"
-                  placeholder="Email"
+                  placeholder={t('ph_email')}
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                   className="w-full text-[13px] border border-line rounded-xl px-3 py-2.5 font-sans outline-none"
@@ -143,7 +145,7 @@ export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProp
               </div>
               <PhoneInput
                 defaultCountry="us"
-                placeholder="Phone (optional)"
+                placeholder={t('ph_phone')}
                 value={form.phone}
                 onChange={phone => setForm(f => ({ ...f, phone }))}
                 inputStyle={{ flex: 1, width: '100%', padding: '0.625rem 0.75rem', border: '1px solid #e4ddcf', borderLeft: 'none', borderRadius: '0 0.75rem 0.75rem 0', backgroundColor: '#ffffff', fontFamily: 'inherit', fontSize: '0.8125rem', color: '#00102e', outline: 'none' }}
@@ -151,11 +153,7 @@ export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProp
               />
               <textarea
                 rows={3}
-                placeholder={
-                  tab === 'buyer'
-                    ? 'What are you looking for? (location, budget, type…)'
-                    : 'Tell us about your property (location, type, asking price…)'
-                }
+                placeholder={tab === 'buyer' ? t('ph_buyer_msg') : t('ph_seller_msg')}
                 value={form.message}
                 onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                 className="w-full text-[13px] border border-line rounded-xl px-3 py-2.5 font-sans outline-none resize-none"
@@ -166,10 +164,10 @@ export default function LeadCaptureModal({ open, onClose }: LeadCaptureModalProp
                 className="w-full py-2.5 rounded-full text-[13.5px] font-bold text-white border-0 cursor-pointer disabled:opacity-60 transition-opacity"
                 style={{ background: '#e10f1f' }}
               >
-                {sending ? 'Sending…' : 'Connect me with an agent'}
+                {sending ? t('sending') : t('submit')}
               </button>
               <p className="text-[11px] text-center text-dim">
-                We'll only use this to reach out about your inquiry. No spam.
+                {t('privacy')}
               </p>
             </form>
           )}

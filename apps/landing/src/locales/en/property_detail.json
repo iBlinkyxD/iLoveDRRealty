@@ -89,7 +89,13 @@
     "check_in": "Check-in",
     "check_out": "Check-out",
     "guests": "Guests",
-    "notes": "Notes (optional)"
+    "notes": "Notes (optional)",
+    "error_auth": "Please log in to request a booking.",
+    "error_generic": "Something went wrong. Please try again."
+  },
+  "unit": {
+    "per_mo": "/ mo",
+    "per_yr": "/ yr"
   },
   "inquiry": {
     "name": "Your name",

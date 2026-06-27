@@ -89,7 +89,13 @@
     "check_in": "Entrada",
     "check_out": "Salida",
     "guests": "Huéspedes",
-    "notes": "Notas (opcional)"
+    "notes": "Notas (opcional)",
+    "error_auth": "Por favor inicia sesión para solicitar una reserva.",
+    "error_generic": "Algo salió mal. Por favor intenta de nuevo."
+  },
+  "unit": {
+    "per_mo": "/ mes",
+    "per_yr": "/ año"
   },
   "inquiry": {
     "name": "Tu nombre",

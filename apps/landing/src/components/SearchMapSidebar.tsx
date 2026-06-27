@@ -1,6 +1,7 @@
 'use client'
 import { GoogleMap, OverlayView, useJsApiLoader } from '@react-google-maps/api'
 import { useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fmt, type Listing } from '../data/listings'
 import { DR_REGIONS } from '../data/searchData'
 
@@ -75,6 +76,7 @@ function LiveMap({ apiKey, hovered, listings, onSelect, currency, dopRate, regio
   dopRate: number
   region: string | null
 }) {
+  const { t } = useTranslation('search')
   const { isLoaded } = useJsApiLoader({ id: 'google-map-script', googleMapsApiKey: apiKey })
   const mapRef = useRef<google.maps.Map | null>(null)
 
@@ -95,7 +97,7 @@ function LiveMap({ apiKey, hovered, listings, onSelect, currency, dopRate, regio
   if (!isLoaded) {
     return (
       <div style={{ width: '100%', height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#00102e', color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>
-        Loading map…
+        {t('map.loading')}
       </div>
     )
   }
@@ -161,6 +163,7 @@ function DRMap({ hovered, listings, onSelect, currency, dopRate, onCurrencyChang
   onCurrencyChange: (c: 'USD' | 'DOP') => void
   region: string | null
 }) {
+  const { t } = useTranslation('search')
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
   const hasKey = Boolean(apiKey && apiKey !== 'YOUR_KEY_HERE')
 
@@ -171,8 +174,8 @@ function DRMap({ hovered, listings, onSelect, currency, dopRate, onCurrencyChang
           <div className="font-sans text-4.25 font-semibold text-ink">Dominican Republic</div>
           <div className="text-xs text-dim mt-0.5 font-sans">
             {listings.length > 0
-              ? `${listings.length} ${listings.length === 1 ? 'property' : 'properties'} mapped · hover a card`
-              : 'Tap a region to filter'}
+              ? t('map.mapped', { count: listings.length })
+              : t('map.tap_region')}
           </div>
         </div>
         <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold shrink-0">
@@ -223,6 +226,7 @@ export function SearchMapSidebar({
   hovered, results, alsoLike, insights, currency, dopRate, region,
   onCurrencyChange, onSelect, go,
 }: MapSidebarProps) {
+  const { t } = useTranslation('search')
   const fmtMedian = (v: number) => {
     if (currency === 'DOP') {
       const dp = Math.round(v * dopRate)
@@ -246,20 +250,20 @@ export function SearchMapSidebar({
 
       {insights && (
         <div className="bg-paper border border-line-soft rounded-2xl py-4 px-4.5">
-          <div className="text-2.75 font-bold tracking-[.12em] uppercase text-dim mb-1">Market snapshot</div>
+          <div className="text-2.75 font-bold tracking-[.12em] uppercase text-dim mb-1">{t('map.snapshot')}</div>
           <div className="text-[11.5px] text-dim mb-2.5 leading-[1.45]">
-            {region ? `In ${region} · ` : 'Across all results · '}updated for current filters
+            {region ? t('map.snapshot_in', { region }) : t('map.snapshot_across')}
           </div>
-          <Insight label="Matching listings" value={insights.count} />
-          {insights.median   > 0 && <Insight label="Median price"     value={fmtMedian(insights.median)} />}
-          {insights.avgYield > 0 && <Insight label="Avg rental yield" value={`${insights.avgYield.toFixed(1)}%`} tone="brand" />}
+          <Insight label={t('map.insight_count')} value={insights.count} />
+          {insights.median   > 0 && <Insight label={t('map.insight_median')} value={fmtMedian(insights.median)} />}
+          {insights.avgYield > 0 && <Insight label={t('map.insight_yield')}  value={`${insights.avgYield.toFixed(1)}%`} tone="brand" />}
         </div>
       )}
 
       {alsoLike.length > 0 && (
         <div className="bg-paper border border-line-soft rounded-2xl py-4 px-4.5">
-          <div className="text-2.75 font-bold tracking-[.12em] uppercase text-dim mb-1">You might also like</div>
-          <div className="text-[11.5px] text-dim mb-3 leading-[1.45]">Just outside your current filters</div>
+          <div className="text-2.75 font-bold tracking-[.12em] uppercase text-dim mb-1">{t('map.also_like')}</div>
+          <div className="text-[11.5px] text-dim mb-3 leading-[1.45]">{t('map.also_like_sub')}</div>
           {alsoLike.map((l, i) => (
             <button key={l.id} onClick={() => go(`detail?id=${l.id}`)}
               className={`flex w-full gap-2.5 py-2.5 bg-transparent border-x-0 border-t-0 cursor-pointer text-left font-sans ${i < alsoLike.length - 1 ? 'border-b border-line-soft' : 'border-b-0'}`}>
@@ -283,18 +287,18 @@ export function SearchMapSidebar({
         <div className="flex items-center gap-2 mb-1.5">
           <span className="w-2 h-2 rounded-full bg-[#4ade80] shrink-0" />
           <span className="text-2.75 text-white/65 tracking-[.08em] uppercase font-bold">
-            Local team online
+            {t('map.team_badge')}
           </span>
         </div>
         <div className="font-sans text-4.25 font-semibold leading-tight mb-1.5">
-          Need help narrowing down?
+          {t('map.team_heading')}
         </div>
         <div className="text-[12.5px] text-white/70 leading-normal mb-3">
-          Our local agents will short-list 3–5 properties that match your goals — usually within 24 hours.
+          {t('map.team_body')}
         </div>
         <button onClick={() => go('contact')}
           className="w-full py-2.5 px-3.5 rounded-lg bg-coral text-white border-none font-sans text-3.25 font-semibold cursor-pointer">
-          Talk to an agent
+          {t('map.team_cta')}
         </button>
       </div>
 
