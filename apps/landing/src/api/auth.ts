@@ -46,3 +46,11 @@ export async function logout(): Promise<void> {
 export async function googleAuth(accessToken: string): Promise<{ expires_in: number }> {
   return client.post('/auth/google', { access_token: accessToken }).then(r => r.data).catch(errorMessage)
 }
+
+export async function forgotPassword(email: string): Promise<void> {
+  return client.post('/auth/forgot-password', { email }).then(() => undefined).catch(errorMessage)
+}
+
+export async function resetPassword(token: string, new_password: string): Promise<void> {
+  return client.post('/auth/reset-password', { token, new_password }).then(() => undefined).catch(errorMessage)
+}

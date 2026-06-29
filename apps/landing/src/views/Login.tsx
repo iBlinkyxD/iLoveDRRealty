@@ -128,7 +128,7 @@ export default function Login() {
             <div className="mb-5.5">
               <div className="flex justify-between items-center mb-1.75">
                 <label className="text-xs font-semibold text-ink2">{t('login.form.password_label')}</label>
-                <button className="bg-transparent border-0 cursor-pointer text-xs text-sea font-semibold font-sans p-0">{t('login.form.forgot')}</button>
+                <button onClick={() => { window.location.href = '/forgot-password' }} className="bg-transparent border-0 cursor-pointer text-xs text-sea font-semibold font-sans p-0">{t('login.form.forgot')}</button>
               </div>
               <div className="relative">
                 <input
