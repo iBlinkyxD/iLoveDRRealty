@@ -11,6 +11,7 @@ import type { LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { AdminListing } from '../../api/admin'
 import { TONE } from '../../pages/admin/shared'
+import { ConfirmModal } from '../shared/ConfirmModal'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -64,9 +65,10 @@ export function ListingDetailPanel({
   listing, onClose, onEdit, onApprove, onReject, onArchive, onSetDeal, onClearDeal, working,
 }: Props) {
   const { t } = useTranslation('admin')
-  const [imgIdx,        setImgIdx]        = useState(0)
-  const [rejectOpen,    setRejectOpen]    = useState(false)
-  const [reason,        setReason]        = useState('')
+  const [imgIdx,             setImgIdx]             = useState(0)
+  const [rejectOpen,         setRejectOpen]         = useState(false)
+  const [reason,             setReason]             = useState('')
+  const [confirmRejectOpen,  setConfirmRejectOpen]  = useState(false)
   const [dealOpen,      setDealOpen]      = useState(false)
   const [discountType,  setDiscountType]  = useState<'pct' | 'fixed'>('pct')
   const [discountValue, setDiscountValue] = useState('')
@@ -591,13 +593,13 @@ export function ListingDetailPanel({
                   type="text"
                   value={reason}
                   onChange={e => setReason(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && reason.trim() && onReject(reason.trim())}
+                  onKeyDown={e => e.key === 'Enter' && reason.trim() && setConfirmRejectOpen(true)}
                   placeholder={t('listing_panel.reason_ph')}
                   className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-red-400"
                   autoFocus
                 />
                 <button
-                  onClick={() => { if (reason.trim()) onReject(reason.trim()) }}
+                  onClick={() => { if (reason.trim()) setConfirmRejectOpen(true) }}
                   disabled={!reason.trim() || working}
                   className="px-4 py-2 rounded-lg text-[12px] font-bold text-white disabled:opacity-50 cursor-pointer shrink-0"
                   style={{ background: '#e10f1f' }}
@@ -605,6 +607,18 @@ export function ListingDetailPanel({
                   {t('listing_panel.confirm')}
                 </button>
               </div>
+            )}
+
+            {confirmRejectOpen && (
+              <ConfirmModal
+                title={t('listing_panel.confirm_reject_title')}
+                description={t('listing_panel.confirm_reject_desc', { title: titleCase(listing.title), reason: reason.trim() })}
+                confirmLabel={t('listing_panel.confirm_reject_btn')}
+                variant="danger"
+                loading={working}
+                onConfirm={() => { onReject(reason.trim()); setConfirmRejectOpen(false) }}
+                onCancel={() => setConfirmRejectOpen(false)}
+              />
             )}
           </div>
         </div>

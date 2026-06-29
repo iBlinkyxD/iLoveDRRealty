@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Shield, Bell, Eye, EyeOff, Mail, Unlink, Link2, AlertTriangle, Camera, Save } from 'lucide-react'
+import { Shield, Bell, Eye, EyeOff, Mail, Unlink, Link2, AlertTriangle, Camera, Save, Trash2, LogOut } from 'lucide-react'
 import { useGoogleLogin } from '@react-oauth/google'
 import { PhoneInput } from 'react-international-phone'
 import { isValidPhoneNumber } from 'libphonenumber-js'
@@ -8,7 +8,8 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { UserInfo } from '../lib/auth'
 import type { Role } from '../App'
-import { changePassword, linkGoogle, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../api/auth'
+import { changePassword, deactivateAccount, linkGoogle, requestAccountDeletion, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../api/auth'
+import { ConfirmModal } from '../components/shared/ConfirmModal'
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488] disabled:bg-[#f4f5f7] disabled:text-dim'
 
@@ -100,6 +101,14 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
   const [unlinking, setUnlinking] = useState(false)
   const [linking, setLinking] = useState(false)
 
+  // Danger zone state
+  const [deactivateOpen,  setDeactivateOpen]  = useState(false)
+  const [deactivating,    setDeactivating]    = useState(false)
+  const [deleteOpen,      setDeleteOpen]      = useState(false)
+  const [deleting,        setDeleting]        = useState(false)
+  const [deleteEmail,     setDeleteEmail]     = useState('')
+  const [deleteDone,      setDeleteDone]      = useState(false)
+
   const startLinkGoogle = useGoogleLogin({
     onSuccess: async ({ access_token }) => {
       setLinking(true)
@@ -187,6 +196,32 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
       toast.error(err instanceof Error ? err.message : t('security.err_required'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDeactivate() {
+    setDeactivating(true)
+    try {
+      await deactivateAccount()
+      window.location.href = `${window.location.origin.replace('dashboard', 'ilovedrrealty.com') || '/'}?msg=deactivated`
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('security.danger_zone.err_deactivate'))
+    } finally {
+      setDeactivating(false)
+      setDeactivateOpen(false)
+    }
+  }
+
+  async function handleDeleteRequest() {
+    setDeleting(true)
+    try {
+      await requestAccountDeletion()
+      setDeleteOpen(false)
+      setDeleteDone(true)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : t('security.danger_zone.err_delete'))
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -375,6 +410,7 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
 
       {/* ── Security tab ── */}
       {tab === 'security' && (
+        <>
         <Section icon={Shield} title={t('security.title')}>
           <div className="flex flex-col divide-y divide-line">
 
@@ -531,8 +567,91 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
               </div>
             </div>
 
+            {/* Danger Zone */}
+            <div className="pt-5 mt-2 border-t border-red-100">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-red-400 mb-4">{t('security.danger_zone.title')}</div>
+              <div className="flex flex-col gap-3">
+
+                {/* Deactivate */}
+                <div className="flex items-start justify-between gap-4 py-3 px-4 rounded-xl border border-red-100 bg-red-50/40">
+                  <div className="min-w-0">
+                    <div className="text-[13.5px] font-semibold text-ink">{t('security.danger_zone.deactivate_label')}</div>
+                    <div className="text-[11.5px] text-dim mt-0.5">{t('security.danger_zone.deactivate_sub')}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDeactivateOpen(true)}
+                    className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-red-200 bg-white text-[12.5px] font-semibold text-red-600 hover:bg-red-50 cursor-pointer transition-colors"
+                  >
+                    <LogOut size={12} />
+                    {t('security.danger_zone.deactivate_btn')}
+                  </button>
+                </div>
+
+                {/* Delete */}
+                <div className="flex items-start justify-between gap-4 py-3 px-4 rounded-xl border border-red-200 bg-red-50/60">
+                  <div className="min-w-0">
+                    <div className="text-[13.5px] font-semibold text-red-700">{t('security.danger_zone.delete_label')}</div>
+                    <div className="text-[11.5px] text-dim mt-0.5">{t('security.danger_zone.delete_sub')}</div>
+                    {deleteDone && (
+                      <div className="mt-2 text-[12px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+                        {t('security.danger_zone.delete_done')}
+                      </div>
+                    )}
+                  </div>
+                  {!deleteDone && (
+                    <div className="shrink-0 flex flex-col gap-2 min-w-40">
+                      <input
+                        type="email"
+                        value={deleteEmail}
+                        onChange={e => setDeleteEmail(e.target.value)}
+                        placeholder={t('security.danger_zone.delete_email_ph')}
+                        className="w-full px-3 py-1.5 rounded-lg border border-red-200 bg-white text-[12px] text-ink outline-none focus:border-red-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDeleteOpen(true)}
+                        disabled={deleteEmail.trim().toLowerCase() !== user.email.toLowerCase()}
+                        className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-red-300 bg-red-600 text-[12.5px] font-bold text-white cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-700 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                        {t('security.danger_zone.delete_btn')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         </Section>
+
+        {/* Deactivate ConfirmModal */}
+        {deactivateOpen && (
+          <ConfirmModal
+            title={t('security.danger_zone.deactivate_modal_title')}
+            description={t('security.danger_zone.deactivate_modal_desc')}
+            confirmLabel={deactivating ? t('security.danger_zone.deactivating') : t('security.danger_zone.deactivate_modal_btn')}
+            variant="warning"
+            loading={deactivating}
+            onConfirm={handleDeactivate}
+            onCancel={() => setDeactivateOpen(false)}
+          />
+        )}
+
+        {/* Delete ConfirmModal */}
+        {deleteOpen && (
+          <ConfirmModal
+            title={t('security.danger_zone.delete_modal_title')}
+            description={t('security.danger_zone.delete_modal_desc')}
+            confirmLabel={deleting ? t('security.danger_zone.deleting') : t('security.danger_zone.delete_modal_btn')}
+            variant="danger"
+            loading={deleting}
+            onConfirm={handleDeleteRequest}
+            onCancel={() => setDeleteOpen(false)}
+          />
+        )}
+        </>
       )}
 
       {/* ── Notifications tab ── */}

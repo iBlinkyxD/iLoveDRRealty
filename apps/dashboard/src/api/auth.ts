@@ -36,6 +36,14 @@ export async function getMyAgent(): Promise<{ realtor_id: string | null; realtor
   return res.data
 }
 
+export async function deactivateAccount(): Promise<void> {
+  await client.put('/auth/me/deactivate')
+}
+
+export async function requestAccountDeletion(): Promise<void> {
+  await client.post('/auth/me/delete-request')
+}
+
 export async function uploadAvatar(file: File): Promise<{ avatar_url: string }> {
   const form = new FormData()
   form.append('file', file)

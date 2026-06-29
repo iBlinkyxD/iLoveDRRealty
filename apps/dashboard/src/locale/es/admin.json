@@ -227,7 +227,10 @@
     "deposit_first":       "Primer mes de renta",
     "deposit_last":        "Último mes de renta",
     "deposit_first_last":  "Primer + último mes de renta",
-    "deposit_none":        "Sin depósito requerido"
+    "deposit_none":        "Sin depósito requerido",
+    "confirm_reject_title": "¿Rechazar esta propiedad?",
+    "confirm_reject_desc":  "Estás a punto de rechazar \"{{title}}\". Motivo: {{reason}}",
+    "confirm_reject_btn":   "Sí, rechazar propiedad"
   },
   "edit_diff": {
     "submitted_by":    "Enviado por",

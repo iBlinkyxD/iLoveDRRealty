@@ -227,7 +227,10 @@
     "deposit_first":       "First month's rent",
     "deposit_last":        "Last month's rent",
     "deposit_first_last":  "First + Last month's rent",
-    "deposit_none":        "No deposit required"
+    "deposit_none":        "No deposit required",
+    "confirm_reject_title": "Reject this listing?",
+    "confirm_reject_desc":  "You are about to reject \"{{title}}\". Reason: {{reason}}",
+    "confirm_reject_btn":   "Yes, reject listing"
   },
   "edit_diff": {
     "submitted_by":    "Submitted by",

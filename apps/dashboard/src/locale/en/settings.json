@@ -67,6 +67,27 @@
       "cancel":     "Cancel",
       "confirm":    "Yes, unlink",
       "confirming": "Unlinking…"
+    },
+    "danger_zone": {
+      "title":                  "Danger Zone",
+      "deactivate_label":       "Deactivate account",
+      "deactivate_sub":         "Temporarily suspend your account. You can reactivate by contacting support.",
+      "deactivate_btn":         "Deactivate",
+      "deactivate_modal_title": "Deactivate your account?",
+      "deactivate_modal_desc":  "Your account will be suspended and you will be signed out immediately. Contact support to reactivate.",
+      "deactivate_modal_btn":   "Yes, deactivate",
+      "deactivating":           "Deactivating…",
+      "delete_label":           "Delete account",
+      "delete_sub":             "Permanently delete your account and all associated data. Type your email address below to enable this action.",
+      "delete_email_ph":        "Type your email to confirm",
+      "delete_btn":             "Request deletion",
+      "delete_modal_title":     "Delete your account?",
+      "delete_modal_desc":      "Your account will be scheduled for permanent deletion in 30 days. Listings and leads may be anonymized or removed.",
+      "delete_modal_btn":       "Yes, request deletion",
+      "deleting":               "Requesting…",
+      "delete_done":            "Deletion requested — you have 30 days to cancel by contacting support.",
+      "err_deactivate":         "Could not deactivate account. Please try again.",
+      "err_delete":             "Could not submit deletion request. Please try again."
     }
   },
   "notifications": {

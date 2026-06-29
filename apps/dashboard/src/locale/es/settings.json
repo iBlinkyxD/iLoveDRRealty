@@ -67,6 +67,27 @@
       "cancel":     "Cancelar",
       "confirm":    "Sí, desvincular",
       "confirming": "Desvinculando…"
+    },
+    "danger_zone": {
+      "title":                  "Zona de peligro",
+      "deactivate_label":       "Desactivar cuenta",
+      "deactivate_sub":         "Suspende temporalmente tu cuenta. Puedes reactivarla contactando a soporte.",
+      "deactivate_btn":         "Desactivar",
+      "deactivate_modal_title": "¿Desactivar tu cuenta?",
+      "deactivate_modal_desc":  "Tu cuenta será suspendida y cerrarás sesión de inmediato. Contacta a soporte para reactivarla.",
+      "deactivate_modal_btn":   "Sí, desactivar",
+      "deactivating":           "Desactivando…",
+      "delete_label":           "Eliminar cuenta",
+      "delete_sub":             "Elimina permanentemente tu cuenta y todos los datos asociados. Escribe tu correo abajo para habilitar esta acción.",
+      "delete_email_ph":        "Escribe tu correo para confirmar",
+      "delete_btn":             "Solicitar eliminación",
+      "delete_modal_title":     "¿Eliminar tu cuenta?",
+      "delete_modal_desc":      "Tu cuenta será programada para eliminación permanente en 30 días. Las propiedades y leads pueden ser anonimizados o eliminados.",
+      "delete_modal_btn":       "Sí, solicitar eliminación",
+      "deleting":               "Solicitando…",
+      "delete_done":            "Eliminación solicitada — tienes 30 días para cancelar contactando a soporte.",
+      "err_deactivate":         "No se pudo desactivar la cuenta. Inténtalo de nuevo.",
+      "err_delete":             "No se pudo enviar la solicitud de eliminación. Inténtalo de nuevo."
     }
   },
   "notifications": {
