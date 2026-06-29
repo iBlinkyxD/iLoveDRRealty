@@ -6,6 +6,7 @@ import { I, CHANNELS } from '../data/contactData'
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
 import { isValidPhoneNumber } from 'libphonenumber-js'
+import { submitContactLead } from '../api/inquiries'
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {
   return (
@@ -34,6 +35,28 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', interest: 'Buying a property', message: '' })
   const [agreed, setAgreed] = useState(false)
   const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit() {
+    if (!agreed || loading) return
+    setLoading(true)
+    setError(null)
+    try {
+      await submitContactLead({
+        name: form.name,
+        email: form.email,
+        phone: form.phone || undefined,
+        interest: form.interest,
+        message: form.message || undefined,
+      })
+      setSent(true)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
@@ -198,11 +221,15 @@ export default function Contact() {
                   {t('form.consent')}
                 </label>
 
+                {error && (
+                  <p className="text-[12.5px] text-coral mb-3">{error}</p>
+                )}
                 <button
-                  onClick={() => agreed && setSent(true)}
-                  className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full border-none font-sans text-3.75 font-bold transition-colors duration-200 ${agreed ? 'bg-coral text-white cursor-pointer' : 'bg-line-soft text-dim cursor-not-allowed'}`}
+                  onClick={handleSubmit}
+                  disabled={!agreed || loading}
+                  className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-full border-none font-sans text-3.75 font-bold transition-colors duration-200 ${agreed && !loading ? 'bg-coral text-white cursor-pointer' : 'bg-line-soft text-dim cursor-not-allowed'}`}
                 >
-                  {t('form.submit')} <Icon d={I.arrow} size={16} />
+                  {loading ? t('form.submitting') : <>{t('form.submit')} <Icon d={I.arrow} size={16} /></>}
                 </button>
               </>
             )}

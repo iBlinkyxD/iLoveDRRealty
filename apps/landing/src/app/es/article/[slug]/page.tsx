@@ -1,39 +1,39 @@
 import type { Metadata } from 'next'
-import ArticleDetail from '../../../views/ArticleDetail'
-import { ARTICLES } from '../../../data/blogData'
-import { ARTICLES_ES } from '../../../data/blogData.es'
+import ArticleDetail from '../../../../views/ArticleDetail'
+import EsLangSync from '../../../../components/EsLangSync'
+import { ARTICLES_ES } from '../../../../data/blogData.es'
 
+// One Spanish page per translated article. Untranslated posts have no /es URL.
 export function generateStaticParams() {
-  return Object.keys(ARTICLES).map(slug => ({ slug }))
+  return Object.keys(ARTICLES_ES).map(slug => ({ slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const a = ARTICLES[slug]
-  if (!a) return { title: 'Article Not Found' }
+  const a = ARTICLES_ES[slug]
+  if (!a) return { title: 'Artículo no encontrado' }
   const title = a.metaTitle ?? a.title
   const description = a.metaDescription ?? a.lede
-  const hasEs = !!ARTICLES_ES[slug]
   return {
     title,
     description,
     keywords: a.keywords,
     alternates: {
-      canonical: `/article/${slug}/`,
+      canonical: `/es/article/${slug}/`,
       languages: {
         en: `/article/${slug}/`,
-        ...(hasEs ? { es: `/es/article/${slug}/` } : {}),
+        es: `/es/article/${slug}/`,
         'x-default': `/article/${slug}/`,
       },
     },
-    openGraph: { title, description, images: [a.img], type: 'article' },
+    openGraph: { title, description, images: [a.img], type: 'article', locale: 'es_DO' },
     twitter: { card: 'summary_large_image', title, description, images: [a.img] },
   }
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const a = ARTICLES[slug]
+  const a = ARTICLES_ES[slug]
 
   const jsonLd = a
     ? [
@@ -45,13 +45,14 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           image: a.img,
           author: { '@type': 'Organization', name: 'I Love DR Realty' },
           publisher: { '@type': 'Organization', name: 'I Love DR Realty' },
-          inLanguage: 'en',
+          inLanguage: 'es',
         },
         ...(a.faqs && a.faqs.length > 0
           ? [
               {
                 '@context': 'https://schema.org',
                 '@type': 'FAQPage',
+                inLanguage: 'es',
                 mainEntity: a.faqs.map(f => ({
                   '@type': 'Question',
                   name: f.q,
@@ -72,7 +73,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <ArticleDetail slug={slug} />
+      <EsLangSync />
+      <ArticleDetail slug={slug} lang="es" />
     </>
   )
 }

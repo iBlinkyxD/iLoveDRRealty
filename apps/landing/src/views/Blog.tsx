@@ -7,10 +7,12 @@ import {
   STATS, STAT_COLORS, FEATURED, EDITOR_PICKS, GUIDES,
   STEPS, STEP_COLORS, FAQ_COLORS,
 } from '../data/blogData'
+import { CARDS_ES } from '../data/blogData.es'
 
 export default function Blog() {
   const go = useNav()
-  const { t } = useTranslation('blog')
+  const { t, i18n } = useTranslation('blog')
+  const isEs = i18n.language.startsWith('es')
   const statsLabels = t('stats', { returnObjects: true }) as string[]
   const processSteps = t('process.steps', { returnObjects: true }) as Array<{ title: string; desc: string }>
   const faqItems = t('faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>
@@ -18,24 +20,21 @@ export default function Blog() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [email, setEmail] = useState('')
 
-  const shownGuides = cat === 'All' ? GUIDES : GUIDES.filter(g => g.cat === cat)
+  // Apply Spanish card text where available; fall back to English.
+  const trCard = <T extends { slug: string }>(c: T): T => (isEs && CARDS_ES[c.slug]) ? { ...c, ...CARDS_ES[c.slug] } : c
+  const feat = trCard(FEATURED)
+  const picks = EDITOR_PICKS.map(trCard)
+  const guidesAll = GUIDES.map(trCard)
+  const shownGuides = cat === 'All' ? guidesAll : guidesAll.filter(g => g.cat === cat)
 
   return (
     <div className="bg-paper">
 
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden bg-ink min-h-100 sm:min-h-130">
+      <div className="relative overflow-hidden bg-ink"
+        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 20% 30%, rgba(225,15,31,.35) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(11,99,171,.45) 0%, transparent 50%), radial-gradient(ellipse at 60% 10%, rgba(240,168,0,.3) 0%, transparent 45%)' }} />
-        <div className="absolute inset-0"
-          style={{ background: 'linear-gradient(180deg, rgba(0,16,46,.65) 0%, rgba(0,16,46,.85) 100%)' }} />
-        {/* Right-side image grid — hidden on mobile */}
-        <div className="hidden lg:grid absolute top-0 right-0 w-[42%] h-full opacity-[.28] grid-cols-2 grid-rows-2 gap-1.5 p-3">
-          <div className="rounded-xl" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div className="rounded-xl" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div className="rounded-xl" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=400&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-          <div className="rounded-xl" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80&auto=format&fit=crop)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        </div>
+          style={{ background: 'linear-gradient(90deg, rgba(0,16,46,.95) 0%, rgba(0,16,46,.75) 55%, rgba(0,16,46,.5) 100%)' }} />
         <div className="relative max-w-310 mx-auto pt-14 sm:pt-17.5 px-4 sm:px-7 pb-12 sm:pb-15">
           <div className="max-w-180">
             <span className="inline-block py-1.5 px-3.5 rounded-full bg-gold text-ink text-2.75 font-extrabold tracking-[.14em] uppercase font-sans">
@@ -73,12 +72,12 @@ export default function Blog() {
           </h2>
           <div className="relative rounded-3xl overflow-hidden cursor-pointer shadow-[0_30px_80px_-30px_rgba(0,16,46,.35)] flex flex-col lg:grid lg:grid-cols-[1.1fr_1fr] lg:min-h-95">
             <div className="relative">
-              <div className="h-56 sm:h-72 lg:h-full lg:min-h-95" style={{ backgroundImage: `url(${FEATURED.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              <div className="h-56 sm:h-72 lg:h-full lg:min-h-95" style={{ backgroundImage: `url(${feat.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
               <div className="absolute inset-0"
                 style={{ background: 'linear-gradient(135deg, rgba(31,122,61,.4), rgba(0,16,46,.1))' }} />
               <div className="absolute top-5.5 left-5.5">
                 <span className="bg-gold text-ink text-2.5 font-extrabold py-1.25 px-3 rounded-full tracking-[.12em] font-sans">
-                  {FEATURED.tag}
+                  {feat.tag}
                 </span>
               </div>
             </div>
@@ -86,23 +85,24 @@ export default function Blog() {
             <div className="pt-8 sm:pt-12 px-7 sm:px-11 pb-8 sm:pb-12 flex flex-col justify-center text-white"
               style={{ background: 'linear-gradient(135deg, #00102e 0%, #1a3a6e 100%)' }}>
               <h3 className="font-sans text-6 sm:text-8 font-semibold text-white leading-[1.12] mb-4 tracking-[-.01em]">
-                {FEATURED.title}
+                {feat.title}
               </h3>
               <p className="text-3.75 text-white/78 leading-[1.65] mb-6 font-sans">
-                {FEATURED.desc}
+                {feat.desc}
               </p>
               <div className="flex items-center gap-3 mb-5">
-                <span className="w-9.5 h-9.5 rounded-full text-white grid place-items-center text-3.25 font-bold font-sans shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #0b63ab, #005f8a)' }}>
-                  {FEATURED.initials}
-                </span>
+                <img
+                  src="/iLoveDRRealty_Icon.png"
+                  alt="I Love DR Realty"
+                  className="w-9.5 h-9.5 rounded-full object-contain bg-white shrink-0 p-0.5"
+                />
                 <div>
-                  <div className="text-3.25 font-semibold text-white font-sans">{FEATURED.author}</div>
-                  <div className="text-[11.5px] text-white/55 font-sans">{FEATURED.role} · {FEATURED.read}</div>
+                  <div className="text-3.25 font-semibold text-white font-sans">{feat.author}</div>
+                  <div className="text-[11.5px] text-white/55 font-sans">{feat.role} · {feat.read}</div>
                 </div>
               </div>
               <button
-                onClick={() => go('article', FEATURED.slug)}
+                onClick={() => go('article', feat.slug)}
                 className="inline-flex items-center gap-1.75 bg-coral text-white border-none py-2.75 px-5.5 rounded-full font-sans font-bold text-[13.5px] cursor-pointer self-start"
               >
                 {t('featured.read_cta')}
@@ -115,7 +115,7 @@ export default function Blog() {
       {/* ── Editor's picks ── */}
       <div className="max-w-310 mx-auto pt-5 px-4 sm:px-7 pb-12.5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5.5">
-          {EDITOR_PICKS.map((p, i) => {
+          {picks.map((p, i) => {
             const info = catInfo(p.cat)
             return (
               <div key={i} onClick={() => go('article', p.slug)}
@@ -171,7 +171,7 @@ export default function Blog() {
       </div>
 
       {/* ── Guides grid ── */}
-      <div className="max-w-310 mx-auto py-12 sm:py-15 px-4 sm:px-7">
+      <div id="guides-section" className="max-w-310 mx-auto py-12 sm:py-15 px-4 sm:px-7">
         <div className="flex justify-between items-end mb-5 sm:mb-6.5 flex-wrap gap-3">
           <div>
             <div className="text-2.75 font-bold tracking-[.22em] uppercase font-sans"

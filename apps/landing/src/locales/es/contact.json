@@ -40,7 +40,8 @@
     "message_label": "Mensaje",
     "message_placeholder": "Cuéntanos lo que buscas…",
     "consent": "Acepto ser contactado sobre mi consulta y acepto la política de privacidad.",
-    "submit": "Enviar mensaje"
+    "submit": "Enviar mensaje",
+    "submitting": "Enviando…"
   },
   "success": {
     "heading": "¡Mensaje enviado!",

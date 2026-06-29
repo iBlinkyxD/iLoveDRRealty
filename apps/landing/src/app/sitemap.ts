@@ -1,4 +1,6 @@
 import type { MetadataRoute } from 'next'
+import { ARTICLES, FEATURED, EDITOR_PICKS, GUIDES } from '../data/blogData'
+import { ARTICLES_ES } from '../data/blogData.es'
 
 export const dynamic = 'force-static'
 
@@ -17,6 +19,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/blog/`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.6 },
   ]
 
+  // Only published (navigable) articles — featured + editor picks + visible guides.
+  // Staged posts in HIDDEN_GUIDES are intentionally excluded until they go live.
+  const publishedSlugs = Array.from(
+    new Set([FEATURED.slug, ...EDITOR_PICKS.map(p => p.slug), ...GUIDES.map(g => g.slug)]),
+  ).filter(slug => ARTICLES[slug])
+
+  const articlePages: MetadataRoute.Sitemap = publishedSlugs.map(slug => {
+    const parsed = ARTICLES[slug].date ? new Date(ARTICLES[slug].date) : null
+    const lastModified = parsed && !isNaN(parsed.getTime()) ? parsed : new Date()
+    const hasEs = !!ARTICLES_ES[slug]
+    return {
+      url: `${BASE}/article/${slug}/`,
+      lastModified,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+      ...(hasEs
+        ? { alternates: { languages: { en: `${BASE}/article/${slug}/`, es: `${BASE}/es/article/${slug}/` } } }
+        : {}),
+    }
+  })
+
+  // Spanish article URLs — only for published posts that actually have a translation.
+  const esArticlePages: MetadataRoute.Sitemap = publishedSlugs
+    .filter(slug => ARTICLES_ES[slug])
+    .map(slug => {
+      const parsed = ARTICLES[slug].date ? new Date(ARTICLES[slug].date) : null
+      return {
+        url: `${BASE}/es/article/${slug}/`,
+        lastModified: parsed && !isNaN(parsed.getTime()) ? parsed : new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+        alternates: { languages: { en: `${BASE}/article/${slug}/`, es: `${BASE}/es/article/${slug}/` } },
+      }
+    })
+
   let listingPages: MetadataRoute.Sitemap = []
   try {
     const res = await fetch(`${API_URL}/listings`)
@@ -33,5 +70,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If API is unavailable at build time, only static pages are included
   }
 
-  return [...staticPages, ...listingPages]
+  return [...staticPages, ...articlePages, ...esArticlePages, ...listingPages]
 }

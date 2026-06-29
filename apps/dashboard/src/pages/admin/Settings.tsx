@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Settings, Bell, Shield, Eye, EyeOff, Mail, Unlink, AlertTriangle, Camera, Save } from 'lucide-react'
 import { PhoneInput } from 'react-international-phone'
 import { isValidPhoneNumber } from 'libphonenumber-js'
@@ -6,6 +6,7 @@ import 'react-international-phone/style.css'
 import toast from 'react-hot-toast'
 import type { UserInfo } from '../../lib/auth'
 import { changePassword, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../../api/auth'
+import { getPlatformSettings, updatePlatformSettings } from '../../api/admin'
 import { TONE, Toggle } from './shared'
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488] disabled:bg-[#f4f5f7] disabled:text-dim'
@@ -113,6 +114,25 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
     require2FA:     false,
   })
   const toggleNotif = (k: keyof typeof notifs) => setNotifs(s => ({ ...s, [k]: !s[k] }))
+
+  // Platform settings (DB-backed)
+  const [notifyEmail, setNotifyEmail] = useState('')
+  const [savingNotifyEmail, setSavingNotifyEmail] = useState(false)
+  useEffect(() => {
+    getPlatformSettings().then(s => setNotifyEmail(s.notify_email || '')).catch(() => {})
+  }, [])
+  async function handleSaveNotifyEmail(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingNotifyEmail(true)
+    try {
+      await updatePlatformSettings({ notify_email: notifyEmail })
+      toast.success('Notification email saved')
+    } catch {
+      toast.error('Failed to save notification email')
+    } finally {
+      setSavingNotifyEmail(false)
+    }
+  }
 
   // Account security state
   const [hasPassword, setHasPassword] = useState(user.has_password !== false)
@@ -353,6 +373,7 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
 
       {/* ── Platform tab ── */}
       {tab === 'platform' && (
+        <div className="flex flex-col gap-5">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
           {/* Platform toggles */}
@@ -413,6 +434,42 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
             </div>
           </div>
 
+        </div>
+
+        {/* Notification email (DB-backed) */}
+        <div className="max-w-2xl bg-paper border border-line rounded-2xl overflow-hidden">
+          <div className="px-5.5 py-4 border-b border-line flex items-center gap-2">
+            <Mail size={15} className="text-ink2" />
+            <div className="font-sans text-[16px] font-bold text-ink">Lead notification email</div>
+          </div>
+          <form onSubmit={handleSaveNotifyEmail} className="px-5.5 py-5 flex flex-col gap-4">
+            <div>
+              <label className="block text-[12px] font-semibold text-dim uppercase tracking-wide mb-1.5">
+                Send new lead alerts to
+              </label>
+              <input
+                type="email"
+                className={inp}
+                value={notifyEmail}
+                onChange={e => setNotifyEmail(e.target.value)}
+                placeholder="e.g. ilovedrrealty@gmail.com"
+                maxLength={200}
+              />
+              <p className="text-[11.5px] text-dim mt-1.5">Leave empty to fall back to the NOTIFY_EMAIL environment variable.</p>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={savingNotifyEmail}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-bold text-white border-0 cursor-pointer transition-opacity disabled:opacity-60"
+                style={{ background: TONE }}
+              >
+                <Save size={13} />
+                {savingNotifyEmail ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
         </div>
       )}
 

@@ -252,3 +252,17 @@ export async function getListingHistory(listingId: string): Promise<ListingEvent
   const res = await client.get<ListingEvent[]>(`/admin/listings/${listingId}/history`)
   return res.data
 }
+
+export interface PlatformSettings {
+  notify_email: string
+  updated_at: string | null
+}
+
+export async function getPlatformSettings(): Promise<PlatformSettings> {
+  const res = await client.get<PlatformSettings>('/admin/settings')
+  return res.data
+}
+
+export async function updatePlatformSettings(data: { notify_email: string }): Promise<void> {
+  await client.put('/admin/settings', data)
+}

@@ -4,7 +4,9 @@
     "heading_pre": "Your guide to",
     "heading_em": "living & investing",
     "heading_post": "in the DR",
-    "sub": "Expert-curated guides, market intelligence, and community wisdom — for first-time visitors, future residents, and serious investors."
+    "sub": "Expert-curated guides, market intelligence, and community wisdom — for first-time visitors, future residents, and serious investors.",
+    "search_placeholder": "Search guides, topics, or questions…",
+    "search_cta": "Search"
   },
   "stats": [
     "Expats in DR",
@@ -71,5 +73,20 @@
     "placeholder": "your@email.com",
     "cta": "Subscribe free",
     "disclaimer": "Join 14,000+ subscribers · Unsubscribe anytime"
+  },
+  "article": {
+    "back": "← Back to Resources",
+    "not_found": "Article not found.",
+    "read_label": "read",
+    "reads_label": "reads",
+    "key_facts": "Key facts",
+    "keep_reading": "Keep reading",
+    "expert_tip": "Expert tip",
+    "faq_heading": "Frequently asked questions",
+    "talk": "Talk to our team →",
+    "more_guides": "← More guides",
+    "cta_title": "Ready to make your move?",
+    "cta_body": "Our bilingual team helps buyers and investors navigate the DR market.",
+    "cta_button": "Get in touch →"
   }
 }

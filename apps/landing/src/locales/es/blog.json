@@ -4,7 +4,9 @@
     "heading_pre": "Tu guía para",
     "heading_em": "vivir e invertir",
     "heading_post": "en la RD",
-    "sub": "Guías curadas por expertos, inteligencia de mercado y sabiduría comunitaria — para visitantes por primera vez, futuros residentes e inversores serios."
+    "sub": "Guías curadas por expertos, inteligencia de mercado y sabiduría comunitaria — para visitantes por primera vez, futuros residentes e inversores serios.",
+    "search_placeholder": "Buscar guías, temas o preguntas…",
+    "search_cta": "Buscar"
   },
   "stats": [
     "Expatriados en la RD",
@@ -71,5 +73,20 @@
     "placeholder": "tu@correo.com",
     "cta": "Suscribirse gratis",
     "disclaimer": "Únete a más de 14,000 suscriptores · Cancela en cualquier momento"
+  },
+  "article": {
+    "back": "← Volver a Recursos",
+    "not_found": "Artículo no encontrado.",
+    "read_label": "de lectura",
+    "reads_label": "lecturas",
+    "key_facts": "Datos clave",
+    "keep_reading": "Seguir leyendo",
+    "expert_tip": "Consejo de experto",
+    "faq_heading": "Preguntas frecuentes",
+    "talk": "Habla con nuestro equipo →",
+    "more_guides": "← Más guías",
+    "cta_title": "¿Listo para dar el paso?",
+    "cta_body": "Nuestro equipo bilingüe ayuda a compradores e inversores a navegar el mercado de la RD.",
+    "cta_button": "Contáctanos →"
   }
 }

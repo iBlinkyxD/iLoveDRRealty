@@ -40,7 +40,8 @@
     "message_label": "Message",
     "message_placeholder": "Tell us what you're looking for…",
     "consent": "I agree to be contacted about my inquiry and accept the privacy policy.",
-    "submit": "Send message"
+    "submit": "Send message",
+    "submitting": "Sending…"
   },
   "success": {
     "heading": "Message sent!",
