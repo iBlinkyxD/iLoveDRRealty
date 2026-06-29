@@ -171,6 +171,11 @@ export function AdminUsers() {
     } finally { setWorking(null) }
   }
 
+  function handleRoleChange(userId: string, newRole: string) {
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
+    setSelectedUser(prev => prev?.id === userId ? { ...prev, role: newRole } : prev)
+  }
+
   const now          = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
   const activeCount    = users.filter(u => u.status === 'active').length
@@ -558,6 +563,7 @@ export function AdminUsers() {
         onUnsuspend={handleUnsuspend}
         onApproveUpgrade={handleApproveUpgrade}
         onRejectUpgrade={handleRejectUpgrade}
+        onRoleChange={handleRoleChange}
       />
     </div>
   )

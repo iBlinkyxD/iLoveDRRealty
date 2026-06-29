@@ -335,7 +335,14 @@
     "suspend":           "Suspend Account",
     "not_provided":      "Not provided",
     "role_owner":        "Property Owner",
-    "role_realtor":      "Realtor"
+    "role_realtor":      "Realtor",
+    "section_role":      "Role Management",
+    "change_role_btn":   "Change Role",
+    "confirm_role_title": "Change this user's role?",
+    "confirm_role_desc": "{{name}} will be changed from {{from}} to {{to}}.",
+    "confirm_role_confirm": "Change Role",
+    "toast_role_changed": "Role changed to {{role}}.",
+    "toast_role_error":  "Failed to change role."
   },
   "add_user_panel": {
     "title":          "Add User",

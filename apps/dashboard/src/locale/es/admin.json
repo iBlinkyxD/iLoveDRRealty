@@ -335,7 +335,14 @@
     "suspend":           "Suspender cuenta",
     "not_provided":      "No proporcionado",
     "role_owner":        "Propietario",
-    "role_realtor":      "Agente"
+    "role_realtor":      "Agente",
+    "section_role":      "Gestión de rol",
+    "change_role_btn":   "Cambiar rol",
+    "confirm_role_title": "¿Cambiar el rol de este usuario?",
+    "confirm_role_desc": "{{name}} pasará de {{from}} a {{to}}.",
+    "confirm_role_confirm": "Cambiar rol",
+    "toast_role_changed": "Rol cambiado a {{role}}.",
+    "toast_role_error":  "Error al cambiar el rol."
   },
   "add_user_panel": {
     "title":          "Agregar usuario",

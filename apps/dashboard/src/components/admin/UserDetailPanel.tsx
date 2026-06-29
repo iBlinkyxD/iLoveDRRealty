@@ -1,8 +1,10 @@
 import { X, Check, ChevronDown, Key, Building2, Mail, Phone, Calendar, Copy, CheckCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
 import { ROLE_COLOR } from '../../pages/admin/shared'
 import type { AdminUser, AdminUpgradeRequest } from '../../api/admin'
+import { changeUserRole } from '../../api/admin'
 import { ConfirmModal } from '../shared/ConfirmModal'
 
 const UPGRADE_ROLE_ICON: Record<string, typeof Key>  = { owner: Key, realtor: Building2 }
@@ -42,11 +44,12 @@ interface Props {
   onUnsuspend: (u: AdminUser) => void
   onApproveUpgrade: (reqId: string) => void
   onRejectUpgrade: (reqId: string, reason: string) => void
+  onRoleChange: (userId: string, newRole: string) => void
 }
 
 export function UserDetailPanel({
   user, requests, working, openRejectId, onClose,
-  onSuspend, onUnsuspend, onApproveUpgrade, onRejectUpgrade,
+  onSuspend, onUnsuspend, onApproveUpgrade, onRejectUpgrade, onRoleChange,
 }: Props) {
   const { t } = useTranslation('admin')
 
@@ -59,6 +62,9 @@ export function UserDetailPanel({
   const [rejectReason,  setRejectReason]  = useState('')
   const [copied,        setCopied]        = useState(false)
   const [confirmSuspend, setConfirmSuspend] = useState(false)
+  const [selectedRole,  setSelectedRole]  = useState(user?.role ?? 'buyer')
+  const [confirmRole,   setConfirmRole]   = useState(false)
+  const [changingRole,  setChangingRole]  = useState(false)
 
   useEffect(() => {
     if (openRejectId) {
@@ -66,6 +72,25 @@ export function UserDetailPanel({
       setRejectReason('')
     }
   }, [openRejectId])
+
+  useEffect(() => {
+    if (user) setSelectedRole(user.role)
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleRoleChange() {
+    if (!user) return
+    setChangingRole(true)
+    try {
+      await changeUserRole(user.id, selectedRole)
+      onRoleChange(user.id, selectedRole)
+      toast.success(t('user_panel.toast_role_changed', { role: selectedRole }))
+      setConfirmRole(false)
+    } catch {
+      toast.error(t('user_panel.toast_role_error'))
+    } finally {
+      setChangingRole(false)
+    }
+  }
 
   function copyEmail() {
     navigator.clipboard.writeText(user?.email ?? '').then(() => {
@@ -213,6 +238,34 @@ export function UserDetailPanel({
                 </div>
               </div>
             </div>
+
+            {/* Role Management */}
+            {user.role !== 'admin' && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">
+                  {t('user_panel.section_role')}
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedRole}
+                    onChange={e => setSelectedRole(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-coral cursor-pointer"
+                  >
+                    <option value="buyer">Buyer</option>
+                    <option value="owner">Owner</option>
+                    <option value="realtor">Realtor</option>
+                  </select>
+                  <button
+                    onClick={() => setConfirmRole(true)}
+                    disabled={selectedRole === user.role || changingRole}
+                    className="px-4 py-2 rounded-lg border-0 text-[13px] font-semibold text-white cursor-pointer disabled:opacity-40"
+                    style={{ background: ROLE_COLOR[selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)] ?? '#7884a0' }}
+                  >
+                    {t('user_panel.change_role_btn')}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Upgrade Request History */}
             <div>
@@ -374,6 +427,21 @@ export function UserDetailPanel({
             onClose()
           }}
           onCancel={() => setConfirmSuspend(false)}
+        />
+      )}
+      {confirmRole && (
+        <ConfirmModal
+          title={t('user_panel.confirm_role_title')}
+          description={t('user_panel.confirm_role_desc', {
+            name: user.display_name ?? user.email,
+            from: user.role,
+            to: selectedRole,
+          })}
+          confirmLabel={t('user_panel.confirm_role_confirm')}
+          variant="warning"
+          loading={changingRole}
+          onConfirm={handleRoleChange}
+          onCancel={() => setConfirmRole(false)}
         />
       )}
     </>

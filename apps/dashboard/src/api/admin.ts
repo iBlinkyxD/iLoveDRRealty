@@ -266,3 +266,7 @@ export async function getPlatformSettings(): Promise<PlatformSettings> {
 export async function updatePlatformSettings(data: { notify_email: string }): Promise<void> {
   await client.put('/admin/settings', data)
 }
+
+export async function changeUserRole(userId: string, role: string): Promise<void> {
+  await client.put(`/admin/users/${userId}/role`, { role })
+}
