@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fmt, type Listing } from '../data/listings'
 import { DR_REGIONS } from '../data/searchData'
+import { supabaseImgUrl } from '../api/imgUrl'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -268,7 +269,7 @@ export function SearchMapSidebar({
             <button key={l.id} onClick={() => go(`detail?id=${l.id}`)}
               className={`flex w-full gap-2.5 py-2.5 bg-transparent border-x-0 border-t-0 cursor-pointer text-left font-sans ${i < alsoLike.length - 1 ? 'border-b border-line-soft' : 'border-b-0'}`}>
               <div className="w-14 h-11 rounded-md shrink-0 overflow-hidden"
-                style={{ backgroundImage: `url(${l.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                style={{ backgroundImage: `url(${supabaseImgUrl(l.img, 400)})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-semibold text-ink truncate">{titleCase(l.title)}</div>
                 <div className="text-[10.5px] text-dim mt-px truncate">{l.region}</div>

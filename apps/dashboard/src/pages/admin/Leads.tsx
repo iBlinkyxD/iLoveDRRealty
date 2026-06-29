@@ -57,7 +57,7 @@ const STATUS_PILL_MAP: Record<string, string> = {
   New: 'new', Assigned: 'assigned', Contacted: 'contacted', Closed: 'closed',
 }
 
-const COLS = 'grid-cols-[100px_1fr_1fr_1.2fr_160px_110px]'
+const COLS = 'grid-cols-[100px_1fr_1fr_1.2fr_160px_56px_110px]'
 
 function fmtUserCode(code: string | null): string {
   if (!code) return ''
@@ -285,7 +285,7 @@ export function AdminLeads() {
 
         {/* Table header */}
         <div className={`hidden lg:grid ${COLS} gap-3 py-2.5 px-5.5 border-b border-line bg-nav/5`}>
-          {[t('leads_page.header_type'), t('leads_page.header_contact'), t('leads_page.header_property'), t('leads_page.header_message'), t('leads_page.header_assign_realtor'), t('leads_page.header_status')].map((h, i) => (
+          {[t('leads_page.header_type'), t('leads_page.header_contact'), t('leads_page.header_property'), t('leads_page.header_message'), t('leads_page.header_assign_realtor'), 'GHL', t('leads_page.header_status')].map((h, i) => (
             <div key={i} className="text-[11px] font-bold text-dim uppercase tracking-[.06em]">{h}</div>
           ))}
         </div>
@@ -304,6 +304,7 @@ export function AdminLeads() {
                   <div className="h-3 bg-line-soft rounded w-2/3" />
                   <div className="h-3 bg-line-soft rounded w-4/5" />
                   <div className="h-7 bg-line-soft rounded-lg w-24" />
+                  <div className="h-5 bg-line-soft rounded w-7" />
                   <div className="h-5 bg-line-soft rounded-full w-16" />
                 </div>
               ))}
@@ -372,6 +373,26 @@ export function AdminLeads() {
                   <div className="text-[12px] text-ink2 line-clamp-2">{lead.message ?? '—'}</div>
                   <div className="text-[12.5px] truncate" style={{ color: lead.assigned_realtor_id ? TONE : '#94a3b8' }}>
                     {lead.assigned_realtor_name ?? t('leads_page.unassigned')}
+                  </div>
+                  <div>
+                    {lead.ghl_contact_url ? (
+                      <a
+                        href={lead.ghl_contact_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        title="View in GoHighLevel"
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-[#0069ff12] hover:bg-[#0069ff22] transition-colors"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0069ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                          <polyline points="15 3 21 3 21 9"/>
+                          <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-dim">—</span>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1">
                     <StatusBadge status={lead.status} />

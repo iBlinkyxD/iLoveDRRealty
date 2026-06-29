@@ -21,6 +21,8 @@ export function Logo({ size = 42 }: { size?: number }) {
         alt="I Love DR Realty"
         className="block w-auto"
         style={{ height: size }}
+        width={152}
+        height={74}
       />
     </Link>
   )

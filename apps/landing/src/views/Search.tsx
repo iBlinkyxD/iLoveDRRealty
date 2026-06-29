@@ -5,6 +5,7 @@ import { useState, useMemo, useEffect, type ReactNode } from 'react'
 import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp, SlidersHorizontal } from 'lucide-react'
 import { fmt, type Listing } from '../data/listings'
 import { fetchListings } from '../api/listings'
+import { supabaseImgUrl } from '../api/imgUrl'
 import { getMySavedIds, saveHome, unsaveHome } from '../api/savedHomes'
 import { SearchFilterSidebar } from '../components/SearchFilterSidebar'
 import { SearchMapSidebar } from '../components/SearchMapSidebar'
@@ -76,7 +77,7 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
       onClick={() => go(`detail?id=${l.id}`)}
       className={`bg-paper rounded-xl overflow-hidden cursor-pointer transition-all duration-250 border ${hot ? 'border-line -translate-y-1 shadow-[0_22px_50px_-28px_rgba(0,16,46,.4)]' : 'border-line-soft shadow-[0_1px_0_rgba(0,16,46,.03)]'}`}
     >
-      <div className="relative h-46" style={{ backgroundImage: `url(${l.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <div className="relative h-46" style={{ backgroundImage: `url(${supabaseImgUrl(l.img, 600)})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute top-3 left-3 flex gap-1.5">
           {l.tags.map(([tag, tone], i) => <Tag key={i} tone={tone}>{tag}</Tag>)}
         </div>

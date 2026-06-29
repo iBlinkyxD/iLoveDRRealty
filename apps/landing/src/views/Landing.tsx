@@ -6,6 +6,7 @@ import { STATS, MISTAKES, ROLES } from '../data/landingData'
 import { fetchListings, fetchDealListings } from '../api/listings'
 import type { ApiDealListing } from '../api/listings'
 import type { Listing } from '../data/listings'
+import { supabaseImgUrl } from '../api/imgUrl'
 import { useTranslation, Trans } from 'react-i18next'
 
 type GoFn = (page: string, slug?: string, params?: Record<string, string>) => void
@@ -31,7 +32,7 @@ function HeroListingCard({ prop, go }: { prop: Listing; go: GoFn }) {
     <div
       onClick={() => go('detail', undefined, { id: String(prop.id) })}
       className="flex-1 rounded-3xl overflow-hidden relative shadow-[rgba(0,0,0,0.5)_0px_20px_50px_-20px] cursor-pointer"
-      style={{ backgroundImage: `url(${prop.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      style={{ backgroundImage: `url(${supabaseImgUrl(prop.img, 800)})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
     >
       <div className="absolute inset-0 bg-linear-to-t from-ink/80 via-ink/20 to-transparent" />
       {prop.is_deal ? (
@@ -74,7 +75,7 @@ function PropertyCard({ prop, go, currency, dopRate }: { prop: Listing; go: GoFn
       onClick={() => go('detail', undefined, { id: String(prop.id) })}
       className="bg-paper rounded-2xl border border-line-soft overflow-hidden cursor-pointer"
     >
-      <div className="h-45 relative bg-ink" style={{ backgroundImage: `url(${prop.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <div className="h-45 relative bg-ink" style={{ backgroundImage: `url(${supabaseImgUrl(prop.img, 600)})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         {tag && (
           <span className="absolute top-3 left-3 text-2.75 font-bold tracking-[.04em] bg-black/35 text-white px-2.25 py-0.75 rounded-md font-sans">
             {tag}
@@ -349,7 +350,7 @@ export default function Landing() {
                 {/* Left — property photo */}
                 <div
                   className="relative h-64 lg:h-115 overflow-hidden bg-ink"
-                  style={deal.images?.[0] ? { backgroundImage: `url(${deal.images[0]})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                  style={deal.images?.[0] ? { backgroundImage: `url(${supabaseImgUrl(deal.images[0], 1200)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
                 >
                   <div className="absolute top-4.5 left-4.5 flex flex-col gap-2">
                     {deal.deal_discount_value && (

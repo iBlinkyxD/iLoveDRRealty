@@ -29,7 +29,7 @@ export default function Footer() {
         <div className="col-span-2 lg:col-span-1">
           <div className="mb-4.5">
             <Link href="/" className="p-0 leading-none block">
-              <img src="/iLoveDRRealty_White.png" alt="I Love DR Realty" className="block w-auto h-11" />
+              <img src="/iLoveDRRealty_White.png" alt="I Love DR Realty" className="block w-auto h-11" width={87} height={36} />
             </Link>
           </div>
           <p className="text-[13.5px] leading-[1.7] text-paper2/55 max-w-65 mb-5">
