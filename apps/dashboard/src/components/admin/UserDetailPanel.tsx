@@ -1,10 +1,10 @@
-import { X, Check, ChevronDown, Key, Building2, Mail, Phone, Calendar, Copy, CheckCheck } from 'lucide-react'
+import { X, Check, ChevronDown, Key, Building2, Mail, Phone, Calendar, Copy, CheckCheck, UserCheck } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { ROLE_COLOR } from '../../pages/admin/shared'
 import type { AdminUser, AdminUpgradeRequest } from '../../api/admin'
-import { changeUserRole } from '../../api/admin'
+import { changeUserRole, assignRealtorToOwner, getAdminUsers } from '../../api/admin'
 import { ConfirmModal } from '../shared/ConfirmModal'
 
 const UPGRADE_ROLE_ICON: Record<string, typeof Key>  = { owner: Key, realtor: Building2 }
@@ -65,6 +65,9 @@ export function UserDetailPanel({
   const [selectedRole,  setSelectedRole]  = useState(user?.role ?? 'buyer')
   const [confirmRole,   setConfirmRole]   = useState(false)
   const [changingRole,  setChangingRole]  = useState(false)
+  const [realtors,        setRealtors]        = useState<AdminUser[]>([])
+  const [selectedRealtor, setSelectedRealtor] = useState<string>('')
+  const [assigningRealtor, setAssigningRealtor] = useState(false)
 
   useEffect(() => {
     if (openRejectId) {
@@ -76,6 +79,13 @@ export function UserDetailPanel({
   useEffect(() => {
     if (user) setSelectedRole(user.role)
   }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (user?.role === 'owner') {
+      getAdminUsers('realtor').then(setRealtors).catch(() => {})
+      setSelectedRealtor(user.assigned_realtor_id ?? '')
+    }
+  }, [user?.id, user?.role]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleRoleChange() {
     if (!user) return
@@ -89,6 +99,20 @@ export function UserDetailPanel({
       toast.error(t('user_panel.toast_role_error'))
     } finally {
       setChangingRole(false)
+    }
+  }
+
+  async function handleAssignRealtor() {
+    if (!user) return
+    setAssigningRealtor(true)
+    try {
+      await assignRealtorToOwner(user.id, selectedRealtor || null)
+      const r = realtors.find(r => r.id === selectedRealtor)
+      toast.success(r ? `Realtor ${r.display_name ?? r.email} assigned` : 'Realtor unassigned')
+    } catch {
+      toast.error('Failed to assign realtor')
+    } finally {
+      setAssigningRealtor(false)
     }
   }
 
@@ -262,6 +286,43 @@ export function UserDetailPanel({
                     style={{ background: ROLE_COLOR[selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)] ?? '#7884a0' }}
                   >
                     {t('user_panel.change_role_btn')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Assign Realtor — only for owners */}
+            {user.role === 'owner' && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4 flex items-center gap-1.5">
+                  <UserCheck size={11} /> Assigned Realtor
+                </div>
+                {user.assigned_realtor_name && (
+                  <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
+                    <div className="w-6 h-6 rounded-full grid place-items-center text-white text-[10px] font-bold shrink-0" style={{ background: '#1f7a3d' }}>
+                      {(user.assigned_realtor_name)[0].toUpperCase()}
+                    </div>
+                    <span className="text-[12.5px] font-semibold text-green-800">{user.assigned_realtor_name}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedRealtor}
+                    onChange={e => setSelectedRealtor(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg border border-line bg-white text-[13px] text-ink outline-none focus:border-coral cursor-pointer"
+                  >
+                    <option value="">— No realtor assigned —</option>
+                    {realtors.map(r => (
+                      <option key={r.id} value={r.id}>{r.display_name ?? r.email}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAssignRealtor}
+                    disabled={assigningRealtor || selectedRealtor === (user.assigned_realtor_id ?? '')}
+                    className="px-4 py-2 rounded-lg border-0 text-[13px] font-semibold text-white cursor-pointer disabled:opacity-40"
+                    style={{ background: '#1f7a3d' }}
+                  >
+                    {assigningRealtor ? '…' : 'Assign'}
                   </button>
                 </div>
               </div>

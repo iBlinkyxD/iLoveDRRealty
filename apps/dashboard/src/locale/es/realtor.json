@@ -117,8 +117,19 @@
     "no_property":        "Sin propiedad",
     "status_new":         "Nuevo",
     "status_assigned":    "Asignado",
+    "status_schedule":    "Agendar",
     "status_contacted":   "Contactado",
-    "status_closed":      "Cerrado"
+    "status_closed":      "Cerrado",
+    "filter_all":         "Todos",
+    "filter_type_inquiry": "Consulta",
+    "filter_type_booking": "Reserva",
+    "filter_type_buyer":   "Comprador",
+    "filter_type_seller":  "Vendedor",
+    "filter_status_new":       "Nuevo",
+    "filter_status_assigned":  "Asignado",
+    "filter_status_schedule":  "Agendar",
+    "filter_status_contacted": "Contactado",
+    "filter_status_closed":    "Cerrado"
   },
   "pipeline_page": {
     "add_deal": "+ Agregar trato",
@@ -126,9 +137,13 @@
     "total":    "total"
   },
   "calendar_page": {
-    "title":            "Próximos eventos",
-    "sub":              "Visitas, llamadas y reuniones",
-    "schedule_showing": "+ Agendar visita"
+    "title":            "Calendario",
+    "sub":              "Tu página de programación de Calendly",
+    "schedule_showing": "+ Agendar visita",
+    "connect_title":    "Conectar Calendly",
+    "connect_desc":     "Vincula tu URL de Calendly en Ajustes para mostrar tu página de programación aquí y compartirla con tus leads asignados.",
+    "connect_btn":      "Ir a Ajustes",
+    "embed_sub":        "Powered by Calendly"
   },
   "submit_listing_page": {
     "back_to_listings":    "Volver a propiedades",

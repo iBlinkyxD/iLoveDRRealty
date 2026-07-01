@@ -117,8 +117,19 @@
     "no_property":        "No property",
     "status_new":         "New",
     "status_assigned":    "Assigned",
+    "status_schedule":    "Schedule",
     "status_contacted":   "Contacted",
-    "status_closed":      "Closed"
+    "status_closed":      "Closed",
+    "filter_all":         "All",
+    "filter_type_inquiry": "Inquiry",
+    "filter_type_booking": "Booking",
+    "filter_type_buyer":   "Buyer",
+    "filter_type_seller":  "Seller",
+    "filter_status_new":       "New",
+    "filter_status_assigned":  "Assigned",
+    "filter_status_schedule":  "Schedule",
+    "filter_status_contacted": "Contacted",
+    "filter_status_closed":    "Closed"
   },
   "pipeline_page": {
     "add_deal": "+ Add deal",
@@ -126,9 +137,13 @@
     "total":    "total"
   },
   "calendar_page": {
-    "title":            "Upcoming Schedule",
-    "sub":              "Showings, calls & meetings",
-    "schedule_showing": "+ Schedule showing"
+    "title":            "Calendar",
+    "sub":              "Your Calendly scheduling page",
+    "schedule_showing": "+ Schedule showing",
+    "connect_title":    "Connect Calendly",
+    "connect_desc":     "Link your Calendly URL in Settings to display your scheduling page here and share it with your assigned leads.",
+    "connect_btn":      "Go to Settings",
+    "embed_sub":        "Powered by Calendly"
   },
   "submit_listing_page": {
     "back_to_listings":    "Back to Listings",

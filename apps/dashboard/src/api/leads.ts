@@ -17,7 +17,7 @@ export interface Lead {
   from_user_avatar_url: string | null
   assigned_realtor_id: string | null
   assigned_realtor_name: string | null
-  status: 'new' | 'assigned' | 'contacted' | 'closed'
+  status: 'new' | 'assigned' | 'schedule' | 'contacted' | 'closed'
   created_at: string
   assigned_at: string | null
   contacted_at: string | null

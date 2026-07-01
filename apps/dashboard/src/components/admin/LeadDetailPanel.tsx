@@ -159,9 +159,10 @@ interface Props {
   onStatusUpdated: (leadId: string, status: string) => void
   allowedStatuses?: readonly string[]
   updateStatusFn?: (leadId: string, status: string) => Promise<void>
+  calendlyUrl?: string
 }
 
-export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusUpdated, allowedStatuses, updateStatusFn }: Props) {
+export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusUpdated, allowedStatuses, updateStatusFn, calendlyUrl }: Props) {
   const { t } = useTranslation('admin')
 
   const TYPE_LABEL: Record<string, string> = {
@@ -567,24 +568,38 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
         </div>
 
         {/* ── Footer ── */}
-        <div className="bg-paper border-t border-line px-5 py-4 shrink-0 flex gap-2">
-          {lead.ghl_contact_url && (
+        <div className="bg-paper border-t border-line px-5 py-4 shrink-0 flex flex-col gap-2">
+          {calendlyUrl && (
             <a
-              href={lead.ghl_contact_url}
+              href={calendlyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 hover:bg-line-soft no-underline"
+              className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border-0 text-[13px] font-bold text-white no-underline"
+              style={{ background: '#006BFF' }}
             >
-              <ExternalLink size={13} />
-              {t('lead_panel.open_ghl')}
+              <Calendar size={13} />
+              Schedule a Session
             </a>
           )}
-          <button
-            onClick={onClose}
-            className={`px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent ${lead.ghl_contact_url ? '' : 'w-full'}`}
-          >
-            {t('lead_panel.close')}
-          </button>
+          <div className="flex gap-2">
+            {lead.ghl_contact_url && (
+              <a
+                href={lead.ghl_contact_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 hover:bg-line-soft no-underline"
+              >
+                <ExternalLink size={13} />
+                {t('lead_panel.open_ghl')}
+              </a>
+            )}
+            <button
+              onClick={onClose}
+              className={`px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent ${lead.ghl_contact_url ? '' : 'w-full'}`}
+            >
+              {t('lead_panel.close')}
+            </button>
+          </div>
         </div>
 
       </div>

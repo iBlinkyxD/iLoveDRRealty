@@ -94,10 +94,10 @@ export const STATUS_STYLE: Record<string, { bg: string; color: string; label: st
   suspended: { bg: '#7884a018', color: '#556070', label: 'Suspended' },
 }
 
-export function FilterPills({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+export function FilterPills({ options, labels, value, onChange }: { options: string[]; labels?: string[]; value: string; onChange: (v: string) => void }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {options.map(f => (
+      {options.map((f, i) => (
         <button
           key={f}
           onClick={() => onChange(f)}
@@ -108,7 +108,7 @@ export function FilterPills({ options, value, onChange }: { options: string[]; v
             color: value === f ? '#fff' : '#33425f',
           }}
         >
-          {f}
+          {labels ? labels[i] : f}
         </button>
       ))}
     </div>

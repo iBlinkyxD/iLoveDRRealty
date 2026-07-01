@@ -49,10 +49,15 @@ export interface Listing {
   co_listing_enabled: boolean
   co_listing_brokerage: string | null
   co_listing_agent_name: string | null
-  co_listing_agent_contact: string | null
+  co_listing_brokerage_email: string | null
+  co_listing_brokerage_phone: string | null
   co_listing_commission_split: number | null
   co_listing_notes: string | null
   co_listing_status: string | null
+  price_per_day: number | null
+  price_per_month: number | null
+  co_listing_agreement_accepted: boolean
+  co_listing_agreement_url: string | null
 }
 
 export interface ListingUpdate {
@@ -90,10 +95,15 @@ export interface ListingUpdate {
   co_listing_enabled?: boolean
   co_listing_brokerage?: string
   co_listing_agent_name?: string
-  co_listing_agent_contact?: string
+  co_listing_brokerage_email?: string
+  co_listing_brokerage_phone?: string
   co_listing_commission_split?: number
   co_listing_notes?: string
   co_listing_status?: string
+  price_per_day?: number
+  price_per_month?: number
+  co_listing_agreement_accepted?: boolean
+  co_listing_agreement_url?: string
 }
 
 export interface ListingCreate {
@@ -131,10 +141,15 @@ export interface ListingCreate {
   co_listing_enabled?: boolean
   co_listing_brokerage?: string
   co_listing_agent_name?: string
-  co_listing_agent_contact?: string
+  co_listing_brokerage_email?: string
+  co_listing_brokerage_phone?: string
   co_listing_commission_split?: number
   co_listing_notes?: string
   co_listing_status?: string
+  price_per_day?: number
+  price_per_month?: number
+  co_listing_agreement_accepted?: boolean
+  co_listing_agreement_url?: string
 }
 
 export async function uploadListingImages(files: File[]): Promise<string[]> {
@@ -166,4 +181,13 @@ export async function submitDealRequest(
   data: { discount_value: number; discount_type: string; message?: string },
 ): Promise<void> {
   await client.post(`/listings/${listingId}/deal-request`, data)
+}
+
+export async function uploadAgreementPdf(file: File): Promise<string> {
+  const fd = new FormData()
+  fd.append('file', file)
+  const res = await client.post<{ url: string }>('/listings/upload-agreement', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data.url
 }

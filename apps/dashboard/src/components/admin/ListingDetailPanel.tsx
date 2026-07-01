@@ -5,7 +5,7 @@ import {
   Pencil, Archive, User, UserCheck, Eye,
   CircleDollarSign, ArrowLeftRight, Calendar, BedDouble, Bath,
   Ruler, Maximize2, TrendingUp, Wallet, CheckCircle2,
-  Video, Box, Building2, Sparkles,
+  Video, Box, Building2, Sparkles, FileText, Mail, Phone,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -124,6 +124,8 @@ export function ListingDetailPanel({
     { Icon: TrendingUp,       label: t('listing_panel.label_roi'),          value: listing.roi },
     { Icon: Wallet,           label: t('listing_panel.label_hoa_fee'),      value: listing.hoa_fee != null ? `$${Number(listing.hoa_fee).toLocaleString('en-US')}` : null },
     { Icon: Building2,        label: t('listing_panel.label_assoc_fee'),    value: listing.association_fee != null ? `$${Number(listing.association_fee).toLocaleString('en-US')}` : null },
+    { Icon: CircleDollarSign, label: t('listing_panel.label_daily_rate',   { defaultValue: 'Daily Rate' }),   value: listing.price_per_day   != null ? `$${Number(listing.price_per_day).toLocaleString('en-US')}/night`  : null },
+    { Icon: CircleDollarSign, label: t('listing_panel.label_monthly_rate', { defaultValue: 'Monthly Rate' }), value: listing.price_per_month != null ? `$${Number(listing.price_per_month).toLocaleString('en-US')}/mo`    : null },
   ] as (PropField & { value: string | number | null | undefined })[]).filter(
     f => f.value != null && f.value !== ''
   ) as PropField[]
@@ -517,43 +519,52 @@ export function ListingDetailPanel({
             {/* Co-Listing */}
             {listing.co_listing_enabled && (
               <div>
-                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-4">
                   {t('listing_panel.section_co_listing')}
                 </div>
-                <div className="rounded-xl border border-line-soft bg-paper2 overflow-hidden divide-y divide-line-soft">
+                <div className="divide-y divide-line-soft">
                   {listing.co_listing_brokerage && (
-                    <div className="px-4 py-3 flex items-center gap-3">
-                      <Building2 size={14} style={{ color: TONE }} className="shrink-0" />
+                    <div className="py-3.5 flex items-start gap-2">
+                      <Building2 size={14} style={{ color: TONE }} className="shrink-0 mt-0.5" />
                       <div className="min-w-0">
-                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_ext_brokerage')}</div>
-                        <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_brokerage}</div>
+                        <div className="text-[10.5px] text-dim leading-tight truncate">{t('listing_panel.co_ext_brokerage')}</div>
+                        <div className="text-[13.5px] font-bold text-ink mt-0.5 truncate">{listing.co_listing_brokerage}</div>
                       </div>
                     </div>
                   )}
                   {listing.co_listing_agent_name && (
-                    <div className="px-4 py-3 flex items-center gap-3">
-                      <User size={14} style={{ color: TONE }} className="shrink-0" />
+                    <div className="py-3.5 flex items-start gap-2">
+                      <User size={14} style={{ color: TONE }} className="shrink-0 mt-0.5" />
                       <div className="min-w-0">
-                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_ext_agent')}</div>
-                        <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_agent_name}</div>
+                        <div className="text-[10.5px] text-dim leading-tight truncate">{t('listing_panel.co_ext_agent')}</div>
+                        <div className="text-[13.5px] font-bold text-ink mt-0.5 truncate">{listing.co_listing_agent_name}</div>
                       </div>
                     </div>
                   )}
-                  {listing.co_listing_agent_contact && (
-                    <div className="px-4 py-3 flex items-center gap-3">
-                      <Link2 size={14} style={{ color: TONE }} className="shrink-0" />
+                  {listing.co_listing_brokerage_email && (
+                    <div className="py-3.5 flex items-start gap-2">
+                      <Mail size={14} style={{ color: TONE }} className="shrink-0 mt-0.5" />
                       <div className="min-w-0">
-                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_agent_contact')}</div>
-                        <div className="text-[13.5px] font-bold text-ink truncate">{listing.co_listing_agent_contact}</div>
+                        <div className="text-[10.5px] text-dim leading-tight truncate">{t('listing_panel.co_brokerage_email')}</div>
+                        <a href={`mailto:${listing.co_listing_brokerage_email}`} className="text-[13.5px] font-bold text-ink mt-0.5 truncate block hover:underline">{listing.co_listing_brokerage_email}</a>
+                      </div>
+                    </div>
+                  )}
+                  {listing.co_listing_brokerage_phone && (
+                    <div className="py-3.5 flex items-start gap-2">
+                      <Phone size={14} style={{ color: TONE }} className="shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <div className="text-[10.5px] text-dim leading-tight truncate">{t('listing_panel.co_brokerage_phone')}</div>
+                        <a href={`tel:${listing.co_listing_brokerage_phone}`} className="text-[13.5px] font-bold text-ink mt-0.5 truncate block hover:underline">{listing.co_listing_brokerage_phone}</a>
                       </div>
                     </div>
                   )}
                   {listing.co_listing_commission_split != null && (
-                    <div className="px-4 py-3 flex items-center gap-3">
-                      <TrendingUp size={14} style={{ color: TONE }} className="shrink-0" />
+                    <div className="py-3.5 flex items-start gap-2">
+                      <TrendingUp size={14} style={{ color: TONE }} className="shrink-0 mt-0.5" />
                       <div>
-                        <div className="text-[10.5px] text-dim">{t('listing_panel.co_commission')}</div>
-                        <div className="text-[13.5px] font-bold text-ink">{listing.co_listing_commission_split}%</div>
+                        <div className="text-[10.5px] text-dim leading-tight">{t('listing_panel.co_commission')}</div>
+                        <div className="text-[13.5px] font-bold text-ink mt-0.5">{listing.co_listing_commission_split}%</div>
                       </div>
                     </div>
                   )}
@@ -562,12 +573,12 @@ export function ListingDetailPanel({
                       bg: '#f3f4f6', color: '#4b5563', label: listing.co_listing_status,
                     }
                     return (
-                      <div className="px-4 py-3 flex items-center gap-3">
-                        <CheckCircle2 size={14} style={{ color: TONE }} className="shrink-0" />
+                      <div className="py-3.5 flex items-start gap-2">
+                        <CheckCircle2 size={14} style={{ color: TONE }} className="shrink-0 mt-0.5" />
                         <div>
-                          <div className="text-[10.5px] text-dim">{t('listing_panel.co_status')}</div>
+                          <div className="text-[10.5px] text-dim leading-tight">{t('listing_panel.co_status')}</div>
                           <span
-                            className="inline-flex items-center mt-0.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+                            className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
                             style={{ background: chip.bg, color: chip.color }}
                           >
                             {chip.label}
@@ -576,10 +587,34 @@ export function ListingDetailPanel({
                       </div>
                     )
                   })()}
+                  {listing.co_listing_agreement_accepted && (
+                    <div className="py-3.5 flex items-start gap-2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" className="shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      <div>
+                        <div className="text-[10.5px] text-dim leading-tight">{t('listing_panel.co_terms')}</div>
+                        <div className="text-[13.5px] font-bold mt-0.5" style={{ color: '#15803d' }}>Accepted</div>
+                      </div>
+                    </div>
+                  )}
+                  {listing.co_listing_agreement_url && (
+                    <div className="py-3.5 flex items-start gap-2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-500 shrink-0 mt-0.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <div>
+                        <div className="text-[10.5px] text-dim leading-tight">{t('listing_panel.co_agreement_pdf')}</div>
+                        <a href={listing.co_listing_agreement_url} target="_blank" rel="noopener noreferrer"
+                          className="text-[13px] text-blue-600 underline font-semibold mt-0.5 inline-block">
+                          View PDF
+                        </a>
+                      </div>
+                    </div>
+                  )}
                   {listing.co_listing_notes && (
-                    <div className="px-4 py-3">
-                      <div className="text-[10.5px] text-dim mb-1">{t('listing_panel.co_notes')}</div>
-                      <div className="text-[13px] text-ink whitespace-pre-line">{listing.co_listing_notes}</div>
+                    <div className="py-3.5 flex items-start gap-2">
+                      <FileText size={14} style={{ color: TONE }} className="shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-[10.5px] text-dim leading-tight mb-1">{t('listing_panel.co_notes')}</div>
+                        <div className="text-[13px] text-ink whitespace-pre-line">{listing.co_listing_notes}</div>
+                      </div>
                     </div>
                   )}
                 </div>

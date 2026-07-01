@@ -79,6 +79,9 @@ export interface ApiListingDetail {
   is_deal: boolean
   deal_discount_value: number | null
   deal_discount_type: string
+  price_per_day: number | null
+  price_per_month: number | null
+  co_listing_agreement_url: string | null
 }
 
 const TAG_TONES: Record<string, [string, string]> = {

@@ -82,10 +82,15 @@ export interface AdminListing {
   co_listing_enabled: boolean
   co_listing_brokerage: string | null
   co_listing_agent_name: string | null
-  co_listing_agent_contact: string | null
+  co_listing_brokerage_email: string | null
+  co_listing_brokerage_phone: string | null
   co_listing_commission_split: number | null
   co_listing_notes: string | null
   co_listing_status: string | null
+  price_per_day: number | null
+  price_per_month: number | null
+  co_listing_agreement_accepted: boolean
+  co_listing_agreement_url: string | null
 }
 
 export async function getAdminListings(status?: string): Promise<AdminListing[]> {
@@ -168,6 +173,8 @@ export interface AdminUser {
   phone: string | null
   created_at: string
   avatar_url: string | null
+  assigned_realtor_id: string | null
+  assigned_realtor_name: string | null
 }
 
 export async function getAdminUsers(role?: string, status?: string): Promise<AdminUser[]> {
@@ -269,4 +276,8 @@ export async function updatePlatformSettings(data: { notify_email: string }): Pr
 
 export async function changeUserRole(userId: string, role: string): Promise<void> {
   await client.put(`/admin/users/${userId}/role`, { role })
+}
+
+export async function assignRealtorToOwner(userId: string, realtorId: string | null): Promise<void> {
+  await client.put(`/admin/users/${userId}/assign-realtor`, { realtor_id: realtorId })
 }

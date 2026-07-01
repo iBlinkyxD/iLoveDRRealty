@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ArrowLeft, ImagePlus, X, Star, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { submitListing, updateListing, uploadListingImages, type Listing } from '../../api/listings'
+import { PhoneInput } from 'react-international-phone'
+import 'react-international-phone/style.css'
+import { isValidPhoneNumber } from 'libphonenumber-js'
+import { submitListing, updateListing, uploadListingImages, uploadAgreementPdf, type Listing } from '../../api/listings'
 import { RichTextEditor } from '../../components/RichTextEditor'
 
 const REGIONS = [
@@ -177,7 +180,10 @@ function PhotoSection({
 function FormSections({
   form, set, toggleFeature, tone, uploadedUrls, thumbnail, uploading,
   fileInputRef, handleFileChange, removeImage, setThumbnail, photoLabel,
-  priceCurrency, setPriceCurrency, dopRate,
+  priceCurrency, setPriceCurrency,
+  dayRateCurrency, setDayRateCurrency, monthRateCurrency, setMonthRateCurrency,
+  assocFeeCurrency, setAssocFeeCurrency, dopRate,
+  agreementUploading, onAgreementUpload,
 }: {
   form: Record<string, unknown>
   set: (f: string, v: unknown) => void
@@ -193,7 +199,15 @@ function FormSections({
   photoLabel?: string
   priceCurrency: 'USD' | 'DOP'
   setPriceCurrency: (c: 'USD' | 'DOP') => void
+  dayRateCurrency: 'USD' | 'DOP'
+  setDayRateCurrency: (c: 'USD' | 'DOP') => void
+  monthRateCurrency: 'USD' | 'DOP'
+  setMonthRateCurrency: (c: 'USD' | 'DOP') => void
+  assocFeeCurrency: 'USD' | 'DOP'
+  setAssocFeeCurrency: (c: 'USD' | 'DOP') => void
   dopRate: number
+  agreementUploading: boolean
+  onAgreementUpload: (file: File) => Promise<void>
 }) {
   const { t } = useTranslation('realtor')
 
@@ -225,6 +239,27 @@ function FormSections({
       set('price', Math.round(raw / dopRate).toString())
     }
     setPriceCurrency(newCurrency)
+  }
+
+  function handleDayRateCurrencyToggle(newCurrency: 'USD' | 'DOP') {
+    const raw = parseFloat((form.price_per_day as string) || '0') || 0
+    if (newCurrency === 'DOP' && dayRateCurrency === 'USD') set('price_per_day', Math.round(raw * dopRate).toString())
+    else if (newCurrency === 'USD' && dayRateCurrency === 'DOP') set('price_per_day', Math.round(raw / dopRate).toString())
+    setDayRateCurrency(newCurrency)
+  }
+
+  function handleMonthRateCurrencyToggle(newCurrency: 'USD' | 'DOP') {
+    const raw = parseFloat((form.price_per_month as string) || '0') || 0
+    if (newCurrency === 'DOP' && monthRateCurrency === 'USD') set('price_per_month', Math.round(raw * dopRate).toString())
+    else if (newCurrency === 'USD' && monthRateCurrency === 'DOP') set('price_per_month', Math.round(raw / dopRate).toString())
+    setMonthRateCurrency(newCurrency)
+  }
+
+  function handleAssocFeeCurrencyToggle(newCurrency: 'USD' | 'DOP') {
+    const raw = parseFloat((form.association_fee as string) || '0') || 0
+    if (newCurrency === 'DOP' && assocFeeCurrency === 'USD') set('association_fee', Math.round(raw * dopRate).toString())
+    else if (newCurrency === 'USD' && assocFeeCurrency === 'DOP') set('association_fee', Math.round(raw / dopRate).toString())
+    setAssocFeeCurrency(newCurrency)
   }
 
   function addCustomFeature() {
@@ -344,15 +379,18 @@ function FormSections({
                   ))}
                 </div>
               </div>
-              <input
-                className={inp}
-                type="text"
-                inputMode="numeric"
-                value={(form.price as string) ? Number(form.price as string).toLocaleString('en-US') : ''}
-                onChange={e => set('price', e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder={priceCurrency === 'USD' ? 'e.g. 850,000' : 'e.g. 50,150,000'}
-                required
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{priceCurrency === 'USD' ? '$' : 'RD$'}</span>
+                <input
+                  className={inp + (priceCurrency === 'USD' ? ' pl-6' : ' pl-11')}
+                  type="text"
+                  inputMode="numeric"
+                  value={(form.price as string) ? Number(form.price as string).toLocaleString('en-US') : ''}
+                  onChange={e => set('price', e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder={priceCurrency === 'USD' ? 'e.g. 850,000' : 'e.g. 50,150,000'}
+                  required
+                />
+              </div>
               {(form.price as string) ? (
                 <p className="text-[11.5px] text-dim mt-1">
                   {priceCurrency === 'USD'
@@ -436,6 +474,58 @@ function FormSections({
       <Sec n={n()} title={t('submit_listing_page.sec_financials')} tone={tone}>
         {isRent ? (
           <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Short-Term Rate (per night)</div>
+                  <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+                    {(['USD', 'DOP'] as const).map(c => (
+                      <button key={c} type="button" onClick={() => handleDayRateCurrencyToggle(c)} className="px-2.5 py-1 transition-colors cursor-pointer"
+                        style={{ background: dayRateCurrency === c ? tone : 'white', color: dayRateCurrency === c ? 'white' : '#64748b' }}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{dayRateCurrency === 'USD' ? '$' : 'RD$'}</span>
+                  <input className={inp + (dayRateCurrency === 'USD' ? ' pl-6' : ' pl-11')} type="text" inputMode="numeric"
+                    value={(form.price_per_day as string) ? Number(form.price_per_day).toLocaleString('en-US') : ''}
+                    onChange={e => set('price_per_day', e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder={dayRateCurrency === 'USD' ? 'e.g. 150' : 'e.g. 8,900'} />
+                </div>
+                <p className="text-[11.5px] text-dim mt-1">
+                  {(form.price_per_day as string) && parseFloat(form.price_per_day as string) > 0
+                    ? dayRateCurrency === 'USD'
+                      ? `≈ DOP ${Math.round(parseFloat(form.price_per_day as string) * dopRate).toLocaleString('en-US')}`
+                      : `≈ USD ${Math.round(parseFloat(form.price_per_day as string) / dopRate).toLocaleString('en-US')}`
+                    : 'Daily rate for short-term, vacation rentals'}
+                </p>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">Mid-, Long-Term Rate (per month)</div>
+                  <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+                    {(['USD', 'DOP'] as const).map(c => (
+                      <button key={c} type="button" onClick={() => handleMonthRateCurrencyToggle(c)} className="px-2.5 py-1 transition-colors cursor-pointer"
+                        style={{ background: monthRateCurrency === c ? tone : 'white', color: monthRateCurrency === c ? 'white' : '#64748b' }}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{monthRateCurrency === 'USD' ? '$' : 'RD$'}</span>
+                  <input className={inp + (monthRateCurrency === 'USD' ? ' pl-6' : ' pl-11')} type="text" inputMode="numeric"
+                    value={(form.price_per_month as string) ? Number(form.price_per_month).toLocaleString('en-US') : ''}
+                    onChange={e => set('price_per_month', e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder={monthRateCurrency === 'USD' ? 'e.g. 2,500' : 'e.g. 148,000'} />
+                </div>
+                <p className="text-[11.5px] text-dim mt-1">
+                  {(form.price_per_month as string) && parseFloat(form.price_per_month as string) > 0
+                    ? monthRateCurrency === 'USD'
+                      ? `≈ DOP ${Math.round(parseFloat(form.price_per_month as string) * dopRate).toLocaleString('en-US')}`
+                      : `≈ USD ${Math.round(parseFloat(form.price_per_month as string) / dopRate).toLocaleString('en-US')}`
+                    : 'Monthly rate for 30-day+ rentals'}
+                </p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Toggle
                 value={association}
@@ -445,15 +535,33 @@ function FormSections({
               />
               {association && (
                 <div>
-                  <Lbl>{t('submit_listing_page.field_assoc_fee_mo')}</Lbl>
-                  <input
-                    className={inp}
-                    type="number"
-                    value={form.association_fee as string}
-                    onChange={e => set('association_fee', e.target.value)}
-                    placeholder="e.g. 200"
-                    min="0"
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing_page.field_assoc_fee_mo')}</div>
+                    <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+                      {(['USD', 'DOP'] as const).map(c => (
+                        <button key={c} type="button" onClick={() => handleAssocFeeCurrencyToggle(c)} className="px-2.5 py-1 transition-colors cursor-pointer"
+                          style={{ background: assocFeeCurrency === c ? tone : 'white', color: assocFeeCurrency === c ? 'white' : '#64748b' }}>{c}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{assocFeeCurrency === 'USD' ? '$' : 'RD$'}</span>
+                    <input
+                      className={inp + (assocFeeCurrency === 'USD' ? ' pl-6' : ' pl-11')}
+                      type="text"
+                      inputMode="numeric"
+                      value={(form.association_fee as string) ? Number(form.association_fee).toLocaleString('en-US') : ''}
+                      onChange={e => set('association_fee', e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder={assocFeeCurrency === 'USD' ? 'e.g. 200' : 'e.g. 11,900'}
+                    />
+                  </div>
+                  <p className="text-[11.5px] text-dim mt-1">
+                    {(form.association_fee as string) && parseFloat(form.association_fee as string) > 0
+                      ? assocFeeCurrency === 'USD'
+                        ? `≈ DOP ${Math.round(parseFloat(form.association_fee as string) * dopRate).toLocaleString('en-US')}`
+                        : `≈ USD ${Math.round(parseFloat(form.association_fee as string) / dopRate).toLocaleString('en-US')}`
+                      : 'Monthly association fee'}
+                  </p>
                 </div>
               )}
             </div>
@@ -750,7 +858,8 @@ function FormSections({
               set('co_listing_enabled', v)
               if (!v) {
                 set('co_listing_brokerage', ''); set('co_listing_agent_name', '')
-                set('co_listing_agent_contact', ''); set('co_listing_commission_split', '')
+                set('co_listing_brokerage_email', ''); set('co_listing_brokerage_phone', '')
+                set('co_listing_commission_split', '')
                 set('co_listing_notes', ''); set('co_listing_status', '')
               }
             }}
@@ -771,13 +880,24 @@ function FormSections({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Lbl>{t('submit_listing_page.field_ext_contact')}</Lbl>
-                  <input className={inp} value={form.co_listing_agent_contact as string} onChange={e => set('co_listing_agent_contact', e.target.value)} placeholder="Phone or email" />
+                  <Lbl>Brokerage Email</Lbl>
+                  <input className={inp} type="email" value={form.co_listing_brokerage_email as string} onChange={e => set('co_listing_brokerage_email', e.target.value)} placeholder="e.g. contact@century21dr.com" />
                 </div>
                 <div>
                   <Lbl>{t('submit_listing_page.field_commission')}</Lbl>
-                  <input className={inp} type="number" step="0.1" min="0" max="100" value={form.co_listing_commission_split as string} onChange={e => set('co_listing_commission_split', e.target.value)} placeholder="e.g. 50" />
+                  <input className={inp} type="number" step="1" min="0" max="100" value={form.co_listing_commission_split as string} onChange={e => set('co_listing_commission_split', e.target.value)} placeholder="e.g. 50" />
                 </div>
+              </div>
+              <div>
+                <Lbl>Brokerage Phone</Lbl>
+                <PhoneInput
+                  defaultCountry="do"
+                  value={form.co_listing_brokerage_phone as string}
+                  onChange={phone => set('co_listing_brokerage_phone', phone)}
+                  inputClassName="!w-full !px-3 !py-2.5 !rounded-r-lg !border-line !bg-white !text-[13.5px] !text-ink !outline-none focus:!border-[#1f7a3d] !h-auto"
+                  countrySelectorStyleProps={{ buttonClassName: '!border-line !bg-white !rounded-l-lg !h-auto !px-2.5 !py-2.5' }}
+                  style={{ '--react-international-phone-border-radius': '0.5rem' } as React.CSSProperties}
+                />
               </div>
               <div>
                 <Lbl>{t('submit_listing_page.field_co_status')}</Lbl>
@@ -808,6 +928,44 @@ function FormSections({
                   onChange={e => set('co_listing_notes', e.target.value)}
                   placeholder="e.g. Split agreed verbally, MLS #DR-204, contract expires Dec 2025…"
                 />
+              </div>
+              {/* Terms checkbox */}
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.co_listing_agreement_accepted as boolean}
+                    onChange={e => set('co_listing_agreement_accepted', e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded cursor-pointer shrink-0"
+                    style={{ accentColor: tone }}
+                  />
+                  <span className="text-[13px] text-ink">
+                    I agree to the <strong>co-listing terms</strong> with I Love DR Realty and confirm that the information above is accurate. <span className="text-red-500">*</span>
+                  </span>
+                </label>
+              </div>
+              {/* Agreement PDF upload */}
+              <div>
+                <Lbl>Co-Listing Agreement (PDF)</Lbl>
+                {form.co_listing_agreement_url ? (
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-line bg-white">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-500 shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <a href={form.co_listing_agreement_url as string} target="_blank" rel="noopener noreferrer" className="text-[13px] text-blue-600 underline flex-1 truncate">View Uploaded Agreement</a>
+                    <button type="button" onClick={() => set('co_listing_agreement_url', '')} className="text-dim hover:text-red-500 cursor-pointer bg-transparent border-0 text-[12px]">Remove</button>
+                  </div>
+                ) : (
+                  <label className="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-2 border-dashed cursor-pointer transition-colors"
+                    style={{ borderColor: tone + '55', background: tone + '06' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: tone }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span className="text-[13px] font-semibold" style={{ color: tone }}>
+                      {agreementUploading ? 'Uploading…' : 'Upload Agreement PDF'}
+                    </span>
+                    <input type="file" accept=".pdf,application/pdf" className="hidden"
+                      disabled={agreementUploading}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) onAgreementUpload(f) }} />
+                  </label>
+                )}
+                <p className="text-[11.5px] text-dim mt-1">Upload the signed co-listing agreement document (PDF, max 10 MB).</p>
               </div>
             </div>
           )}
@@ -861,10 +1019,15 @@ const EMPTY_FORM = {
   co_listing_enabled: false,
   co_listing_brokerage: '',
   co_listing_agent_name: '',
-  co_listing_agent_contact: '',
+  co_listing_brokerage_email: '',
+  co_listing_brokerage_phone: '',
   co_listing_commission_split: '',
   co_listing_notes: '',
   co_listing_status: '',
+  price_per_day: '',
+  price_per_month: '',
+  co_listing_agreement_accepted: false,
+  co_listing_agreement_url: '',
 }
 
 export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: string }) {
@@ -875,8 +1038,12 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
   const [thumbnail,    setThumbnail]    = useState<string | null>(null)
   const [uploading,    setUploading]    = useState(false)
   const [priceCurrency, setPriceCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [dayRateCurrency, setDayRateCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [monthRateCurrency, setMonthRateCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [assocFeeCurrency, setAssocFeeCurrency] = useState<'USD' | 'DOP'>('USD')
   const [dopRate, setDopRate] = useState(59.5)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [agreementUploading, setAgreementUploading] = useState(false)
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -889,6 +1056,18 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
 
   function toggleFeature(f: string) {
     set('features', form.features.includes(f) ? form.features.filter(x => x !== f) : [...form.features, f])
+  }
+
+  async function handleAgreementUpload(file: File) {
+    setAgreementUploading(true)
+    try {
+      const url = await uploadAgreementPdf(file)
+      set('co_listing_agreement_url', url)
+    } catch {
+      toast.error(t('submit_listing_page.toast_upload_error'))
+    } finally {
+      setAgreementUploading(false)
+    }
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -926,6 +1105,9 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
     if (!form.title.trim() || !form.location || !form.price) {
       toast.error(t('submit_listing_page.toast_validation')); return
     }
+    if (form.co_listing_enabled && !form.co_listing_agreement_accepted) {
+      toast.error('You must accept the co-listing terms before submitting.'); return
+    }
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
@@ -945,7 +1127,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         construction_status: form.construction_status || undefined,
         year_built:          form.year_built    ? parseInt(form.year_built)      : undefined,
         ...(isRent ? {
-          association_fee:    form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
+          association_fee:    form.association && form.association_fee ? (assocFeeCurrency === 'DOP' ? Math.round(parseFloat(form.association_fee) / dopRate) : parseFloat(form.association_fee)) : undefined,
           deposit_policy:     form.deposit_policy || undefined,
           included_utilities: form.included_utilities.length ? form.included_utilities : undefined,
         } : {
@@ -968,10 +1150,15 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         co_listing_enabled:          form.co_listing_enabled,
         co_listing_brokerage:        form.co_listing_enabled && form.co_listing_brokerage        ? form.co_listing_brokerage        : undefined,
         co_listing_agent_name:       form.co_listing_enabled && form.co_listing_agent_name       ? form.co_listing_agent_name       : undefined,
-        co_listing_agent_contact:    form.co_listing_enabled && form.co_listing_agent_contact    ? form.co_listing_agent_contact    : undefined,
-        co_listing_commission_split: form.co_listing_enabled && form.co_listing_commission_split ? parseFloat(form.co_listing_commission_split) : undefined,
+        co_listing_brokerage_email:  form.co_listing_enabled && form.co_listing_brokerage_email   ? form.co_listing_brokerage_email   : undefined,
+        co_listing_brokerage_phone:  form.co_listing_enabled ? (() => { const p = (form.co_listing_brokerage_phone as string).trim(); return p && isValidPhoneNumber(p) ? p : undefined })() : undefined,
+        co_listing_commission_split: form.co_listing_enabled && form.co_listing_commission_split ? parseInt(form.co_listing_commission_split) : undefined,
         co_listing_notes:            form.co_listing_enabled && form.co_listing_notes            ? form.co_listing_notes            : undefined,
         co_listing_status:           form.co_listing_enabled && form.co_listing_status           ? form.co_listing_status           : undefined,
+        price_per_day: isRent && form.price_per_day ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day) / dopRate) : parseFloat(form.price_per_day)) : undefined,
+        price_per_month: isRent && form.price_per_month ? (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month) / dopRate) : parseFloat(form.price_per_month)) : undefined,
+        co_listing_agreement_accepted: form.co_listing_enabled && form.co_listing_agreement_accepted ? form.co_listing_agreement_accepted : false,
+        co_listing_agreement_url: form.co_listing_enabled && form.co_listing_agreement_url ? form.co_listing_agreement_url : undefined,
       })
       toast.success(t('submit_listing_page.toast_success'))
       setForm(EMPTY_FORM); setUploadedUrls([]); setThumbnail(null)
@@ -999,7 +1186,12 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
           uploadedUrls={uploadedUrls} thumbnail={thumbnail} uploading={uploading}
           fileInputRef={fileInputRef} handleFileChange={handleFileChange}
           removeImage={removeImage} setThumbnail={setThumbnail}
-          priceCurrency={priceCurrency} setPriceCurrency={setPriceCurrency} dopRate={dopRate}
+          priceCurrency={priceCurrency} setPriceCurrency={setPriceCurrency}
+          dayRateCurrency={dayRateCurrency} setDayRateCurrency={setDayRateCurrency}
+          monthRateCurrency={monthRateCurrency} setMonthRateCurrency={setMonthRateCurrency}
+          assocFeeCurrency={assocFeeCurrency} setAssocFeeCurrency={setAssocFeeCurrency}
+          dopRate={dopRate}
+          agreementUploading={agreementUploading} onAgreementUpload={handleAgreementUpload}
         />
 
         <div className="flex gap-3 pt-2 pb-6">
@@ -1067,10 +1259,15 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
     co_listing_enabled:          listing.co_listing_enabled ?? false,
     co_listing_brokerage:        listing.co_listing_brokerage ?? '',
     co_listing_agent_name:       listing.co_listing_agent_name ?? '',
-    co_listing_agent_contact:    listing.co_listing_agent_contact ?? '',
+    co_listing_brokerage_email:  listing.co_listing_brokerage_email ?? '',
+    co_listing_brokerage_phone:  listing.co_listing_brokerage_phone ?? '',
     co_listing_commission_split: listing.co_listing_commission_split != null ? String(listing.co_listing_commission_split) : '',
     co_listing_notes:            listing.co_listing_notes ?? '',
     co_listing_status:           listing.co_listing_status ?? '',
+    price_per_day:               listing.price_per_day != null ? String(listing.price_per_day) : '',
+    price_per_month:             listing.price_per_month != null ? String(listing.price_per_month) : '',
+    co_listing_agreement_accepted: listing.co_listing_agreement_accepted ?? false,
+    co_listing_agreement_url:    listing.co_listing_agreement_url ?? '',
   })
 
   const [uploadedUrls, setUploadedUrls] = useState<string[]>(listing.images ?? [])
@@ -1078,8 +1275,12 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
   const [uploading,    setUploading]    = useState(false)
   const [submitting,   setSubmitting]   = useState(false)
   const [priceCurrency, setPriceCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [dayRateCurrency, setDayRateCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [monthRateCurrency, setMonthRateCurrency] = useState<'USD' | 'DOP'>('USD')
+  const [assocFeeCurrency, setAssocFeeCurrency] = useState<'USD' | 'DOP'>('USD')
   const [dopRate, setDopRate] = useState(59.5)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [agreementUploading, setAgreementUploading] = useState(false)
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -1092,6 +1293,18 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
 
   function toggleFeature(f: string) {
     set('features', form.features.includes(f) ? form.features.filter(x => x !== f) : [...form.features, f])
+  }
+
+  async function handleAgreementUpload(file: File) {
+    setAgreementUploading(true)
+    try {
+      const url = await uploadAgreementPdf(file)
+      set('co_listing_agreement_url', url)
+    } catch {
+      toast.error(t('submit_listing_page.toast_upload_error'))
+    } finally {
+      setAgreementUploading(false)
+    }
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -1129,6 +1342,9 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
     if (!form.title.trim() || !form.location || !form.price) {
       toast.error(t('submit_listing_page.toast_validation')); return
     }
+    if (form.co_listing_enabled && !form.co_listing_agreement_accepted) {
+      toast.error('You must accept the co-listing terms before saving.'); return
+    }
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
@@ -1148,7 +1364,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         construction_status: form.construction_status || undefined,
         year_built:          form.year_built    ? parseInt(form.year_built)      : undefined,
         ...(isRent ? {
-          association_fee:    form.association && form.association_fee ? parseFloat(form.association_fee) : undefined,
+          association_fee:    form.association && form.association_fee ? (assocFeeCurrency === 'DOP' ? Math.round(parseFloat(form.association_fee) / dopRate) : parseFloat(form.association_fee)) : undefined,
           deposit_policy:     form.deposit_policy || undefined,
           included_utilities: form.included_utilities,
         } : {
@@ -1171,10 +1387,15 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         co_listing_enabled:          form.co_listing_enabled,
         co_listing_brokerage:        form.co_listing_enabled && form.co_listing_brokerage        ? form.co_listing_brokerage        : undefined,
         co_listing_agent_name:       form.co_listing_enabled && form.co_listing_agent_name       ? form.co_listing_agent_name       : undefined,
-        co_listing_agent_contact:    form.co_listing_enabled && form.co_listing_agent_contact    ? form.co_listing_agent_contact    : undefined,
-        co_listing_commission_split: form.co_listing_enabled && form.co_listing_commission_split ? parseFloat(form.co_listing_commission_split) : undefined,
+        co_listing_brokerage_email:  form.co_listing_enabled && form.co_listing_brokerage_email   ? form.co_listing_brokerage_email   : undefined,
+        co_listing_brokerage_phone:  form.co_listing_enabled ? (() => { const p = (form.co_listing_brokerage_phone as string).trim(); return p && isValidPhoneNumber(p) ? p : undefined })() : undefined,
+        co_listing_commission_split: form.co_listing_enabled && form.co_listing_commission_split ? parseInt(form.co_listing_commission_split) : undefined,
         co_listing_notes:            form.co_listing_enabled && form.co_listing_notes            ? form.co_listing_notes            : undefined,
         co_listing_status:           form.co_listing_enabled && form.co_listing_status           ? form.co_listing_status           : undefined,
+        price_per_day: isRent && form.price_per_day ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day) / dopRate) : parseFloat(form.price_per_day)) : undefined,
+        price_per_month: isRent && form.price_per_month ? (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month) / dopRate) : parseFloat(form.price_per_month)) : undefined,
+        co_listing_agreement_accepted: form.co_listing_enabled ? form.co_listing_agreement_accepted : false,
+        co_listing_agreement_url: form.co_listing_enabled && form.co_listing_agreement_url ? form.co_listing_agreement_url : undefined,
       })
       const msg = listing.status === 'rejected'
         ? t('submit_listing_page.toast_edit_rejected')
@@ -1222,7 +1443,12 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
           fileInputRef={fileInputRef} handleFileChange={handleFileChange}
           removeImage={removeImage} setThumbnail={setThumbnail}
           photoLabel={t('submit_listing_page.photos_edit_label')}
-          priceCurrency={priceCurrency} setPriceCurrency={setPriceCurrency} dopRate={dopRate}
+          priceCurrency={priceCurrency} setPriceCurrency={setPriceCurrency}
+          dayRateCurrency={dayRateCurrency} setDayRateCurrency={setDayRateCurrency}
+          monthRateCurrency={monthRateCurrency} setMonthRateCurrency={setMonthRateCurrency}
+          assocFeeCurrency={assocFeeCurrency} setAssocFeeCurrency={setAssocFeeCurrency}
+          dopRate={dopRate}
+          agreementUploading={agreementUploading} onAgreementUpload={handleAgreementUpload}
         />
 
         <div className="flex gap-3 pt-2 pb-6">

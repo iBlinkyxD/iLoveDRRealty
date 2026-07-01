@@ -10,8 +10,8 @@ export async function logout(): Promise<void> {
   await client.post('/auth/logout')
 }
 
-export async function updateProfile(data: { display_name: string; phone?: string }): Promise<{ display_name: string; phone?: string }> {
-  const res = await client.put<{ display_name: string; phone?: string }>('/auth/me', data)
+export async function updateProfile(data: { display_name: string; phone?: string; calendly_url?: string }): Promise<{ display_name: string; phone?: string; calendly_url?: string }> {
+  const res = await client.put<{ display_name: string; phone?: string; calendly_url?: string }>('/auth/me', data)
   return res.data
 }
 

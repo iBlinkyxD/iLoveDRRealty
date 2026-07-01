@@ -75,6 +75,8 @@
     "per_mo_usd": "USD / mes",
     "assoc_fee": "Cuota de Asociación",
     "deposit": "Depósito",
+    "daily_rate": "Corto Plazo (Diario)",
+    "monthly_rate": "Mediano / Largo Plazo (Mensual)",
     "request_book": "Solicitar reserva",
     "listed_by": "Publicado por",
     "message_agent": "Enviar mensaje al agente",
@@ -86,16 +88,19 @@
     "send": "Enviar"
   },
   "booking": {
+    "name": "Tu nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono (opcional)",
     "check_in": "Entrada",
     "check_out": "Salida",
     "guests": "Huéspedes",
     "notes": "Notas (opcional)",
-    "error_auth": "Por favor inicia sesión para solicitar una reserva.",
     "error_generic": "Algo salió mal. Por favor intenta de nuevo."
   },
   "unit": {
     "per_mo": "/ mes",
-    "per_yr": "/ año"
+    "per_yr": "/ año",
+    "per_day": "/ día"
   },
   "inquiry": {
     "name": "Tu nombre",

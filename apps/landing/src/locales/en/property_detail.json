@@ -75,6 +75,8 @@
     "per_mo_usd": "USD / mo",
     "assoc_fee": "Association Fee",
     "deposit": "Deposit",
+    "daily_rate": "Short-Term (Daily)",
+    "monthly_rate": "Mid / Long-Term (Monthly)",
     "request_book": "Request to book",
     "listed_by": "Listed by",
     "message_agent": "Message Agent",
@@ -86,16 +88,19 @@
     "send": "Send"
   },
   "booking": {
+    "name": "Your name",
+    "email": "Email",
+    "phone": "Phone (optional)",
     "check_in": "Check-in",
     "check_out": "Check-out",
     "guests": "Guests",
     "notes": "Notes (optional)",
-    "error_auth": "Please log in to request a booking.",
     "error_generic": "Something went wrong. Please try again."
   },
   "unit": {
     "per_mo": "/ mo",
-    "per_yr": "/ yr"
+    "per_yr": "/ yr",
+    "per_day": "/ day"
   },
   "inquiry": {
     "name": "Your name",

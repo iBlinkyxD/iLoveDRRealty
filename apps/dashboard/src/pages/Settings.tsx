@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Shield, Bell, Eye, EyeOff, Mail, Unlink, Link2, AlertTriangle, Camera, Save, Trash2, LogOut } from 'lucide-react'
+import { Shield, Bell, Eye, EyeOff, Mail, Unlink, Link2, AlertTriangle, Camera, Save, Trash2, LogOut, CalendarDays, Plug } from 'lucide-react'
 import { useGoogleLogin } from '@react-oauth/google'
 import { PhoneInput } from 'react-international-phone'
 import { isValidPhoneNumber } from 'libphonenumber-js'
@@ -65,22 +65,61 @@ function StatusBadge({ active, label }: { active: boolean; label: string }) {
   )
 }
 
-type SettingsTab = 'profile' | 'security' | 'notifications'
+type SettingsTab = 'profile' | 'security' | 'notifications' | 'connections'
 
-export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInfo; role: Role; tone: string; onUserUpdate: (updates: Partial<UserInfo>) => void }) {
+export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { user: UserInfo; role: Role; tone: string; onUserUpdate: (updates: Partial<UserInfo>) => void; initialTab?: SettingsTab }) {
   const { t } = useTranslation('settings')
 
-  const [tab, setTab] = useState<SettingsTab>('profile')
+  const [tab, setTab] = useState<SettingsTab>(initialTab ?? 'profile')
 
   const TABS: { id: SettingsTab; label: string }[] = [
     { id: 'profile',       label: t('tabs.profile')       },
     { id: 'security',      label: t('tabs.security')      },
     { id: 'notifications', label: t('tabs.notifications') },
+    ...(role === 'Realtor' ? [{ id: 'connections' as const, label: 'Connections' }] : []),
   ]
 
   // Profile state
   const [displayName, setDisplayName] = useState(user.display_name)
   const [phone, setPhone] = useState(user.phone ?? '')
+  const [calendlyUrl, setCalendlyUrl] = useState(user.calendly_url ?? '')
+  const [calendlyInput, setCalendlyInput] = useState('')
+  const [calendlySaving, setCalendlySaving] = useState(false)
+
+  async function handleCalendlyConnect() {
+    const url = calendlyInput.trim()
+    if (!url.startsWith('https://calendly.com/')) {
+      toast.error('Please enter a valid Calendly URL (https://calendly.com/...)')
+      return
+    }
+    setCalendlySaving(true)
+    try {
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: url })
+      setCalendlyUrl(url)
+      setCalendlyInput('')
+      onUserUpdate({ calendly_url: url })
+      toast.success('Calendly connected')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
+    } finally {
+      setCalendlySaving(false)
+    }
+  }
+
+  async function handleCalendlyDisconnect() {
+    setCalendlySaving(true)
+    try {
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: undefined })
+      setCalendlyUrl('')
+      setCalendlyInput('')
+      onUserUpdate({ calendly_url: undefined })
+      toast.success('Calendly disconnected')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to disconnect')
+    } finally {
+      setCalendlySaving(false)
+    }
+  }
   const [avatarSrc, setAvatarSrc] = useState(user.avatar_url ?? '')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
@@ -159,7 +198,8 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
     if (phone && !isValidPhoneNumber(phone)) { toast.error(t('profile.err_phone')); return }
     setProfileSaving(true)
     try {
-      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined })
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined })
+      onUserUpdate({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined })
       toast.success(t('profile.toast_saved'))
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('profile.err_upload'))
@@ -652,6 +692,71 @@ export function UserSettings({ user, role, tone, onUserUpdate }: { user: UserInf
           />
         )}
         </>
+      )}
+
+      {/* ── Connections tab ── */}
+      {tab === 'connections' && (
+        <Section icon={Plug} title="Connections">
+          <div className="rounded-xl border border-line overflow-hidden">
+            <div className="px-4 py-3 bg-[#f8f9fc] border-b border-line flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[#006BFF]/10 flex items-center justify-center shrink-0">
+                <CalendarDays size={15} className="text-[#006BFF]" />
+              </div>
+              <div>
+                <div className="text-[13px] font-bold text-ink">Calendly</div>
+                <div className="text-[11px] text-dim">Scheduling integration</div>
+              </div>
+              {calendlyUrl ? (
+                <span className="ml-auto flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ color: '#15803d', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] inline-block" /> Connected
+                </span>
+              ) : (
+                <span className="ml-auto text-[11px] font-semibold text-dim bg-white border border-line px-2.5 py-1 rounded-full">Not connected</span>
+              )}
+            </div>
+            <div className="px-4 py-3.5">
+              {calendlyUrl ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-semibold text-ink truncate">{calendlyUrl}</div>
+                    <div className="text-[11px] text-dim mt-0.5">Shown on your Calendar page and shared with assigned leads.</div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={calendlySaving}
+                    onClick={handleCalendlyDisconnect}
+                    className="shrink-0 text-[12px] font-semibold text-red-500 hover:text-red-700 bg-transparent border-0 cursor-pointer p-0 disabled:opacity-50"
+                  >
+                    {calendlySaving ? 'Disconnecting…' : 'Disconnect'}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <div className="text-[12px] text-dim">Add your Calendly URL to display your scheduling page on the Calendar tab and share it with your assigned leads.</div>
+                  <div className="flex gap-2">
+                    <input
+                      className={`${inp} flex-1`}
+                      type="url"
+                      value={calendlyInput}
+                      onChange={e => setCalendlyInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleCalendlyConnect()}
+                      placeholder="https://calendly.com/your-link"
+                      maxLength={500}
+                    />
+                    <button
+                      type="button"
+                      disabled={calendlySaving}
+                      onClick={handleCalendlyConnect}
+                      className="shrink-0 px-4 py-2 rounded-lg text-[12.5px] font-bold text-white border-0 cursor-pointer bg-[#006BFF] disabled:opacity-50"
+                    >
+                      {calendlySaving ? 'Connecting…' : 'Connect'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Section>
       )}
 
       {/* ── Notifications tab ── */}

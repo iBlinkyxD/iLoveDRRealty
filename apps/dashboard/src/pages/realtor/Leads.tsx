@@ -5,6 +5,7 @@ import { getRealtorLeads, updateRealtorLeadStatus, type Lead } from '../../api/l
 import { FilterPills } from '../admin/shared'
 import { LeadDetailPanel } from '../../components/admin/LeadDetailPanel'
 import { parsePhone } from '../../utils/phone'
+import type { UserInfo } from '../../lib/auth'
 
 const TONE = '#1f7a3d'
 
@@ -25,6 +26,7 @@ const TYPE_COLOR: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   new:       'New',
   assigned:  'Assigned',
+  schedule:  'Schedule',
   contacted: 'Contacted',
   closed:    'Closed',
 }
@@ -32,12 +34,13 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_COLOR: Record<string, string> = {
   new:       '#64748b',
   assigned:  '#0d9488',
+  schedule:  '#006BFF',
   contacted: '#1f7a3d',
   closed:    '#94a3b8',
 }
 
 const TYPE_PILLS   = ['All', 'Inquiry', 'Booking', 'Buyer', 'Seller'] as const
-const STATUS_PILLS = ['All', 'New', 'Assigned', 'Contacted', 'Closed'] as const
+const STATUS_PILLS = ['All', 'New', 'Assigned', 'Schedule', 'Contacted', 'Closed'] as const
 
 const TYPE_PILL_MAP: Record<string, string> = {
   Inquiry: 'property_inquiry',
@@ -46,7 +49,7 @@ const TYPE_PILL_MAP: Record<string, string> = {
   Seller:  'seller_interest',
 }
 const STATUS_PILL_MAP: Record<string, string> = {
-  New: 'new', Assigned: 'assigned', Contacted: 'contacted', Closed: 'closed',
+  New: 'new', Assigned: 'assigned', Schedule: 'schedule', Contacted: 'contacted', Closed: 'closed',
 }
 
 const COLS    = 'grid-cols-[100px_1fr_1fr_1.2fr_110px]'
@@ -122,7 +125,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-export function RealtorLeads({ go }: { go?: (v: string) => void }) {
+export function RealtorLeads({ go, user }: { go?: (v: string) => void; user?: UserInfo }) {
   const { t } = useTranslation('realtor')
   const [leads,        setLeads]        = useState<Lead[]>([])
   const [loading,      setLoading]      = useState(true)
@@ -242,9 +245,19 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
             </div>
             {/* Pills — right */}
             <div className="flex items-center gap-3 ml-auto flex-wrap">
-              <FilterPills options={[...TYPE_PILLS]}   value={typeFilter}   onChange={setTypeFilter} />
+              <FilterPills
+                options={[...TYPE_PILLS]}
+                labels={[t('leads_page.filter_all'), t('leads_page.filter_type_inquiry'), t('leads_page.filter_type_booking'), t('leads_page.filter_type_buyer'), t('leads_page.filter_type_seller')]}
+                value={typeFilter}
+                onChange={setTypeFilter}
+              />
               <div className="w-px h-4 bg-line shrink-0" />
-              <FilterPills options={[...STATUS_PILLS]} value={statusFilter} onChange={setStatusFilter} />
+              <FilterPills
+                options={[...STATUS_PILLS]}
+                labels={[t('leads_page.filter_all'), t('leads_page.filter_status_new'), t('leads_page.filter_status_assigned'), t('leads_page.filter_status_schedule'), t('leads_page.filter_status_contacted'), t('leads_page.filter_status_closed')]}
+                value={statusFilter}
+                onChange={setStatusFilter}
+              />
             </div>
           </div>
         </div>
@@ -396,6 +409,7 @@ export function RealtorLeads({ go }: { go?: (v: string) => void }) {
         onStatusUpdated={handleStatusUpdate}
         allowedStatuses={['contacted', 'closed']}
         updateStatusFn={updateRealtorLeadStatus}
+        calendlyUrl={user?.calendly_url}
       />
     </div>
   )
