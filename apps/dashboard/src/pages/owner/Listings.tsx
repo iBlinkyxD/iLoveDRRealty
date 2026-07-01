@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  Building2, Search, MoreHorizontal, Home, Pencil, Trash2, EyeOff, MapPin, Star, Clock, MessageCircle, X, UserCircle,
+  Building2, Plus, Search, MoreHorizontal, Home, Pencil, Trash2, EyeOff, MapPin, Star, Clock, MessageCircle, X, UserCircle, CalendarCheck,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { getMyListings, type Listing } from '../../api/listings'
 import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
+import { OwnerSubmitListing } from './SubmitListing'
 import { submitLead } from '../../api/leads'
 import { getMe, getMyAgent } from '../../api/auth'
 import toast from 'react-hot-toast'
@@ -136,7 +137,7 @@ function RequestChangeModal({ listing, onClose }: { listing: Listing; onClose: (
   )
 }
 
-function ActionMenu({ onRequestDeal, onRequestChange }: { onRequestDeal?: () => void; onRequestChange: () => void }) {
+function ActionMenu({ onRequestDeal, onRequestChange, onEdit }: { onRequestDeal?: () => void; onRequestChange: () => void; onEdit?: () => void }) {
   const { t } = useTranslation('owner')
   const [open, setOpen] = useState(false)
   const [pos,  setPos]  = useState({ top: 0, left: 0 })
@@ -177,6 +178,15 @@ function ActionMenu({ onRequestDeal, onRequestChange }: { onRequestDeal?: () => 
           className="fixed w-44 bg-paper rounded-xl border border-line shadow-lg z-50 overflow-hidden"
           style={{ top: pos.top, left: pos.left }}
         >
+          {onEdit && (
+            <button
+              onClick={() => { onEdit(); setOpen(false) }}
+              className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs hover:bg-amber-50 transition-colors cursor-pointer"
+              style={{ color: '#c07800' }}
+            >
+              <Pencil size={12} /> {t('listings_page.edit_listing')}
+            </button>
+          )}
           <button
             onClick={() => { onRequestChange(); setOpen(false) }}
             className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs hover:bg-amber-50 transition-colors cursor-pointer"
@@ -269,7 +279,7 @@ const FILTERS = ['All', 'Active', 'Review', 'Rejected', 'Archived'] as const
 export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => void }) {
   const { t } = useTranslation('owner')
   const [listings, setListings] = useState<Listing[]>([])
-  const [agent, setAgent] = useState<{ name: string; email: string; phone: string | null } | null>(null)
+  const [agent, setAgent] = useState<{ name: string; email: string; phone: string | null; calendly_url: string | null } | null>(null)
   const [loading,  setLoading]  = useState(true)
   const [loadingAgent, setLoadingAgent] = useState(true)
   const [filter,   setFilter]   = useState<typeof FILTERS[number]>('All')
@@ -277,6 +287,9 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
   const [selected,  setSelected]  = useState<Listing | null>(null)
   const [openDeal,  setOpenDeal]  = useState(false)
   const [requestChangeListing, setRequestChangeListing] = useState<Listing | null>(null)
+  const [editTarget, setEditTarget] = useState<Listing | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [calendlyLinked, setCalendlyLinked] = useState(false)
 
   function load() {
     getMyListings()
@@ -288,8 +301,9 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
   useEffect(() => {
     load()
     getMyAgent().then(d => {
-      if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null })
+      if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null, calendly_url: d.realtor_calendly_url ?? null })
     }).catch(() => {}).finally(() => setLoadingAgent(false))
+    getMe().then(me => { setCurrentUserId(me.id); setCalendlyLinked(!!me.calendly_url) }).catch(() => {})
   }, [])
 
   const afterFilter = filter === 'All'
@@ -305,6 +319,17 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
 
   const pendingReviews = listings.filter(l => l.has_pending_deal_request || l.has_pending_edit)
 
+  if (editTarget) {
+    return (
+      <OwnerSubmitListing
+        go={go}
+        tone={tone}
+        listing={editTarget}
+        onBack={() => { setEditTarget(null); load() }}
+      />
+    )
+  }
+
   return (
     <>
       {/* Agent Banner */}
@@ -318,18 +343,31 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
             </div>
           </div>
         ) : agent ? (
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-full shrink-0 grid place-items-center font-bold text-[13px] text-white"
-              style={{ background: tone }}
-            >
-              {agent.name[0].toUpperCase()}
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-full shrink-0 grid place-items-center font-bold text-[13px] text-white"
+                style={{ background: tone }}
+              >
+                {agent.name[0].toUpperCase()}
+              </div>
+              <div>
+                <div className="text-[11.5px] text-dim font-medium">{t('listings_page.your_agent')}</div>
+                <div className="text-[13.5px] font-bold text-ink">{agent.name}</div>
+                <div className="text-[11.5px] text-dim">{agent.email}{agent.phone ? ` · ${agent.phone}` : ''}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-[11.5px] text-dim font-medium">{t('listings_page.your_agent')}</div>
-              <div className="text-[13.5px] font-bold text-ink">{agent.name}</div>
-              <div className="text-[11.5px] text-dim">{agent.email}{agent.phone ? ` · ${agent.phone}` : ''}</div>
-            </div>
+            {agent.calendly_url && /^https?:\/\//i.test(agent.calendly_url) && (
+              <a
+                href={agent.calendly_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-white no-underline"
+                style={{ background: tone }}
+              >
+                <CalendarCheck size={13} /> {t('listings_page.schedule_meeting')}
+              </a>
+            )}
           </div>
         ) : (
           <>
@@ -364,6 +402,15 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                   className="text-xs border-0 outline-none bg-transparent text-ink placeholder:text-dim flex-1"
                 />
               </div>
+              <button
+                onClick={() => calendlyLinked && go('submit-listing')}
+                disabled={!calendlyLinked}
+                title={!calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 border-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                style={{ background: tone }}
+              >
+                <Plus size={13} /> {t('listings_page.add_listing')}
+              </button>
             </div>
             <div className="flex gap-1.5 flex-wrap">
               {FILTERS.map(f => (
@@ -418,6 +465,15 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                 {t('listings_page.empty_sub')}
               </div>
             </div>
+            <button
+              onClick={() => calendlyLinked && go('submit-listing')}
+              disabled={!calendlyLinked}
+              title={!calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+              className="px-5 py-2 rounded-full text-[12.5px] font-bold text-white border-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              style={{ background: tone }}
+            >
+              {t('listings_page.list_property_btn')}
+            </button>
           </div>
         ) : visible.length === 0 ? (
           <div className="py-12 text-center text-sm text-dim">
@@ -457,8 +513,8 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                   {/* Leads */}
                   <div className="text-[12px] text-ink2">{l.leads_count.toLocaleString()}</div>
                   {/* Realtor */}
-                  <div className="text-[12px] truncate" style={{ color: l.submitted_by_name ? tone : '#94a3b8' }}>
-                    {l.submitted_by_name ?? t('listings_page.unassigned')}
+                  <div className="text-[12px] truncate" style={{ color: (!l.submitted_by_name || l.submitted_by === currentUserId) ? '#94a3b8' : tone }}>
+                    {(!l.submitted_by_name || l.submitted_by === currentUserId) ? t('listings_page.unassigned') : l.submitted_by_name}
                   </div>
                   {/* Updated */}
                   <div className="text-[12px] text-ink2">{fmtRelative(l.updated_at, t)}</div>
@@ -467,6 +523,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                     <ActionMenu
                       onRequestChange={() => setRequestChangeListing(l)}
                       onRequestDeal={l.status === 'active' && !l.is_deal ? () => { setSelected(l); setOpenDeal(true) } : undefined}
+                      onEdit={l.submitted_by === currentUserId ? () => setEditTarget(l) : undefined}
                     />
                   </div>
                 </div>
@@ -496,7 +553,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                     </div>
                   </div>
                   <div className="text-[11px] text-dim mt-2">
-                    {fmtType(l.type)} · {l.view_count} {t('listings.views')} · {l.leads_count} {t('listings.leads')} · {l.submitted_by_name ? `${t('listings_page.header_realtor')}: ${l.submitted_by_name}` : t('listings_page.no_realtor')} · {t('listings_page.header_updated')} {fmtRelative(l.updated_at, t)}
+                    {fmtType(l.type)} · {l.view_count} {t('listings.views')} · {l.leads_count} {t('listings.leads')} · {(l.submitted_by_name && l.submitted_by !== currentUserId) ? `${t('listings_page.header_realtor')}: ${l.submitted_by_name}` : t('listings_page.no_realtor')} · {t('listings_page.header_updated')} {fmtRelative(l.updated_at, t)}
                   </div>
                 </div>
               </div>
@@ -518,6 +575,11 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
           tone={tone}
           role="owner"
           openDeal={openDeal}
+          realtorCalendlyUrl={agent?.calendly_url ?? null}
+          selfManaged={selected.submitted_by === currentUserId}
+          onEdit={selected.submitted_by === currentUserId
+            ? () => { setSelected(null); setOpenDeal(false); setEditTarget(selected) }
+            : undefined}
           onClose={() => { setSelected(null); setOpenDeal(false) }}
         />
       )}

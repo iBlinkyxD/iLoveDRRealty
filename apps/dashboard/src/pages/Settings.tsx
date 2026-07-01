@@ -76,7 +76,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
     { id: 'profile',       label: t('tabs.profile')       },
     { id: 'security',      label: t('tabs.security')      },
     { id: 'notifications', label: t('tabs.notifications') },
-    ...(role === 'Realtor' ? [{ id: 'connections' as const, label: 'Connections' }] : []),
+    ...(role === 'Realtor' || role === 'Owner' ? [{ id: 'connections' as const, label: 'Connections' }] : []),
   ]
 
   // Profile state
@@ -719,7 +719,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="text-[12px] font-semibold text-ink truncate">{calendlyUrl}</div>
-                    <div className="text-[11px] text-dim mt-0.5">Shown on your Calendar page and shared with assigned leads.</div>
+                    <div className="text-[11px] text-dim mt-0.5">{role === 'Owner' ? 'Shared with clients and your assigned realtor for scheduling.' : 'Shown on your Calendar page and shared with assigned leads.'}</div>
                   </div>
                   <button
                     type="button"
@@ -732,7 +732,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <div className="text-[12px] text-dim">Add your Calendly URL to display your scheduling page on the Calendar tab and share it with your assigned leads.</div>
+                  <div className="text-[12px] text-dim">{role === 'Owner' ? 'Add your Calendly URL so clients and your assigned realtor can schedule meetings with you.' : 'Add your Calendly URL to display your scheduling page on the Calendar tab and share it with your assigned leads.'}</div>
                   <div className="flex gap-2">
                     <input
                       className={`${inp} flex-1`}

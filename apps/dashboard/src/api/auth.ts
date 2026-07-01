@@ -31,8 +31,8 @@ export async function unlinkGoogle(): Promise<void> {
   await client.delete('/auth/unlink-google')
 }
 
-export async function getMyAgent(): Promise<{ realtor_id: string | null; realtor_name: string | null; realtor_email: string | null; realtor_phone: string | null }> {
-  const res = await client.get<{ realtor_id: string | null; realtor_name: string | null; realtor_email: string | null; realtor_phone: string | null }>('/auth/me/agent')
+export async function getMyAgent(): Promise<{ realtor_id: string | null; realtor_name: string | null; realtor_email: string | null; realtor_phone: string | null; realtor_calendly_url: string | null }> {
+  const res = await client.get<{ realtor_id: string | null; realtor_name: string | null; realtor_email: string | null; realtor_phone: string | null; realtor_calendly_url: string | null }>('/auth/me/agent')
   return res.data
 }
 

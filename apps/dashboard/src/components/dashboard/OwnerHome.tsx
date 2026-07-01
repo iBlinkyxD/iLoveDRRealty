@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Home, Calendar, DollarSign, Bell, MessageCircle, Clock, Star, Pencil, UserCircle } from 'lucide-react'
+import { Home, Calendar, DollarSign, Bell, MessageCircle, Clock, Star, Pencil, UserCircle, CalendarCheck, CalendarDays } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
 import { getMyListings, type Listing } from '../../api/listings'
 import { getOwnerBookings, type Booking } from '../../api/bookings'
 import { getOwnerInquiries, type Inquiry } from '../../api/inquiries'
 import { getMyAgent } from '../../api/auth'
+import type { UserInfo } from '../../lib/auth'
 
 export const OWNER_KPIS: { label: string; value: string; sub: string; accent?: string }[] = [
   { label: 'Active Listings',    value: '—', sub: '' },
@@ -54,14 +55,14 @@ function avatarTone(name: string): string {
   return tones[h % tones.length]
 }
 
-export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string }) {
+export function OwnerHome({ go, tone, user }: { go: (v: string) => void; tone: string; user: UserInfo }) {
   const { t } = useTranslation('owner')
   const { t: tCommon } = useTranslation('common')
 
   const [myListings, setMyListings]   = useState<Listing[]>([])
   const [bookings, setBookings]       = useState<Booking[]>([])
   const [inquiries, setInquiries]     = useState<Inquiry[]>([])
-  const [agent, setAgent] = useState<{ name: string; email: string; phone: string | null } | null>(null)
+  const [agent, setAgent] = useState<{ name: string; email: string; phone: string | null; calendly_url: string | null } | null>(null)
   const [loadingListings, setLoadingListings] = useState(true)
   const [loadingBookings, setLoadingBookings] = useState(true)
   const [loadingInquiries, setLoadingInquiries] = useState(true)
@@ -72,7 +73,7 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
     getOwnerBookings().then(setBookings).catch(() => {}).finally(() => setLoadingBookings(false))
     getOwnerInquiries().then(setInquiries).catch(() => {}).finally(() => setLoadingInquiries(false))
     getMyAgent().then(d => {
-      if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null })
+      if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null, calendly_url: d.realtor_calendly_url ?? null })
     }).catch(() => {}).finally(() => setLoadingAgent(false))
   }, [])
 
@@ -108,8 +109,28 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
     },
   ]
 
+  const calendlyLinked = !!user.calendly_url
+
   return (
     <>
+      {!calendlyLinked && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-5 rounded-xl border" style={{ background: '#f0f7ff', borderColor: '#bfdbfe' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#006BFF18' }}>
+            <CalendarDays size={16} style={{ color: '#006BFF' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-semibold text-ink">{t('calendly_banner.title')}</div>
+            <div className="text-[11.5px] text-dim mt-0.5">{t('calendly_banner.desc')}</div>
+          </div>
+          <button
+            onClick={() => go('settings:connections')}
+            className="shrink-0 px-3.5 py-1.5 rounded-lg text-[12px] font-bold text-white border-0 cursor-pointer"
+            style={{ background: '#006BFF' }}
+          >
+            {t('calendly_banner.btn')}
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 mb-5 lg:grid-cols-4 lg:gap-4 lg:mb-6">
         {kpis.map((k, i) => <RoleKpiCard key={i} {...k} />)}
       </div>
@@ -117,7 +138,20 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_1fr]">
         <div className="flex flex-col gap-5">
           <Card title={<><Home size={14} /> {t('listings.title')}</>} padded={false}
-            action={<button onClick={() => go('listings')} className="text-xs font-bold bg-transparent border-none cursor-pointer" style={{ color: tone }}>{t('listings.manage')}</button>}>
+            action={
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => calendlyLinked && go('submit-listing')}
+                  disabled={!calendlyLinked}
+                  title={!calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+                  className="text-xs font-bold bg-transparent border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ color: tone }}
+                >
+                  {t('listings.list_property')}
+                </button>
+                <button onClick={() => go('listings')} className="text-xs font-bold bg-transparent border-none cursor-pointer" style={{ color: tone }}>{t('listings.manage')}</button>
+              </div>
+            }>
             {loadingListings ? (
               <div>
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -140,6 +174,15 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
                   <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('listings.empty_heading')}</div>
                   <div className="text-[11.5px] text-dim">{t('listings.empty_sub')}</div>
                 </div>
+                <button
+                  onClick={() => calendlyLinked && go('submit-listing')}
+                  disabled={!calendlyLinked}
+                  title={!calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+                  className="mt-1 px-5 py-2 rounded-full text-[12.5px] font-bold text-white border-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ background: tone }}
+                >
+                  {t('listings.list_property_btn')}
+                </button>
               </div>
             ) : (
               <div>
@@ -210,18 +253,31 @@ export function OwnerHome({ go, tone }: { go: (v: string) => void; tone: string 
                 </div>
               </div>
             ) : agent ? (
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-full shrink-0 grid place-items-center font-bold text-[15px] text-white"
-                  style={{ background: tone }}
-                >
-                  {agent.name[0].toUpperCase()}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-full shrink-0 grid place-items-center font-bold text-[15px] text-white"
+                    style={{ background: tone }}
+                  >
+                    {agent.name[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-[13.5px] font-bold text-ink">{agent.name}</div>
+                    <div className="text-[11.5px] text-dim">{agent.email}</div>
+                    {agent.phone && <div className="text-[11.5px] text-dim">{agent.phone}</div>}
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[13.5px] font-bold text-ink">{agent.name}</div>
-                  <div className="text-[11.5px] text-dim">{agent.email}</div>
-                  {agent.phone && <div className="text-[11.5px] text-dim">{agent.phone}</div>}
-                </div>
+                {agent.calendly_url && /^https?:\/\//i.test(agent.calendly_url) && (
+                  <a
+                    href={agent.calendly_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white no-underline"
+                    style={{ background: tone }}
+                  >
+                    <CalendarCheck size={13} /> {t('agent.schedule')}
+                  </a>
+                )}
               </div>
             ) : (
               <div className="py-2 text-center">

@@ -3,7 +3,7 @@ import {
   X, MapPin, Tag, Link2, Eye, Users, Home, Pencil,
   ChevronLeft, ChevronRight, CircleDollarSign, ArrowLeftRight,
   Calendar, BedDouble, Bath, Ruler, Maximize2, TrendingUp,
-  Wallet, CheckCircle2, Star, Clock, Building2, Video, Box, FileText, Mail, Phone,
+  Wallet, CheckCircle2, Star, Clock, Building2, Video, Box, FileText, Mail, Phone, CalendarCheck, UserCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import DOMPurify from 'dompurify'
@@ -53,11 +53,13 @@ interface Props {
   tone: string
   role?: string
   openDeal?: boolean
+  realtorCalendlyUrl?: string | null
   onClose: () => void
   onEdit?: () => void
+  selfManaged?: boolean
 }
 
-export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onEdit }: Props) {
+export function ListingDetailPanel({ listing, tone, role, openDeal, realtorCalendlyUrl, onClose, onEdit, selfManaged }: Props) {
   const { t } = useTranslation('common')
   const [imgIdx,        setImgIdx]        = useState(0)
   const [dealOpen,      setDealOpen]      = useState(false)
@@ -69,7 +71,8 @@ export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onE
   useEffect(() => { if (openDeal) setDealOpen(true) }, [openDeal])
 
   const isOwnerOrRealtor = role === 'owner' || role === 'realtor'
-  const canRequestDeal = listing.status === 'active' && !listing.is_deal && !listing.has_pending_deal_request && isOwnerOrRealtor
+  const realtorManaged = role === 'owner' && selfManaged === false
+  const canRequestDeal = listing.status === 'active' && !listing.is_deal && !listing.has_pending_deal_request && isOwnerOrRealtor && !realtorManaged
 
   const DEPOSIT_LABELS: Record<string, string> = {
     first:      t('listing_panel.deposit_first'),
@@ -490,6 +493,35 @@ export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onE
               </div>
             )}
 
+            {/* Managing Realtor (owner view — only when a realtor submitted it) */}
+            {role === 'owner' && !selfManaged && listing.submitted_by_name && (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">Managing Realtor</div>
+                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-line-soft bg-paper2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full shrink-0 grid place-items-center" style={{ background: `${tone}18` }}>
+                      <UserCircle size={18} style={{ color: tone }} />
+                    </div>
+                    <div>
+                      <div className="text-[13.5px] font-bold text-ink">{listing.submitted_by_name}</div>
+                      <div className="text-[11.5px] text-dim">Your assigned realtor</div>
+                    </div>
+                  </div>
+                  {realtorCalendlyUrl && safeUrl(realtorCalendlyUrl) && (
+                    <a
+                      href={safeUrl(realtorCalendlyUrl)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white no-underline"
+                      style={{ background: tone }}
+                    >
+                      <CalendarCheck size={13} /> Schedule Meeting
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Co-Listing */}
             {listing.co_listing_enabled && (
               <div>
@@ -664,6 +696,17 @@ export function ListingDetailPanel({ listing, tone, role, openDeal, onClose, onE
 
         {/* ── Footer ────────────────────────────────────────────────────── */}
         <div className="border-t border-line px-5 py-4 flex gap-3 shrink-0 bg-paper">
+          {role === 'owner' && !selfManaged && realtorCalendlyUrl && safeUrl(realtorCalendlyUrl) && (
+            <a
+              href={safeUrl(realtorCalendlyUrl)!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold text-white no-underline"
+              style={{ background: tone }}
+            >
+              <CalendarCheck size={14} /> Schedule Meeting
+            </a>
+          )}
           {onEdit && (
             <button
               onClick={onEdit}

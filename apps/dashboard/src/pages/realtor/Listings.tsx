@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { getMyListings, type Listing } from '../../api/listings'
 import { EditListing } from './SubmitListing'
 import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
+import type { UserInfo } from '../../lib/auth'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -195,8 +196,9 @@ const FILTERS = ['All', 'Active', 'Review', 'Rejected', 'Archived'] as const
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function RealtorListings({ tone, go }: { tone: string; go: (v: string) => void }) {
+export function RealtorListings({ tone, go, user }: { tone: string; go: (v: string) => void; user?: UserInfo }) {
   const { t } = useTranslation('realtor')
+  const calendlyLinked = !!user?.calendly_url
   const [listings, setListings] = useState<Listing[]>([])
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState<typeof FILTERS[number]>('All')
@@ -265,8 +267,10 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                 />
               </div>
               <button
-                onClick={() => go('submit-listing')}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
+                onClick={() => calendlyLinked && go('submit-listing')}
+                disabled={!calendlyLinked}
+                title={!calendlyLinked ? t('calendar_page.connect_desc') : undefined}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 border-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: tone }}
               >
                 <Plus size={13} /> {t('listings_page.add_listing')}
@@ -326,8 +330,10 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
               </div>
             </div>
             <button
-              onClick={() => go('submit-listing')}
-              className="flex items-center gap-1.5 py-2 px-5 rounded-full text-[13px] font-bold cursor-pointer"
+              onClick={() => calendlyLinked && go('submit-listing')}
+              disabled={!calendlyLinked}
+              title={!calendlyLinked ? t('calendar_page.connect_desc') : undefined}
+              className="flex items-center gap-1.5 py-2 px-5 rounded-full text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               style={{ background: tone, color: '#fff' }}
             >
               <Plus size={14} strokeWidth={2.5} />
