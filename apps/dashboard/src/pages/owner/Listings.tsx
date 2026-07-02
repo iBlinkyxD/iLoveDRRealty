@@ -23,6 +23,16 @@ function fmtPrice(price: number): string {
   return `$${price}`
 }
 
+function fmtListingPrice(l: Listing) {
+  if (l.transaction === 'rent') {
+    const parts = []
+    if (l.price_per_day)   parts.push(`$${Number(l.price_per_day).toLocaleString()}/day`)
+    if (l.price_per_month) parts.push(`$${Number(l.price_per_month).toLocaleString()}/mo`)
+    if (parts.length) return parts.join(' · ')
+  }
+  return fmtPrice(Number(l.price))
+}
+
 function fmtType(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
 }
@@ -505,7 +515,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                   {/* Type */}
                   <div className="text-[12px] text-ink2">{fmtType(l.type)}</div>
                   {/* Price */}
-                  <div className="text-[13px] font-semibold text-ink">{fmtPrice(Number(l.price))}</div>
+                  <div className="text-[13px] font-semibold text-ink">{fmtListingPrice(l)}</div>
                   {/* Status */}
                   <div><StatusChip status={l.status} /></div>
                   {/* Views */}
@@ -549,7 +559,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                     </div>
                     <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <StatusChip status={l.status} />
-                      <div className="text-[11px] text-dim">{fmtPrice(Number(l.price))}</div>
+                      <div className="text-[11px] text-dim">{fmtListingPrice(l)}</div>
                     </div>
                   </div>
                   <div className="text-[11px] text-dim mt-2">
