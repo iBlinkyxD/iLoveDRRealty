@@ -4,13 +4,14 @@ import { AdminHome } from './admin/Home'
 import { AdminUsers } from './admin/Users'
 import { AdminListings } from './admin/Listings'
 import { AdminLeads } from './admin/Leads'
+import { AdminBookings } from './admin/Bookings'
 import { Analytics } from './admin/Analytics'
 import { AdminSettings } from './admin/Settings'
 
 export default function AdminDash({ go, view = 'home', user, onUserUpdate }: { go: (v: string, openId?: string) => void; view?: string; user: UserInfo; onUserUpdate: (updates: Partial<UserInfo>) => void }) {
   const { t } = useTranslation('admin')
 
-  const pageKey = ['home', 'users', 'listings', 'leads', 'analytics', 'settings'].includes(view) ? view : 'home'
+  const pageKey = ['home', 'users', 'listings', 'leads', 'bookings', 'analytics', 'settings'].includes(view) ? view : 'home'
   const title = t(`pages.${pageKey}.title`)
   const sub   = t(`pages.${pageKey}.sub`)
 
@@ -19,6 +20,7 @@ export default function AdminDash({ go, view = 'home', user, onUserUpdate }: { g
       case 'users':    return <AdminUsers />
       case 'listings': return <AdminListings />
       case 'leads':    return <AdminLeads />
+      case 'bookings': return <AdminBookings />
       case 'analytics': return <Analytics />
       case 'settings': return <AdminSettings user={user} onUserUpdate={onUserUpdate} />
       default:         return <AdminHome go={go} />

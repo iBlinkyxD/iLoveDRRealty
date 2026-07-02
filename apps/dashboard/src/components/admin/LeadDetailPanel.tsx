@@ -492,8 +492,20 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
               </div>
             )}
 
-            {/* Assign Realtor — only shown when caller has realtors to choose from */}
-            {realtors.length > 0 && (
+            {/* Owner-managed listing — no realtor assignment */}
+            {lead.listing_owner_id ? (
+              <div className="flex items-center gap-3 px-3.5 py-3 rounded-xl border" style={{ background: '#7c3aed0d', borderColor: '#7c3aed30' }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#7c3aed18' }}>
+                  <UserCheck size={13} style={{ color: '#7c3aed' }} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[11.5px] font-semibold" style={{ color: '#7c3aed' }}>Owner managed</div>
+                  <div className="text-[11px] text-dim mt-0.5">
+                    This booking is handled directly by <span className="font-medium text-ink2">{lead.listing_owner_name ?? 'the owner'}</span>. No realtor assignment needed.
+                  </div>
+                </div>
+              </div>
+            ) : realtors.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">
                   <UserCheck size={11} />
@@ -533,35 +545,41 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
             {/* Status */}
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('lead_panel.section_status')}</div>
-              <div className="flex gap-2 flex-wrap">
-                {(() => {
-                  const currentIndex = STATUSES.indexOf(lead.status as typeof STATUSES[number])
-                  return STATUSES.filter(s => !allowedStatuses || allowedStatuses.includes(s)).map(s => {
-                    const idx    = STATUSES.indexOf(s)
-                    const active = lead.status === s
-                    const past   = idx < currentIndex
-                    const c      = past ? '#cbd5e1' : STATUS_COLOR[s]
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => handleStatus(s)}
-                        disabled={statusSaving || past}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all"
-                        style={{
-                          background:  active ? c : 'transparent',
-                          color:       active ? 'white' : c,
-                          borderColor: c,
-                          cursor:      past ? 'default' : 'pointer',
-                        }}
-                      >
-                        {active && <Check size={11} />}
-                        {STATUS_LABEL[s]}
-                      </button>
-                    )
-                  })
-                })()}
-              </div>
-              {statusSaving && <div className="text-[11px] text-dim mt-1.5">{t('lead_panel.saving')}</div>}
+              {lead.listing_owner_id ? (
+                <div className="text-[12px] text-dim italic">Status is managed by the owner and cannot be changed here.</div>
+              ) : (
+                <>
+                  <div className="flex gap-2 flex-wrap">
+                    {(() => {
+                      const currentIndex = STATUSES.indexOf(lead.status as typeof STATUSES[number])
+                      return STATUSES.filter(s => !allowedStatuses || allowedStatuses.includes(s)).map(s => {
+                        const idx    = STATUSES.indexOf(s)
+                        const active = lead.status === s
+                        const past   = idx < currentIndex
+                        const c      = past ? '#cbd5e1' : STATUS_COLOR[s]
+                        return (
+                          <button
+                            key={s}
+                            onClick={() => handleStatus(s)}
+                            disabled={statusSaving || past}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all"
+                            style={{
+                              background:  active ? c : 'transparent',
+                              color:       active ? 'white' : c,
+                              borderColor: c,
+                              cursor:      past ? 'default' : 'pointer',
+                            }}
+                          >
+                            {active && <Check size={11} />}
+                            {STATUS_LABEL[s]}
+                          </button>
+                        )
+                      })
+                    })()}
+                  </div>
+                  {statusSaving && <div className="text-[11px] text-dim mt-1.5">{t('lead_panel.saving')}</div>}
+                </>
+              )}
             </div>
 
           </div>

@@ -23,6 +23,8 @@ import { OwnerSubmitListing } from './owner/SubmitListing'
 import { RealtorCalendar } from './realtor/Calendar'
 import { RealtorLeads } from './realtor/Leads'
 import { Pipeline } from './realtor/Pipeline'
+import { RealtorBookings } from './realtor/Bookings'
+import { AdminBookings } from './admin/Bookings'
 import { UserSettings } from './Settings'
 import { Upgrade } from './buyer/Upgrade'
 
@@ -111,8 +113,9 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
       case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} go={go} /> : <RealtorListings tone={tone} go={go} user={user} />
       case 'submit-listing':  return role === 'Owner' ? <OwnerSubmitListing go={go} tone={tone} /> : <SubmitListing go={go} tone={tone} />
       case 'calendar':   return role === 'Owner' ? <OwnerCalendar user={user} go={go} /> : <RealtorCalendar user={user} go={go} />
-      case 'bookings':        return <BuyerBookings />
-      case 'owner-bookings':  return <OwnerBookings go={go} />
+      case 'bookings':        return role === 'Admin' ? <AdminBookings /> : <BuyerBookings />
+      case 'owner-bookings':    return <OwnerBookings go={go} />
+      case 'realtor-bookings':  return <RealtorBookings />
       case 'leads':      return role === 'Owner' ? <OwnerLeads tone={tone} go={go} /> : <RealtorLeads go={go} user={user} />
       case 'settings':
       case 'settings:connections':

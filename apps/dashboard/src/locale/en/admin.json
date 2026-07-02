@@ -5,6 +5,7 @@
     "users":     { "title": "User management",    "sub": "Manage users, roles, and upgrade requests"           },
     "listings":  { "title": "Listings",           "sub": "Manage listings requests"                            },
     "leads":     { "title": "Leads",              "sub": "Inquiries, bookings, and buyer/seller interest"      },
+    "bookings":  { "title": "Bookings",            "sub": "All guest bookings across every listing"             },
     "analytics": { "title": "Analytics",          "sub": "Platform metrics · May 2026"                         },
     "settings":  { "title": "Settings",           "sub": "Platform configuration"                              }
   },
@@ -512,7 +513,9 @@
 
     "toast_max_photos":  "Maximum 25 photos allowed.",
     "toast_upload_fail": "Upload failed. Check file types (JPEG, PNG, WebP) and sizes (max 25 MB).",
-    "toast_required":    "Title, region, and price are required.",
+    "toast_required":              "Title, region, and price are required.",
+    "toast_rent_price_required":   "Enter at least one rate — short-term (per night) or monthly.",
+    "rent_price_hint":             "Enter at least one rate. Both are optional but at least one is required to accept bookings.",
     "toast_published":   "Listing published successfully.",
     "toast_saved":       "Changes saved!",
     "toast_error":       "Something went wrong. Please try again.",

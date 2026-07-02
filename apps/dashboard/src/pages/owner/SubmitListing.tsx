@@ -634,7 +634,10 @@ export function OwnerSubmitListing({ go, tone, listing, onBack }: { go: (v: stri
           </div>
         </Sec>
 
-        <div className="flex gap-3 pt-2 pb-6">
+        <p className="text-[11.5px] text-ink3 leading-relaxed pt-2">
+          {t('submit_listing_page.commission_disclaimer')}
+        </p>
+        <div className="flex gap-3 pt-3 pb-6">
           <button type="button" onClick={goBack}
             className="px-6 py-3 rounded-full border border-line bg-paper text-ink text-[13.5px] font-semibold cursor-pointer">
             {t('submit_listing_page.cancel')}

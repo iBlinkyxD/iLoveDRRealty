@@ -89,6 +89,7 @@ export interface AdminListing {
   co_listing_status: string | null
   price_per_day: number | null
   price_per_month: number | null
+  owner_paypal_email: string | null
   co_listing_agreement_accepted: boolean
   co_listing_agreement_url: string | null
 }

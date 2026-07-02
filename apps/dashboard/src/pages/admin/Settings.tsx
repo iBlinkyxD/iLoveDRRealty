@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { Settings, Bell, Shield, Eye, EyeOff, Mail, Unlink, AlertTriangle, Camera, Save } from 'lucide-react'
+import { Bell, Shield, Eye, EyeOff, Mail, Unlink, Link2, AlertTriangle, Camera, Save } from 'lucide-react'
+import { useGoogleLogin } from '@react-oauth/google'
 import { PhoneInput } from 'react-international-phone'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import 'react-international-phone/style.css'
 import toast from 'react-hot-toast'
 import type { UserInfo } from '../../lib/auth'
-import { changePassword, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../../api/auth'
+import { changePassword, linkGoogle, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../../api/auth'
 import { getPlatformSettings, updatePlatformSettings } from '../../api/admin'
-import { TONE, Toggle } from './shared'
+import { TONE } from './shared'
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488] disabled:bg-[#f4f5f7] disabled:text-dim'
 
@@ -98,23 +99,6 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
   const fileRef = useRef<HTMLInputElement>(null)
   const initials = (displayName || user.display_name || user.email)[0].toUpperCase()
 
-  // Platform state
-  const [platform, setPlatform] = useState({
-    newRegistrations: true,
-    autoApprove:      false,
-    maintenanceMode:  false,
-    publicListings:   true,
-  })
-  const togglePlatform = (k: keyof typeof platform) => setPlatform(s => ({ ...s, [k]: !s[k] }))
-
-  // Notifications + 2FA state
-  const [notifs, setNotifs] = useState({
-    approvalAlerts: true,
-    dailyDigest:    true,
-    require2FA:     false,
-  })
-  const toggleNotif = (k: keyof typeof notifs) => setNotifs(s => ({ ...s, [k]: !s[k] }))
-
   // Platform settings (DB-backed)
   const [notifyEmail, setNotifyEmail] = useState('')
   const [savingNotifyEmail, setSavingNotifyEmail] = useState(false)
@@ -146,6 +130,23 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
   const [savingPw, setSavingPw] = useState(false)
   const [unlinkOpen, setUnlinkOpen] = useState(false)
   const [unlinking, setUnlinking] = useState(false)
+  const [linking, setLinking] = useState(false)
+
+  const startLinkGoogle = useGoogleLogin({
+    onSuccess: async ({ access_token }) => {
+      setLinking(true)
+      try {
+        await linkGoogle(access_token)
+        setHasGoogle(true)
+        toast.success('Google account linked')
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Failed to link Google')
+      } finally {
+        setLinking(false)
+      }
+    },
+    onError: () => toast.error('Google sign-in failed'),
+  })
 
   // Profile handlers
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -373,70 +374,6 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
 
       {/* ── Platform tab ── */}
       {tab === 'platform' && (
-        <div className="flex flex-col gap-5">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-
-          {/* Platform toggles */}
-          <div className="bg-paper border border-line rounded-2xl overflow-hidden">
-            <div className="px-5.5 py-4 border-b border-line flex items-center gap-2">
-              <Settings size={15} className="text-ink2" />
-              <div className="font-sans text-[16px] font-bold text-ink">Platform</div>
-            </div>
-            <div className="flex flex-col">
-              {[
-                { key: 'newRegistrations' as const, label: 'Allow new registrations',  sub: 'New users can sign up on the platform'    },
-                { key: 'autoApprove'      as const, label: 'Auto-approve listings',     sub: 'Skip manual review for verified realtors' },
-                { key: 'maintenanceMode'  as const, label: 'Maintenance mode',          sub: 'Disable public access for all visitors'   },
-                { key: 'publicListings'   as const, label: 'Public listing visibility', sub: 'Listings visible without login'           },
-              ].map(({ key, label, sub }, i) => (
-                <div key={i} className={`flex items-center justify-between px-5.5 py-4 ${i < 3 ? 'border-b border-line-soft' : ''}`}>
-                  <div>
-                    <div className="text-[13.5px] font-semibold text-ink">{label}</div>
-                    <div className="text-[11.5px] text-dim mt-0.5">{sub}</div>
-                  </div>
-                  <Toggle on={platform[key]} onToggle={() => togglePlatform(key)} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Notifications + 2FA */}
-          <div className="bg-paper border border-line rounded-2xl overflow-hidden">
-            <div className="px-5.5 py-4 border-b border-line flex items-center gap-2">
-              <Bell size={15} className="text-ink2" />
-              <div className="font-sans text-[16px] font-bold text-ink">Notifications</div>
-            </div>
-            <div className="flex flex-col">
-              {[
-                { key: 'approvalAlerts' as const, label: 'Approval alerts', sub: 'Email when new items need review'  },
-                { key: 'dailyDigest'    as const, label: 'Daily digest',     sub: 'Summary email each morning at 8am' },
-              ].map(({ key, label, sub }, i) => (
-                <div key={i} className={`flex items-center justify-between px-5.5 py-4 ${i === 0 ? 'border-b border-line-soft' : ''}`}>
-                  <div>
-                    <div className="text-[13.5px] font-semibold text-ink">{label}</div>
-                    <div className="text-[11.5px] text-dim mt-0.5">{sub}</div>
-                  </div>
-                  <Toggle on={notifs[key]} onToggle={() => toggleNotif(key)} />
-                </div>
-              ))}
-            </div>
-
-            <div className="px-5.5 py-4 border-t border-b border-line flex items-center gap-2 mt-2">
-              <Shield size={15} className="text-ink2" />
-              <div className="font-sans text-[16px] font-bold text-ink">Security</div>
-            </div>
-            <div className="flex items-center justify-between px-5.5 py-4">
-              <div>
-                <div className="text-[13.5px] font-semibold text-ink">Require 2FA for admins</div>
-                <div className="text-[11.5px] text-dim mt-0.5">Enforce two-factor for all admin accounts</div>
-              </div>
-              <Toggle on={notifs.require2FA} onToggle={() => toggleNotif('require2FA')} />
-            </div>
-          </div>
-
-        </div>
-
-        {/* Notification email (DB-backed) */}
         <div className="max-w-2xl bg-paper border border-line rounded-2xl overflow-hidden">
           <div className="px-5.5 py-4 border-b border-line flex items-center gap-2">
             <Mail size={15} className="text-ink2" />
@@ -469,7 +406,6 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
               </button>
             </div>
           </form>
-        </div>
         </div>
       )}
 
@@ -594,8 +530,19 @@ export function AdminSettings({ user, onUserUpdate }: { user: UserInfo; onUserUp
                         <span className="group-hover:hidden">Connected</span>
                         <span className="hidden group-hover:inline">Unlink</span>
                       </button>
+                    ) : hasGoogle ? (
+                      <StatusBadge active={true} label="Connected" />
                     ) : (
-                      <StatusBadge active={hasGoogle} label={hasGoogle ? 'Connected' : 'Not linked'} />
+                      <button
+                        type="button"
+                        onClick={() => startLinkGoogle()}
+                        disabled={linking}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11.5px] font-semibold transition-colors cursor-pointer disabled:opacity-60"
+                        style={{ background: '#f8faff', color: '#2563eb', borderColor: '#bfdbfe' }}
+                      >
+                        <Link2 size={10} />
+                        {linking ? 'Linking…' : 'Link Google'}
+                      </button>
                     )}
                   </div>
                 </div>

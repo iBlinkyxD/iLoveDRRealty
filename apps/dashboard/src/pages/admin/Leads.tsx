@@ -123,6 +123,31 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
+const BOOKING_STATUS_COLOR: Record<string, string> = {
+  pending:   '#d97706',
+  confirmed: '#1f7a3d',
+  cancelled: '#64748b',
+}
+
+function BookingStatusBadge({ status }: { status: string | null }) {
+  const s = status ?? 'pending'
+  const color = BOOKING_STATUS_COLOR[s] ?? '#64748b'
+  const label = s.charAt(0).toUpperCase() + s.slice(1)
+  return (
+    <span
+      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
+      style={{ background: `${color}18`, color }}
+    >
+      {label}
+    </span>
+  )
+}
+
+function LeadStatusBadge({ lead }: { lead: Lead }) {
+  if (lead.type === 'booking') return <BookingStatusBadge status={lead.booking_status} />
+  return <StatusBadge status={lead.status} />
+}
+
 
 export function AdminLeads() {
   const { t } = useTranslation('admin')
@@ -367,13 +392,27 @@ export function AdminLeads() {
                       {lead.phone && (() => { const ph = parsePhone(lead.phone); return <div className="flex items-center gap-1 text-[11px] text-dim">{ph.country && <img src={`https://flagcdn.com/w20/${ph.country.toLowerCase()}.png`} alt={ph.country} className="w-3.5 h-auto shrink-0 rounded-xs" />}<span className="truncate">{ph.formatted}</span></div> })()}
                     </div>
                   </div>
-                  <div className="text-[12.5px] text-ink2 truncate">
-                    {lead.property_title ?? <span className="text-dim italic">{t('leads_page.no_property')}</span>}
+                  <div className="min-w-0">
+                    <div className="text-[12.5px] text-ink2 truncate">
+                      {lead.property_title ?? <span className="text-dim italic">{t('leads_page.no_property')}</span>}
+                    </div>
+                    {lead.listing_owner_id && (
+                      <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold" style={{ background: '#7c3aed12', color: '#7c3aed' }}>
+                        Owner Listing
+                      </div>
+                    )}
                   </div>
                   <div className="text-[12px] text-ink2 line-clamp-2">{lead.message ?? '—'}</div>
-                  <div className="text-[12.5px] truncate" style={{ color: lead.assigned_realtor_id ? TONE : '#94a3b8' }}>
-                    {lead.assigned_realtor_name ?? t('leads_page.unassigned')}
-                  </div>
+                  {lead.listing_owner_id ? (
+                    <div className="flex flex-col gap-0.5">
+                      <div className="text-[11px] font-semibold truncate" style={{ color: '#7c3aed' }}>Owner managed</div>
+                      <div className="text-[10.5px] text-dim truncate">{lead.listing_owner_name}</div>
+                    </div>
+                  ) : (
+                    <div className="text-[12.5px] truncate" style={{ color: lead.assigned_realtor_id ? TONE : '#94a3b8' }}>
+                      {lead.assigned_realtor_name ?? t('leads_page.unassigned')}
+                    </div>
+                  )}
                   <div>
                     {lead.ghl_contact_url ? (
                       <a
@@ -395,7 +434,7 @@ export function AdminLeads() {
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
-                    <StatusBadge status={lead.status} />
+                    <LeadStatusBadge lead={lead} />
                     <div className="text-[10.5px] text-dim">{fmtRelative(lead.created_at, t)}</div>
                   </div>
                 </div>
@@ -431,7 +470,7 @@ export function AdminLeads() {
                     <div className="text-[12px] text-ink2 line-clamp-2">{lead.message}</div>
                   )}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <StatusBadge status={lead.status} />
+                    <LeadStatusBadge lead={lead} />
                     {lead.assigned_realtor_name && (
                       <span className="text-[11.5px] font-medium" style={{ color: TONE }}>
                         {lead.assigned_realtor_name}

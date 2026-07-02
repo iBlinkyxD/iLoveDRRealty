@@ -184,6 +184,7 @@ function FormSections({
   dayRateCurrency, setDayRateCurrency, monthRateCurrency, setMonthRateCurrency,
   assocFeeCurrency, setAssocFeeCurrency, dopRate,
   agreementUploading, onAgreementUpload,
+  customTagInput, setCustomTagInput, customTags, addCustomTag, removeCustomTag,
 }: {
   form: Record<string, unknown>
   set: (f: string, v: unknown) => void
@@ -208,6 +209,11 @@ function FormSections({
   dopRate: number
   agreementUploading: boolean
   onAgreementUpload: (file: File) => Promise<void>
+  customTagInput: string
+  setCustomTagInput: (v: string) => void
+  customTags: string[]
+  addCustomTag: () => void
+  removeCustomTag: (tag: string) => void
 }) {
   const { t } = useTranslation('realtor')
 
@@ -223,6 +229,7 @@ function FormSections({
   const hoa               = form.hoa as boolean
   const association       = form.association as boolean
   const isRent            = form.transaction === 'rent'
+  const allTagOptions     = [...ALL_TAGS, ...customTags.filter(t => !ALL_TAGS.includes(t))]
 
   const [customInput, setCustomInput] = useState('')
   const [customUtilityInput, setCustomUtilityInput] = useState('')
@@ -351,7 +358,57 @@ function FormSections({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {!isRent ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center h-7 mb-1.5">
+                  <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing_page.field_region')}</div>
+                </div>
+                <select
+                  className={inp + ' cursor-pointer'}
+                  value={form.location as string}
+                  onChange={e => set('location', e.target.value)}
+                  required
+                >
+                  <option value="">{t('submit_listing_page.select_region')}</option>
+                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing_page.field_price')}</div>
+                  <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+                    {(['USD', 'DOP'] as const).map(c => (
+                      <button key={c} type="button" onClick={() => handleCurrencyToggle(c)}
+                        className="px-2.5 py-1 transition-colors cursor-pointer"
+                        style={{ background: priceCurrency === c ? tone : 'white', color: priceCurrency === c ? 'white' : '#64748b' }}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{priceCurrency === 'USD' ? '$' : 'RD$'}</span>
+                  <input
+                    className={inp + (priceCurrency === 'USD' ? ' pl-6' : ' pl-11')}
+                    type="text"
+                    inputMode="numeric"
+                    value={(form.price as string) ? Number(form.price as string).toLocaleString('en-US') : ''}
+                    onChange={e => set('price', e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder={priceCurrency === 'USD' ? 'e.g. 850,000' : 'e.g. 50,150,000'}
+                    required
+                  />
+                </div>
+                {(form.price as string) ? (
+                  <p className="text-[11.5px] text-dim mt-1">
+                    {priceCurrency === 'USD'
+                      ? t('submit_listing_page.price_hint_dop', { amount: Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US') })
+                      : t('submit_listing_page.price_hint_usd_rate', { amount: Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US'), rate: dopRate.toFixed(1) })}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : (
             <div>
               <div className="flex items-center h-7 mb-1.5">
                 <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing_page.field_region')}</div>
@@ -366,40 +423,7 @@ function FormSections({
                 {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing_page.field_price')}</div>
-                <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
-                  {(['USD', 'DOP'] as const).map(c => (
-                    <button key={c} type="button" onClick={() => handleCurrencyToggle(c)}
-                      className="px-2.5 py-1 transition-colors cursor-pointer"
-                      style={{ background: priceCurrency === c ? tone : 'white', color: priceCurrency === c ? 'white' : '#64748b' }}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{priceCurrency === 'USD' ? '$' : 'RD$'}</span>
-                <input
-                  className={inp + (priceCurrency === 'USD' ? ' pl-6' : ' pl-11')}
-                  type="text"
-                  inputMode="numeric"
-                  value={(form.price as string) ? Number(form.price as string).toLocaleString('en-US') : ''}
-                  onChange={e => set('price', e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder={priceCurrency === 'USD' ? 'e.g. 850,000' : 'e.g. 50,150,000'}
-                  required
-                />
-              </div>
-              {(form.price as string) ? (
-                <p className="text-[11.5px] text-dim mt-1">
-                  {priceCurrency === 'USD'
-                    ? t('submit_listing_page.price_hint_dop', { amount: Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US') })
-                    : t('submit_listing_page.price_hint_usd_rate', { amount: Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US'), rate: dopRate.toFixed(1) })}
-                </p>
-              ) : null}
-            </div>
-          </div>
+          )}
 
           <div>
             <Lbl>{t('submit_listing_page.field_description')}</Lbl>
@@ -474,6 +498,7 @@ function FormSections({
       <Sec n={n()} title={t('submit_listing_page.sec_financials')} tone={tone}>
         {isRent ? (
           <div className="space-y-4">
+            <p className="text-[12px] text-dim -mt-1">{t('submit_listing_page.rent_price_hint')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
@@ -526,6 +551,23 @@ function FormSections({
                 </p>
               </div>
             </div>
+            {(form.price_per_day as string) && (
+              <div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">
+                  Owner PayPal Email <span className="text-red-500">*</span>
+                </div>
+                <input
+                  className={inp}
+                  type="email"
+                  value={(form.owner_paypal_email as string) ?? ''}
+                  onChange={e => set('owner_paypal_email', e.target.value.trim())}
+                  placeholder="owner@example.com"
+                />
+                <p className="text-[11.5px] text-dim mt-1">
+                  Payout for this listing's bookings will be sent to this PayPal account (after the 20% platform fee).
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Toggle
                 value={association}
@@ -976,24 +1018,54 @@ function FormSections({
       <Sec n={n()} title={t('submit_listing_page.sec_tags')} tone={tone}>
         <Lbl>{t('submit_listing_page.field_tags')}</Lbl>
         <div className="flex flex-wrap gap-2 mt-1">
-          {ALL_TAGS.map(tag => {
+          {allTagOptions.map(tag => {
             const active = tags.includes(tag)
+            const isCustom = !ALL_TAGS.includes(tag)
             return (
-              <button
+              <span
                 key={tag}
-                type="button"
-                onClick={() => toggleTag(tag)}
-                className="px-4 py-2 rounded-full border text-[13px] font-semibold cursor-pointer transition-all"
-                style={{
-                  borderColor: active ? tone : '#e2e8f0',
-                  background:  active ? tone : 'white',
-                  color:       active ? 'white' : '#64748b',
-                }}
+                className="inline-flex items-center rounded-full border text-[13px] font-semibold transition-all"
+                style={{ borderColor: active ? tone : '#e2e8f0', background: active ? tone : 'white', color: active ? 'white' : '#64748b' }}
               >
-                {t(tagKey(tag), { defaultValue: tag })}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className="pl-4 pr-2 py-2 cursor-pointer bg-transparent border-0 font-semibold text-[13px]"
+                  style={{ color: 'inherit' }}
+                >
+                  {isCustom ? tag : t(tagKey(tag), { defaultValue: tag })}
+                </button>
+                {isCustom && (
+                  <button
+                    type="button"
+                    onClick={() => { removeCustomTag(tag); set('tags', tags.filter(x => x !== tag)) }}
+                    className="pr-3 py-2 cursor-pointer bg-transparent border-0 text-[11px] leading-none"
+                    style={{ color: 'inherit' }}
+                  >×</button>
+                )}
+                {!isCustom && <span className="pr-4" />}
+              </span>
             )
           })}
+        </div>
+        <div className="flex gap-2 mt-2">
+          <input
+            className={inp + ' flex-1'}
+            type="text"
+            value={customTagInput}
+            onChange={e => setCustomTagInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTag() } }}
+            placeholder={t('submit_listing_page.add_custom_tag')}
+          />
+          <button
+            type="button"
+            onClick={addCustomTag}
+            disabled={!customTagInput.trim()}
+            className="px-4 py-2.5 rounded-lg text-[13px] font-semibold border-0 cursor-pointer disabled:opacity-40 transition-opacity"
+            style={{ background: tone, color: 'white' }}
+          >
+            {t('submit_listing_page.add')}
+          </button>
         </div>
       </Sec>
     </>
@@ -1026,6 +1098,7 @@ const EMPTY_FORM = {
   co_listing_status: '',
   price_per_day: '',
   price_per_month: '',
+  owner_paypal_email: '',
   co_listing_agreement_accepted: false,
   co_listing_agreement_url: '',
 }
@@ -1044,6 +1117,8 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
   const [dopRate, setDopRate] = useState(59.5)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [agreementUploading, setAgreementUploading] = useState(false)
+  const [customTagInput, setCustomTagInput] = useState('')
+  const [customTags, setCustomTags] = useState<string[]>([])
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -1056,6 +1131,18 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
 
   function toggleFeature(f: string) {
     set('features', form.features.includes(f) ? form.features.filter(x => x !== f) : [...form.features, f])
+  }
+
+  function addCustomTag() {
+    const val = customTagInput.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    if (!val || customTags.includes(val) || ALL_TAGS.includes(val)) return
+    setCustomTags(prev => [...prev, val])
+    set('tags', [...form.tags, val])
+    setCustomTagInput('')
+  }
+
+  function removeCustomTag(tag: string) {
+    setCustomTags(prev => prev.filter(t => t !== tag))
   }
 
   async function handleAgreementUpload(file: File) {
@@ -1102,8 +1189,15 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!form.title.trim() || !form.location || !form.price) {
+    const isRentMode = form.transaction === 'rent'
+    if (!form.title.trim() || !form.location || (!isRentMode && !form.price)) {
       toast.error(t('submit_listing_page.toast_validation')); return
+    }
+    if (isRentMode && !form.price_per_day && !form.price_per_month) {
+      toast.error(t('submit_listing_page.toast_rent_price_required')); return
+    }
+    if (isRentMode && form.price_per_day && !form.owner_paypal_email.trim()) {
+      toast.error('Owner PayPal email is required when a daily rate is set.'); return
     }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) {
       toast.error('You must accept the co-listing terms before submitting.'); return
@@ -1111,8 +1205,10 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
-      const priceUSD = priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price)
-      const isRent = form.transaction === 'rent'
+      const isRent = isRentMode
+      const priceUSD = isRent
+        ? (form.price_per_day ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day) / dopRate) : parseFloat(form.price_per_day)) : (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month) / dopRate) : parseFloat(form.price_per_month)))
+        : (priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price))
       await submitListing({
         title:               form.title.trim(),
         description:         form.description || undefined,
@@ -1157,6 +1253,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
         co_listing_status:           form.co_listing_enabled && form.co_listing_status           ? form.co_listing_status           : undefined,
         price_per_day: isRent && form.price_per_day ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day) / dopRate) : parseFloat(form.price_per_day)) : undefined,
         price_per_month: isRent && form.price_per_month ? (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month) / dopRate) : parseFloat(form.price_per_month)) : undefined,
+        owner_paypal_email: isRent && form.price_per_day && form.owner_paypal_email ? form.owner_paypal_email : undefined,
         co_listing_agreement_accepted: form.co_listing_enabled && form.co_listing_agreement_accepted ? form.co_listing_agreement_accepted : false,
         co_listing_agreement_url: form.co_listing_enabled && form.co_listing_agreement_url ? form.co_listing_agreement_url : undefined,
       })
@@ -1192,9 +1289,14 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
           assocFeeCurrency={assocFeeCurrency} setAssocFeeCurrency={setAssocFeeCurrency}
           dopRate={dopRate}
           agreementUploading={agreementUploading} onAgreementUpload={handleAgreementUpload}
+          customTagInput={customTagInput} setCustomTagInput={setCustomTagInput}
+          customTags={customTags} addCustomTag={addCustomTag} removeCustomTag={removeCustomTag}
         />
 
-        <div className="flex gap-3 pt-2 pb-6">
+        <p className="text-[11.5px] text-ink3 leading-relaxed pt-2">
+          {t('submit_listing_page.commission_disclaimer')}
+        </p>
+        <div className="flex gap-3 pt-3 pb-6">
           <button
             type="button"
             onClick={() => go('listings')}
@@ -1266,6 +1368,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
     co_listing_status:           listing.co_listing_status ?? '',
     price_per_day:               listing.price_per_day != null ? String(listing.price_per_day) : '',
     price_per_month:             listing.price_per_month != null ? String(listing.price_per_month) : '',
+    owner_paypal_email:          listing.owner_paypal_email ?? '',
     co_listing_agreement_accepted: listing.co_listing_agreement_accepted ?? false,
     co_listing_agreement_url:    listing.co_listing_agreement_url ?? '',
   })
@@ -1281,6 +1384,10 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
   const [dopRate, setDopRate] = useState(59.5)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [agreementUploading, setAgreementUploading] = useState(false)
+  const [customTagInput, setCustomTagInput] = useState('')
+  const [customTags, setCustomTags] = useState<string[]>(() =>
+    (listing.tags ?? []).filter(t => !ALL_TAGS.includes(t))
+  )
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -1293,6 +1400,18 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
 
   function toggleFeature(f: string) {
     set('features', form.features.includes(f) ? form.features.filter(x => x !== f) : [...form.features, f])
+  }
+
+  function addCustomTag() {
+    const val = customTagInput.trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+    if (!val || customTags.includes(val) || ALL_TAGS.includes(val)) return
+    setCustomTags(prev => [...prev, val])
+    set('tags', [...form.tags, val])
+    setCustomTagInput('')
+  }
+
+  function removeCustomTag(tag: string) {
+    setCustomTags(prev => prev.filter(t => t !== tag))
   }
 
   async function handleAgreementUpload(file: File) {
@@ -1339,8 +1458,15 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!form.title.trim() || !form.location || !form.price) {
+    const isRentMode = form.transaction === 'rent'
+    if (!form.title.trim() || !form.location || (!isRentMode && !form.price)) {
       toast.error(t('submit_listing_page.toast_validation')); return
+    }
+    if (isRentMode && !form.price_per_day && !form.price_per_month) {
+      toast.error(t('submit_listing_page.toast_rent_price_required')); return
+    }
+    if (isRentMode && form.price_per_day && !form.owner_paypal_email.trim()) {
+      toast.error('Owner PayPal email is required when a daily rate is set.'); return
     }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) {
       toast.error('You must accept the co-listing terms before saving.'); return
@@ -1348,8 +1474,10 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
-      const priceUSD = priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price)
-      const isRent = form.transaction === 'rent'
+      const isRent = isRentMode
+      const priceUSD = isRent
+        ? (form.price_per_day ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day) / dopRate) : parseFloat(form.price_per_day)) : (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month) / dopRate) : parseFloat(form.price_per_month)))
+        : (priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price))
       const updated = await updateListing(listing.id, {
         title:               form.title.trim(),
         description:         form.description || undefined,
@@ -1394,6 +1522,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
         co_listing_status:           form.co_listing_enabled && form.co_listing_status           ? form.co_listing_status           : undefined,
         price_per_day: isRent && form.price_per_day ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day) / dopRate) : parseFloat(form.price_per_day)) : undefined,
         price_per_month: isRent && form.price_per_month ? (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month) / dopRate) : parseFloat(form.price_per_month)) : undefined,
+        owner_paypal_email: isRent && form.price_per_day && form.owner_paypal_email ? form.owner_paypal_email : undefined,
         co_listing_agreement_accepted: form.co_listing_enabled ? form.co_listing_agreement_accepted : false,
         co_listing_agreement_url: form.co_listing_enabled && form.co_listing_agreement_url ? form.co_listing_agreement_url : undefined,
       })
@@ -1449,6 +1578,8 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
           assocFeeCurrency={assocFeeCurrency} setAssocFeeCurrency={setAssocFeeCurrency}
           dopRate={dopRate}
           agreementUploading={agreementUploading} onAgreementUpload={handleAgreementUpload}
+          customTagInput={customTagInput} setCustomTagInput={setCustomTagInput}
+          customTags={customTags} addCustomTag={addCustomTag} removeCustomTag={removeCustomTag}
         />
 
         <div className="flex gap-3 pt-2 pb-6">

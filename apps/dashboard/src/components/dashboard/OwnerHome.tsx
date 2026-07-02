@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Home, Calendar, DollarSign, Bell, MessageCircle, Clock, Star, Pencil, UserCircle, CalendarCheck, CalendarDays } from 'lucide-react'
+import { Home, Calendar, DollarSign, Bell, MessageCircle, Clock, Star, Pencil, UserCircle, CalendarCheck, CalendarDays, Wallet } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
 import { getMyListings, type Listing } from '../../api/listings'
@@ -110,9 +110,28 @@ export function OwnerHome({ go, tone, user }: { go: (v: string) => void; tone: s
   ]
 
   const calendlyLinked = !!user.calendly_url
+  const paypalLinked = !!user.paypal_email
 
   return (
     <>
+      {!paypalLinked && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-3 rounded-xl border" style={{ background: '#fffbeb', borderColor: '#fde68a' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#f59e0b1a' }}>
+            <Wallet size={16} style={{ color: '#d97706' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-semibold text-ink">{t('paypal_banner.title')}</div>
+            <div className="text-[11.5px] text-dim mt-0.5">{t('paypal_banner.desc')}</div>
+          </div>
+          <button
+            onClick={() => go('settings:connections')}
+            className="shrink-0 px-3.5 py-1.5 rounded-lg text-[12px] font-bold text-white border-0 cursor-pointer"
+            style={{ background: '#d97706' }}
+          >
+            {t('paypal_banner.btn')}
+          </button>
+        </div>
+      )}
       {!calendlyLinked && (
         <div className="flex items-center gap-3 px-4 py-3 mb-5 rounded-xl border" style={{ background: '#f0f7ff', borderColor: '#bfdbfe' }}>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#006BFF18' }}>
@@ -141,9 +160,9 @@ export function OwnerHome({ go, tone, user }: { go: (v: string) => void; tone: s
             action={
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => calendlyLinked && go('submit-listing')}
-                  disabled={!calendlyLinked}
-                  title={!calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+                  onClick={() => calendlyLinked && paypalLinked && go('submit-listing')}
+                  disabled={!calendlyLinked || !paypalLinked}
+                  title={!paypalLinked ? t('paypal_banner.disabled_tooltip') : !calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
                   className="text-xs font-bold bg-transparent border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ color: tone }}
                 >

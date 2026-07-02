@@ -31,15 +31,15 @@ export function OwnerCalendar({ user, go }: { user: UserInfo; go: (v: string) =>
 
   return (
     <Card
-      title={<><Calendar size={14} /> {t('calendar_page.title')}</>}
-      sub={
-        <span className="flex items-center gap-1.5">
-          {t('calendar_page.embed_sub')}
-          <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" className="text-[#006BFF] inline-flex items-center gap-0.5 hover:underline">
+      title={
+        <span className="flex items-center gap-2">
+          <Calendar size={14} /> {t('calendar_page.title')}
+          <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" className="text-[#006BFF] inline-flex items-center gap-0.5 hover:underline ml-0.5">
             <ExternalLink size={11} />
           </a>
         </span>
       }
+      sub={t('calendar_page.embed_sub')}
     >
       <div className="rounded-xl overflow-hidden border border-line" style={{ height: '680px' }}>
         <iframe

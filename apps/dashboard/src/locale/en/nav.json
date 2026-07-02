@@ -17,6 +17,7 @@
   "submit-listing": "Submit Listing",
   "analytics": "Analytics",
   "owner-bookings": "Guest Bookings",
+  "realtor-bookings": "Guest Bookings",
   "portal_eyebrow": "{{role}} Portal · {{name}}",
   "lang_toggle": "Language",
   "roles": {

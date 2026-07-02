@@ -258,7 +258,44 @@ function AdminFormBody({
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          {!isRent ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center h-7 mb-1.5">
+                  <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing.lbl_region')}</div>
+                </div>
+                <select className={inp + ' cursor-pointer'} value={form.location as string} onChange={e => set('location', e.target.value)} required>
+                  <option value="">{t('submit_listing.select_region')}</option>
+                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing.lbl_price')}</div>
+                  <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
+                    {(['USD', 'DOP'] as const).map(c => (
+                      <button key={c} type="button" onClick={() => handleCurrencyToggle(c)} className="px-2.5 py-1 transition-colors cursor-pointer"
+                        style={{ background: priceCurrency === c ? tone : 'white', color: priceCurrency === c ? 'white' : '#64748b' }}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{priceCurrency === 'USD' ? '$' : 'RD$'}</span>
+                  <input className={inp + (priceCurrency === 'USD' ? ' pl-6' : ' pl-11')} type="text" inputMode="numeric"
+                    value={(form.price as string) ? Number(form.price as string).toLocaleString('en-US') : ''}
+                    onChange={e => set('price', e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder={priceCurrency === 'USD' ? 'e.g. 850,000' : 'e.g. 50,150,000'} required />
+                </div>
+                {(form.price as string) ? (
+                  <p className="text-[11.5px] text-dim mt-1">
+                    {priceCurrency === 'USD'
+                      ? t('submit_listing.price_hint_dop', { amount: Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US') })
+                      : t('submit_listing.price_hint_usd_rate', { amount: Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US'), rate: dopRate.toFixed(1) })}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : (
             <div>
               <div className="flex items-center h-7 mb-1.5">
                 <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing.lbl_region')}</div>
@@ -268,32 +305,7 @@ function AdminFormBody({
                 {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide">{t('submit_listing.lbl_price')}</div>
-                <div className="flex rounded-lg border border-line overflow-hidden text-[11px] font-bold">
-                  {(['USD', 'DOP'] as const).map(c => (
-                    <button key={c} type="button" onClick={() => handleCurrencyToggle(c)} className="px-2.5 py-1 transition-colors cursor-pointer"
-                      style={{ background: priceCurrency === c ? tone : 'white', color: priceCurrency === c ? 'white' : '#64748b' }}>{c}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-dim text-[13px]">{priceCurrency === 'USD' ? '$' : 'RD$'}</span>
-                <input className={inp + (priceCurrency === 'USD' ? ' pl-6' : ' pl-11')} type="text" inputMode="numeric"
-                  value={(form.price as string) ? Number(form.price as string).toLocaleString('en-US') : ''}
-                  onChange={e => set('price', e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder={priceCurrency === 'USD' ? 'e.g. 850,000' : 'e.g. 50,150,000'} required />
-              </div>
-              {(form.price as string) ? (
-                <p className="text-[11.5px] text-dim mt-1">
-                  {priceCurrency === 'USD'
-                    ? t('submit_listing.price_hint_dop', { amount: Math.round(parseFloat(form.price as string) * dopRate).toLocaleString('en-US') })
-                    : t('submit_listing.price_hint_usd_rate', { amount: Math.round(parseFloat(form.price as string) / dopRate).toLocaleString('en-US'), rate: dopRate.toFixed(1) })}
-                </p>
-              ) : null}
-            </div>
-          </div>
+          )}
           <div>
             <Lbl>{t('submit_listing.lbl_description')}</Lbl>
             <RichTextEditor value={form.description as string} onChange={v => set('description', v)} tone={tone} />
@@ -343,6 +355,7 @@ function AdminFormBody({
       <Sec n={n()} title={t('submit_listing.sec_financials')} tone={tone}>
         {isRent ? (
           <div className="space-y-4">
+            <p className="text-[12px] text-dim -mt-1">{t('submit_listing.rent_price_hint')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
@@ -395,6 +408,23 @@ function AdminFormBody({
                 </p>
               </div>
             </div>
+            {(form.price_per_day as string) && (
+              <div>
+                <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">
+                  Owner PayPal Email <span className="text-red-500">*</span>
+                </div>
+                <input
+                  className={inp}
+                  type="email"
+                  value={(form.owner_paypal_email as string) ?? ''}
+                  onChange={e => set('owner_paypal_email', e.target.value.trim())}
+                  placeholder="owner@example.com"
+                />
+                <p className="text-[11.5px] text-dim mt-1">
+                  Payout for this listing's bookings will be sent to this PayPal account (after the 20% platform fee).
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <FormToggle value={association} onChange={v => { set('association', v); if (!v) set('association_fee', '') }} label={t('submit_listing.toggle_assoc_fee')} tone={tone} />
               {association && (
@@ -831,6 +861,7 @@ const EMPTY_FORM = {
   co_listing_status: '',
   price_per_day: '',
   price_per_month: '',
+  owner_paypal_email: '',
   co_listing_agreement_accepted: false,
   co_listing_agreement_url: '',
 }
@@ -932,13 +963,18 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.title.trim() || !form.location || !form.price) { toast.error(t('submit_listing.toast_required')); return }
+    const isRentMode = form.transaction === 'rent' || form.transaction === 'both'
+    if (!form.title.trim() || !form.location || (!isRentMode && !form.price)) { toast.error(t('submit_listing.toast_required')); return }
+    if (isRentMode && !(form.price_per_day as string) && !(form.price_per_month as string)) { toast.error(t('submit_listing.toast_rent_price_required')); return }
+    if (isRentMode && (form.price_per_day as string) && !(form.owner_paypal_email as string).trim()) { toast.error('Owner PayPal email is required when a daily rate is set.'); return }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) { toast.error('You must accept the co-listing terms before submitting.'); return }
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
-      const priceUSD = priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price)
-      const isRent = form.transaction === 'rent'
+      const isRent = isRentMode
+      const priceUSD = isRent
+        ? ((form.price_per_day as string) ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day as string) / dopRate) : parseFloat(form.price_per_day as string)) : (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month as string) / dopRate) : parseFloat(form.price_per_month as string)))
+        : (priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price))
       await submitListing({
         title: form.title.trim(), description: form.description || undefined,
         type: form.type, transaction: form.transaction,
@@ -1075,6 +1111,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
     co_listing_status:           listing.co_listing_status ?? '',
     price_per_day:               listing.price_per_day != null ? String(listing.price_per_day) : '',
     price_per_month:             listing.price_per_month != null ? String(listing.price_per_month) : '',
+    owner_paypal_email:          listing.owner_paypal_email ?? '',
     co_listing_agreement_accepted: listing.co_listing_agreement_accepted ?? false,
     co_listing_agreement_url:    listing.co_listing_agreement_url ?? '',
   })
@@ -1177,13 +1214,18 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!form.title.trim() || !form.location || !form.price) { toast.error(t('submit_listing.toast_required')); return }
+    const isRentMode = form.transaction === 'rent' || form.transaction === 'both'
+    if (!form.title.trim() || !form.location || (!isRentMode && !form.price)) { toast.error(t('submit_listing.toast_required')); return }
+    if (isRentMode && !(form.price_per_day as string) && !(form.price_per_month as string)) { toast.error(t('submit_listing.toast_rent_price_required')); return }
+    if (isRentMode && (form.price_per_day as string) && !(form.owner_paypal_email as string).trim()) { toast.error('Owner PayPal email is required when a daily rate is set.'); return }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) { toast.error('You must accept the co-listing terms before saving.'); return }
     setSubmitting(true)
     try {
       const orderedImages = thumbnail ? [thumbnail, ...uploadedUrls.filter(u => u !== thumbnail)] : uploadedUrls
-      const priceUSD = priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price)
-      const isRent = form.transaction === 'rent'
+      const isRent = isRentMode
+      const priceUSD = isRent
+        ? ((form.price_per_day as string) ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day as string) / dopRate) : parseFloat(form.price_per_day as string)) : (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month as string) / dopRate) : parseFloat(form.price_per_month as string)))
+        : (priceCurrency === 'DOP' ? Math.round(parseFloat(form.price) / dopRate) : parseFloat(form.price))
       const updated = await updateListing(listing.id, {
         title: form.title.trim(), description: form.description || undefined,
         type: form.type, transaction: form.transaction,
@@ -1224,6 +1266,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
         co_listing_status: (form.co_listing_status as string) || undefined,
         price_per_day: isRent && (form.price_per_day as string) ? (dayRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_day as string) / dopRate) : parseFloat(form.price_per_day as string)) : undefined,
         price_per_month: isRent && (form.price_per_month as string) ? (monthRateCurrency === 'DOP' ? Math.round(parseFloat(form.price_per_month as string) / dopRate) : parseFloat(form.price_per_month as string)) : undefined,
+        owner_paypal_email: isRent && (form.price_per_day as string) && (form.owner_paypal_email as string) ? (form.owner_paypal_email as string) : undefined,
         co_listing_agreement_accepted: (form.co_listing_enabled as boolean) ? (form.co_listing_agreement_accepted as boolean) : false,
         co_listing_agreement_url: (form.co_listing_enabled as boolean) && (form.co_listing_agreement_url as string) ? (form.co_listing_agreement_url as string) : undefined,
       })

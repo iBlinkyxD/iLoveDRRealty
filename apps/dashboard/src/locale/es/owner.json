@@ -9,6 +9,12 @@
     "earnings":      "Ganancias",
     "settings":      "Configuración"
   },
+  "paypal_banner": {
+    "title":            "Vincula tu cuenta de PayPal",
+    "desc":             "Conecta tu correo de PayPal en Ajustes para habilitar propiedades y recibir pagos de reservas.",
+    "btn":              "Conectar",
+    "disabled_tooltip": "Vincula tu cuenta de PayPal en Ajustes para habilitar esto"
+  },
   "calendly_banner": {
     "title":            "Vincula tu Calendly",
     "desc":             "Conecta tu página de programación para agregar propiedades y que los clientes agenden reuniones contigo.",
@@ -89,7 +95,16 @@
     "guest_count_other":  "{{count}} huéspedes",
     "status_pending":     "Pendiente",
     "status_confirmed":   "Confirmada",
-    "status_cancelled":   "Cancelada"
+    "status_cancelled":   "Cancelada",
+    "payment_authorized": "Autorizado",
+    "payment_captured":   "Pagado",
+    "payment_voided":     "Anulado",
+    "payment_refunded":   "Reembolsado",
+    "payout_sent":        "Pago enviado",
+    "payout_failed":      "Pago fallido",
+    "release_payout":     "Liberar pago",
+    "request_payout":     "Solicitar pago",
+    "payout_requested":   "Pago solicitado"
   },
   "leads_page": {
     "title":           "Todos los contactos",
@@ -222,7 +237,8 @@
     "toast_edit_success":   "¡Propiedad actualizada correctamente!",
     "toast_error":          "Algo salió mal. Inténtalo de nuevo.",
     "toast_upload_error":   "Error al subir. Inténtalo de nuevo.",
-    "toast_max_photos":     "Máximo 25 fotos permitidas."
+    "toast_max_photos":     "Máximo 25 fotos permitidas.",
+    "commission_disclaimer": "Al enviar esta propiedad, aceptas que I Love DR Realty cobrará una comisión del 20% sobre el monto total de cada reserva aceptada a través de esta plataforma. Esta comisión se descontará automáticamente de tu pago antes de la transferencia."
   },
   "rel": {
     "just_now":   "ahora mismo",

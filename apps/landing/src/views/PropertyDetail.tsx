@@ -32,8 +32,11 @@ import type { ApiListingDetail } from "../api/listings";
 import { submitInquiry } from "../api/inquiries";
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
-import { createBooking, getUnavailableDates, type BookedRange } from "../api/bookings";
+import { createBooking, createPaymentAuth, getUnavailableDates, type BookedRange } from "../api/bookings";
 import { getMe } from "../api/auth";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+
+const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || ''
 import { useTranslation } from 'react-i18next'
 
 function Slider({
@@ -288,6 +291,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
   const [bookingSending, setBookingSending] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
   const [bookingError, setBookingError] = useState('');
+  const [rentalType, setRentalType] = useState<'daily' | 'monthly'>('daily');
   const [calYear, setCalYear] = useState<number>(() => new Date().getFullYear());
   const [calMonth, setCalMonth] = useState<number>(() => new Date().getMonth());
   const [bookedRanges, setBookedRanges] = useState<BookedRange[]>([]);
@@ -1154,6 +1158,27 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               ) : bookingOpen ? (
                 <form onSubmit={handleBooking} className="mt-4 flex flex-col gap-2">
                   {bookingError && <div className="text-[12px] text-coral font-semibold text-center">{bookingError}</div>}
+                  {listing?.price_per_day && listing?.price_per_month && (
+                    <div>
+                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.rental_type')}</div>
+                      <div className="flex gap-1.5">
+                        {(['daily', 'monthly'] as const).map(type => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setRentalType(type)}
+                            className={`flex-1 py-1.5 rounded-full text-[12px] font-semibold border cursor-pointer transition-colors font-sans ${
+                              rentalType === type
+                                ? 'bg-coral text-white border-coral'
+                                : 'bg-transparent text-ink2 border-line'
+                            }`}
+                          >
+                            {t(`booking.${type}`)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <input required placeholder={t('booking.name')} value={bookingForm.name}
                     onChange={e => setBookingForm(f => ({ ...f, name: e.target.value }))}
                     className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
@@ -1196,11 +1221,60 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                       className="flex-1 py-2 rounded-full border border-line text-[13px] font-semibold text-ink2 cursor-pointer bg-transparent font-sans">
                       {t('sidebar.cancel')}
                     </button>
-                    <button type="submit" disabled={bookingSending}
-                      className="flex-1 py-2 rounded-full bg-coral text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
-                      {bookingSending ? t('sidebar.sending') : t('sidebar.request')}
-                    </button>
+                    {(!PAYPAL_CLIENT_ID || listing?.transaction !== 'rent' || !listing?.price_per_day || rentalType === 'monthly') && (
+                      <button type="submit" disabled={bookingSending}
+                        className="flex-1 py-2 rounded-full bg-coral text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
+                        {bookingSending ? t('sidebar.sending') : t('sidebar.request')}
+                      </button>
+                    )}
                   </div>
+                  {PAYPAL_CLIENT_ID && listing?.transaction === 'rent' && listing?.price_per_day && rentalType === 'daily' && (
+                    <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID, intent: 'authorize', currency: 'USD' }}>
+                      <div className="mt-1">
+                        <PayPalButtons
+                          style={{ layout: 'vertical', shape: 'pill', label: 'pay', height: 40 }}
+                          createOrder={async () => {
+                            if (!bookingForm.checkIn || !bookingForm.checkOut) {
+                              setBookingError(t('booking.error_dates'))
+                              throw new Error('dates required')
+                            }
+                            if (!me && (!bookingForm.name.trim() || !bookingForm.email.trim())) {
+                              setBookingError(t('booking.error_contact'))
+                              throw new Error('contact required')
+                            }
+                            setBookingError('')
+                            const result = await createPaymentAuth({ listing_id: id, check_in: bookingForm.checkIn, check_out: bookingForm.checkOut })
+                            return result.paypal_order_id
+                          }}
+                          onApprove={async (data) => {
+                            setBookingSending(true)
+                            try {
+                              await createBooking({
+                                listing_id: id,
+                                check_in: bookingForm.checkIn,
+                                check_out: bookingForm.checkOut,
+                                guests: bookingForm.guests,
+                                notes: bookingForm.notes || undefined,
+                                name: me ? undefined : bookingForm.name,
+                                email: me ? undefined : bookingForm.email,
+                                phone: me ? undefined : (bookingForm.phone || undefined),
+                                paypal_order_id: data.orderID,
+                              })
+                              setBookingSent(true)
+                            } catch {
+                              setBookingError(t('booking.error_generic'))
+                            } finally {
+                              setBookingSending(false)
+                            }
+                          }}
+                          onError={() => setBookingError(t('booking.error_generic'))}
+                        />
+                      </div>
+                    </PayPalScriptProvider>
+                  )}
+                  <p className="text-[11px] text-ink3 leading-relaxed mt-2">
+                    {t('booking.deposit_disclaimer')}
+                  </p>
                 </form>
               ) : (
                 <button onClick={() => {

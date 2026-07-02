@@ -420,6 +420,22 @@ export function ListingDetailPanel({
               </div>
             )}
 
+            {/* Owner PayPal payout email (daily rental only) */}
+            {listing.price_per_day != null && listing.owner_paypal_email && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-line-soft bg-paper2">
+                <Mail size={15} className="text-dim shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-[10.5px] text-dim">Owner PayPal Payout Email</div>
+                  <a
+                    href={`mailto:${listing.owner_paypal_email}`}
+                    className="text-[13.5px] font-bold text-ink hover:underline truncate block"
+                  >
+                    {listing.owner_paypal_email}
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* Utilities */}
             {listing.utilities && (
               <div>

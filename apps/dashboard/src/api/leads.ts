@@ -11,6 +11,8 @@ export interface Lead {
   property_title: string | null
   listing_realtor_id: string | null
   listing_realtor_name: string | null
+  listing_owner_id: string | null
+  listing_owner_name: string | null
   from_user_id: string | null
   from_user_code: string | null
   from_user_name: string | null
@@ -23,6 +25,7 @@ export interface Lead {
   contacted_at: string | null
   closed_at: string | null
   ghl_contact_url: string | null
+  booking_status: string | null
 }
 
 export interface LeadCreate {

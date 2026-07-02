@@ -9,4 +9,5 @@ export interface UserInfo {
   has_password?: boolean
   has_google?: boolean
   calendly_url?: string
+  paypal_email?: string
 }

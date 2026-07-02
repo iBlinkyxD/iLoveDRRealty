@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { Bell, CalendarDays, Users, CreditCard, Mail, Phone } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { StatusPill, fmtPrice } from '../../components/dashboard/shared'
-import { getOwnerBookings, acceptBooking, declineBooking, requestPayout, type Booking } from '../../api/bookings'
+import { getRealtorBookings, acceptBooking, declineBooking, requestPayout, type Booking } from '../../api/bookings'
 import { BookingDetailPanel } from '../../components/dashboard/BookingDetailPanel'
+
+const TONE = '#1f7a3d'
 
 function fmtDate(s: string): string {
   return new Date(s + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -30,10 +32,10 @@ function SectionHeader({ label, count }: { label: string; count: number }) {
 }
 
 const PAYMENT_STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  authorized:  { bg: 'bg-amber-100',  text: 'text-amber-700',  label: 'Authorized' },
-  captured:    { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Paid' },
-  voided:      { bg: 'bg-gray-100',   text: 'text-gray-500',   label: 'Voided' },
-  refunded:    { bg: 'bg-blue-100',   text: 'text-blue-600',   label: 'Refunded' },
+  authorized: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Authorized' },
+  captured:   { bg: 'bg-green-100', text: 'text-green-700', label: 'Paid'        },
+  voided:     { bg: 'bg-gray-100',  text: 'text-gray-500',  label: 'Voided'      },
+  refunded:   { bg: 'bg-blue-100',  text: 'text-blue-600',  label: 'Refunded'    },
 }
 
 function PaymentBadge({ status }: { status: string | null }) {
@@ -65,11 +67,10 @@ function BookingRow({
   acting: boolean
   onClick?: () => void
 }) {
-  const { t } = useTranslation('owner')
+  const { t } = useTranslation('realtor')
   const [payoutRequested, setPayoutRequested] = useState(false)
   const name = booking.guest_name ?? t('bookings_page.guest_fallback')
   const nights = nightsBetween(booking.check_in, booking.check_out)
-
   const showRequest = booking.payment_status === 'captured' && booking.payout_status === 'failed'
 
   return (
@@ -77,7 +78,6 @@ function BookingRow({
       className={`flex items-start gap-4 px-5 py-4 cursor-pointer hover:bg-paper2 transition-colors ${actionable ? 'bg-amber-50/40' : ''}`}
       onClick={onClick}
     >
-      {/* Avatar */}
       <div
         className="w-9 h-9 rounded-full shrink-0 grid place-items-center font-bold text-[14px] text-white mt-0.5"
         style={{ background: avatarTone(name) }}
@@ -85,23 +85,30 @@ function BookingRow({
         {name[0].toUpperCase()}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[13.5px] font-semibold text-ink">{name}</span>
           <StatusPill label={t(`bookings_page.status_${booking.status}`, { defaultValue: booking.status.charAt(0).toUpperCase() + booking.status.slice(1) })} />
           <PaymentBadge status={booking.payment_status} />
           {actionable && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{t('bookings_page.action_required')}</span>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+              {t('bookings_page.action_required')}
+            </span>
           )}
           {booking.payout_status === 'paid' && (
-            <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">{t('bookings_page.payout_sent')}</span>
+            <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+              {t('bookings_page.payout_sent')}
+            </span>
           )}
           {booking.payout_status === 'failed' && (
-            <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">{t('bookings_page.payout_failed')}</span>
+            <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+              {t('bookings_page.payout_failed')}
+            </span>
           )}
         </div>
-        <div className="text-[12px] text-ink2 mt-0.5 truncate font-medium">{booking.listing_title ?? t('bookings_page.property_fallback')}</div>
+        <div className="text-[12px] text-ink2 mt-0.5 truncate font-medium">
+          {booking.listing_title ?? t('bookings_page.property_fallback')}
+        </div>
         <div className="flex items-center gap-3 mt-1 text-[11.5px] text-dim flex-wrap">
           <span className="flex items-center gap-1">
             <CalendarDays size={10} className="shrink-0" />
@@ -130,13 +137,14 @@ function BookingRow({
         )}
       </div>
 
-      {/* Right side */}
       <div className="flex flex-col items-end gap-2 shrink-0">
         {booking.payout_amount != null ? (
           <div className="flex flex-col items-end gap-0.5">
             <span className="text-[13.5px] font-bold text-ink">{fmtPrice(booking.payout_amount)}</span>
             {booking.platform_fee != null && (
-              <span className="text-[10.5px] text-dim">of {fmtPrice(booking.total_price ?? 0)} · {fmtPrice(booking.platform_fee)} fee</span>
+              <span className="text-[10.5px] text-dim">
+                of {fmtPrice(booking.total_price ?? 0)} · {fmtPrice(booking.platform_fee)} fee
+              </span>
             )}
           </div>
         ) : booking.total_price != null && (
@@ -147,7 +155,8 @@ function BookingRow({
             <button
               onClick={onAccept}
               disabled={acting}
-              className="text-[12px] font-bold py-1.5 px-3.5 rounded-lg border-0 bg-brand text-white cursor-pointer disabled:opacity-50"
+              className="text-[12px] font-bold py-1.5 px-3.5 rounded-lg border-0 text-white cursor-pointer disabled:opacity-50"
+              style={{ background: TONE }}
             >
               {acting ? '…' : t('bookings_page.accept')}
             </button>
@@ -179,18 +188,16 @@ function BookingRow({
   )
 }
 
-const TONE = '#f0a800'
-
-export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdmin?: boolean }) {
-  const { t } = useTranslation('owner')
-  const [bookings, setBookings]   = useState<Booking[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [acting, setActing]       = useState<string | null>(null)
+export function RealtorBookings() {
+  const { t } = useTranslation('realtor')
+  const [bookings, setBookings]     = useState<Booking[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [acting, setActing]         = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const panelBooking = selectedId ? (bookings.find(b => b.id === selectedId) ?? null) : null
 
   useEffect(() => {
-    getOwnerBookings()
+    getRealtorBookings()
       .then(setBookings)
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -200,7 +207,11 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
     setActing(id)
     try {
       await acceptBooking(id)
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'confirmed', payment_status: b.payment_status === 'authorized' ? 'captured' : b.payment_status } : b))
+      setBookings(prev => prev.map(b =>
+        b.id === id
+          ? { ...b, status: 'confirmed', payment_status: b.payment_status === 'authorized' ? 'captured' : b.payment_status }
+          : b
+      ))
     } catch {
     } finally {
       setActing(null)
@@ -211,7 +222,11 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
     setActing(id)
     try {
       await declineBooking(id)
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled', payment_status: b.payment_status === 'authorized' ? 'voided' : b.payment_status } : b))
+      setBookings(prev => prev.map(b =>
+        b.id === id
+          ? { ...b, status: 'cancelled', payment_status: b.payment_status === 'authorized' ? 'voided' : b.payment_status }
+          : b
+      ))
     } catch {
     } finally {
       setActing(null)
@@ -228,11 +243,11 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
     }
   }
 
-  const today = new Date().toISOString().slice(0, 10)
-  const pending   = bookings.filter(b => b.status === 'pending')
-  const upcoming  = bookings.filter(b => b.status === 'confirmed' && b.check_in >= today)
-  const past      = bookings.filter(b => b.status === 'confirmed' && b.check_out < today)
-  const cancelled = bookings.filter(b => b.status === 'cancelled')
+  const today      = new Date().toISOString().slice(0, 10)
+  const pending    = bookings.filter(b => b.status === 'pending')
+  const upcoming   = bookings.filter(b => b.status === 'confirmed' && b.check_in >= today)
+  const past       = bookings.filter(b => b.status === 'confirmed' && b.check_out < today)
+  const cancelled  = bookings.filter(b => b.status === 'cancelled')
 
   if (loading) {
     return (
@@ -331,7 +346,7 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
         booking={panelBooking}
         onClose={() => setSelectedId(null)}
         accentColor={TONE}
-        isAdmin={isAdmin}
+        showGHL
         onAccept={panelBooking?.status === 'pending' ? () => handleAccept(panelBooking.id) : undefined}
         onDecline={panelBooking?.status === 'pending' ? () => handleDecline(panelBooking.id) : undefined}
         onRequestPayout={

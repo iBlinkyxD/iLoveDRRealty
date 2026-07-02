@@ -17,6 +17,7 @@
   "submit-listing": "Enviar propiedad",
   "analytics": "Analíticas",
   "owner-bookings": "Reservas de huéspedes",
+  "realtor-bookings": "Reservas de huéspedes",
   "portal_eyebrow": "Portal {{role}} · {{name}}",
   "lang_toggle": "Idioma",
   "roles": {

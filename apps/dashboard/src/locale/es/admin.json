@@ -5,6 +5,7 @@
     "users":     { "title": "Gestión de usuarios",       "sub": "Administrar usuarios, roles y solicitudes de acceso"        },
     "listings":  { "title": "Propiedades",               "sub": "Gestionar solicitudes de propiedades"                       },
     "leads":     { "title": "Contactos",                 "sub": "Consultas, reservas e intereses de compradores/vendedores"  },
+    "bookings":  { "title": "Reservas",                  "sub": "Todas las reservas de huéspedes en cada propiedad"          },
     "analytics": { "title": "Analíticas",                "sub": "Métricas de la plataforma · Mayo 2026"                      },
     "settings":  { "title": "Configuración",             "sub": "Configuración de la plataforma"                             }
   },
@@ -512,7 +513,9 @@
 
     "toast_max_photos":  "Máximo 25 fotos permitidas.",
     "toast_upload_fail": "Error al subir. Verifica los tipos de archivo (JPEG, PNG, WebP) y los tamaños (máx. 25 MB).",
-    "toast_required":    "El título, la región y el precio son obligatorios.",
+    "toast_required":              "El título, la región y el precio son obligatorios.",
+    "toast_rent_price_required":   "Ingresa al menos una tarifa — por noche o mensual.",
+    "rent_price_hint":             "Ingresa al menos una tarifa. Ambas son opcionales pero se requiere al menos una para aceptar reservas.",
     "toast_published":   "Listado publicado exitosamente.",
     "toast_saved":       "¡Cambios guardados!",
     "toast_error":       "Algo salió mal. Por favor, inténtalo de nuevo.",

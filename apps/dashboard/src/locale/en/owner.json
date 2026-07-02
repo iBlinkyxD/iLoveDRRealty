@@ -9,6 +9,12 @@
     "earnings":      "Earnings",
     "settings":      "Settings"
   },
+  "paypal_banner": {
+    "title":            "Link your PayPal account",
+    "desc":             "Connect your PayPal email in Settings to enable listings and receive booking payouts.",
+    "btn":              "Connect",
+    "disabled_tooltip": "Link your PayPal account in Settings to enable this"
+  },
   "calendly_banner": {
     "title":            "Link your Calendly",
     "desc":             "Connect your scheduling page to add listings and let clients book meetings with you.",
@@ -89,7 +95,16 @@
     "guest_count_other":  "{{count}} guests",
     "status_pending":     "Pending",
     "status_confirmed":   "Confirmed",
-    "status_cancelled":   "Cancelled"
+    "status_cancelled":   "Cancelled",
+    "payment_authorized": "Authorized",
+    "payment_captured":   "Paid",
+    "payment_voided":     "Voided",
+    "payment_refunded":   "Refunded",
+    "payout_sent":        "Payout sent",
+    "payout_failed":      "Payout failed",
+    "release_payout":     "Release payout",
+    "request_payout":     "Request Payout",
+    "payout_requested":   "Payout Requested"
   },
   "leads_page": {
     "title":           "All Leads",
@@ -222,7 +237,8 @@
     "toast_edit_success":   "Listing updated successfully!",
     "toast_error":          "Something went wrong. Please try again.",
     "toast_upload_error":   "Upload failed. Please try again.",
-    "toast_max_photos":     "Maximum 25 photos allowed."
+    "toast_max_photos":     "Maximum 25 photos allowed.",
+    "commission_disclaimer": "By submitting this listing, you agree that I Love DR Realty will collect a 20% commission fee on the total amount of every booking accepted through this platform. This fee is automatically deducted from your payout before transfer."
   },
   "rel": {
     "just_now":   "just now",

@@ -49,10 +49,11 @@ const NAV: Record<Exclude<Role, 'Admin'>, { Icon: LucideIcon; view: string }[]> 
     { Icon: DollarSign,    view: 'earnings'        },
   ],
   Realtor: [
-    { Icon: Building2,     view: 'listings' },
-    { Icon: ClipboardList, view: 'leads'    },
-    { Icon: GitBranch,     view: 'pipeline' },
-    { Icon: CalendarDays,  view: 'calendar' },
+    { Icon: Building2,     view: 'listings'          },
+    { Icon: ClipboardList, view: 'leads'             },
+    { Icon: Bell,          view: 'realtor-bookings'  },
+    { Icon: GitBranch,     view: 'pipeline'          },
+    { Icon: CalendarDays,  view: 'calendar'          },
   ],
 }
 
@@ -61,6 +62,7 @@ const ADMIN_NAV: { Icon: LucideIcon; view: string }[] = [
   { Icon: Users,           view: 'users'     },
   { Icon: Building2,       view: 'listings'  },
   { Icon: Inbox,           view: 'leads'     },
+  { Icon: Bell,            view: 'bookings'  },
   { Icon: Settings,        view: 'settings'  },
 ]
 
