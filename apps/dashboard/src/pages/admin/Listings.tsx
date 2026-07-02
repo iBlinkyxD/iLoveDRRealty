@@ -35,6 +35,16 @@ function fmtPrice(n: number) {
   return n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` : `$${Math.round(n / 1_000)}K`
 }
 
+function fmtListingPrice(l: AdminListing) {
+  if (l.transaction === 'rent') {
+    const parts = []
+    if (l.price_per_day)   parts.push(`$${Number(l.price_per_day).toLocaleString()}/day`)
+    if (l.price_per_month) parts.push(`$${Number(l.price_per_month).toLocaleString()}/mo`)
+    if (parts.length) return parts.join(' · ')
+  }
+  return fmtPrice(l.price)
+}
+
 function fmtType(t: string) {
   return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()
 }
@@ -735,7 +745,7 @@ export function AdminListings() {
                     {/* Type */}
                     <div className="text-[12px] text-ink2">{fmtType(l.type)}</div>
                     {/* Price */}
-                    <div className="text-[13px] font-semibold text-ink">{fmtPrice(l.price)}</div>
+                    <div className="text-[13px] font-semibold text-ink">{fmtListingPrice(l)}</div>
                     {/* Status */}
                     <div><StatusChip status={l.status} /></div>
                     {/* Submitted by */}
@@ -778,7 +788,7 @@ export function AdminListings() {
                       </div>
                       <div className="flex flex-col items-end gap-1.5 shrink-0">
                         <StatusChip status={l.status} />
-                        <div className="text-[11px] text-dim">{fmtPrice(l.price)}</div>
+                        <div className="text-[11px] text-dim">{fmtListingPrice(l)}</div>
                       </div>
                     </div>
                     <div className="text-[11px] text-dim mt-2">{t('listings_page.mobile_row_sub', { type: fmtType(l.type), time: fmtRelative(l.updated_at, t) })}</div>
