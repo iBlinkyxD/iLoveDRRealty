@@ -97,7 +97,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
     }
     setCalendlySaving(true)
     try {
-      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: url })
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: url, paypal_email: paypalEmail.trim() || undefined })
       setCalendlyUrl(url)
       setCalendlyInput('')
       onUserUpdate({ calendly_url: url })
@@ -112,7 +112,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
   async function handleCalendlyDisconnect() {
     setCalendlySaving(true)
     try {
-      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: undefined })
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: undefined, paypal_email: paypalEmail.trim() || undefined })
       setCalendlyUrl('')
       setCalendlyInput('')
       onUserUpdate({ calendly_url: undefined })
@@ -123,6 +123,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
       setCalendlySaving(false)
     }
   }
+
   async function handlePaypalConnect() {
     const email = paypalEmailInput.trim()
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -131,7 +132,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
     }
     setPaypalEmailSaving(true)
     try {
-      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, paypal_email: email })
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined, paypal_email: email })
       setPaypalEmail(email)
       setPaypalEmailInput('')
       onUserUpdate({ paypal_email: email })
@@ -146,7 +147,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
   async function handlePaypalDisconnect() {
     setPaypalEmailSaving(true)
     try {
-      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, paypal_email: undefined })
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined, paypal_email: undefined })
       setPaypalEmail('')
       setPaypalEmailInput('')
       onUserUpdate({ paypal_email: undefined })
@@ -236,8 +237,8 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
     if (phone && !isValidPhoneNumber(phone)) { toast.error(t('profile.err_phone')); return }
     setProfileSaving(true)
     try {
-      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined })
-      onUserUpdate({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined })
+      await updateProfile({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined, paypal_email: paypalEmail.trim() || undefined })
+      onUserUpdate({ display_name: displayName.trim(), phone: phone || undefined, calendly_url: calendlyUrl.trim() || undefined, paypal_email: paypalEmail.trim() || undefined })
       toast.success(t('profile.toast_saved'))
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t('profile.err_upload'))
