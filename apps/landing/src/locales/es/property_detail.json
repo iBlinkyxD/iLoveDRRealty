@@ -98,6 +98,7 @@
     "error_generic": "Algo salió mal. Por favor intenta de nuevo.",
     "error_dates": "Por favor selecciona las fechas de entrada y salida.",
     "error_contact": "Por favor ingresa tu nombre y correo electrónico.",
+    "error_date_unavailable": "Esa fecha ya está reservada. Por favor elige otra.",
     "deposit_disclaimer": "El pago no es reembolsable una vez que el propietario acepta tu reserva. Se pueden considerar excepciones únicamente en casos documentados de desastres naturales, prohibiciones de viaje emitidas por el gobierno o emergencias médicas graves que impidan el viaje. Todas las solicitudes de reembolso deben presentarse por escrito a I Love DR Realty y están sujetas a revisión y aprobación individual.",
     "rental_type": "Tipo de renta",
     "daily": "Diario",

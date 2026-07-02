@@ -291,6 +291,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
   const [bookingSending, setBookingSending] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
   const [bookingError, setBookingError] = useState('');
+  const [bookingDateError, setBookingDateError] = useState('');
   const [rentalType, setRentalType] = useState<'daily' | 'monthly'>('daily');
   const [calYear, setCalYear] = useState<number>(() => new Date().getFullYear());
   const [calMonth, setCalMonth] = useState<number>(() => new Date().getMonth());
@@ -346,6 +347,9 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
     const totalInterest = totalPaid - loan;
     return { loan, down, monthly, totalPaid, totalInterest };
   }, [aPrice, aDown, aRate, aTerm]);
+  const todayStr = new Date().toISOString().split('T')[0]
+  const isDateBooked = (ds: string) => bookedRanges.some(r => ds >= r.check_in && ds < r.check_out)
+
   const handleInquiry = async (e: FormEvent) => {
     e.preventDefault()
     setInquirySending(true)
@@ -1193,20 +1197,45 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                     inputStyle={{ flex: 1, width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #e4ddcf', borderLeft: 'none', borderRadius: '0 0.5rem 0.5rem 0', backgroundColor: '#ffffff', fontFamily: 'inherit', fontSize: '0.8125rem', color: '#00102e', outline: 'none' }}
                     countrySelectorStyleProps={{ buttonStyle: { border: '1px solid #e4ddcf', borderRight: 'none', borderRadius: '0.5rem 0 0 0.5rem', backgroundColor: '#f3f1ea', padding: '0 0.5rem', cursor: 'pointer', height: '100%' } }}
                   />
-                  <div className="grid grid-cols-2 gap-2">
+                  {rentalType === 'daily' && (
                     <div>
-                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_in')}</div>
-                      <input required type="date" value={bookingForm.checkIn}
-                        onChange={e => setBookingForm(f => ({ ...f, checkIn: e.target.value }))}
-                        className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_in')}</div>
+                          <input required type="date" value={bookingForm.checkIn}
+                            min={todayStr}
+                            onChange={e => {
+                              const val = e.target.value
+                              if (isDateBooked(val)) {
+                                setBookingDateError(t('booking.error_date_unavailable'))
+                                setBookingForm(f => ({ ...f, checkIn: '' }))
+                              } else {
+                                setBookingDateError('')
+                                setBookingForm(f => ({ ...f, checkIn: val, checkOut: f.checkOut && f.checkOut <= val ? '' : f.checkOut }))
+                              }
+                            }}
+                            className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                        </div>
+                        <div>
+                          <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_out')}</div>
+                          <input required type="date" value={bookingForm.checkOut}
+                            min={bookingForm.checkIn || todayStr}
+                            onChange={e => {
+                              const val = e.target.value
+                              if (isDateBooked(val)) {
+                                setBookingDateError(t('booking.error_date_unavailable'))
+                                setBookingForm(f => ({ ...f, checkOut: '' }))
+                              } else {
+                                setBookingDateError('')
+                                setBookingForm(f => ({ ...f, checkOut: val }))
+                              }
+                            }}
+                            className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                        </div>
+                      </div>
+                      {bookingDateError && <div className="text-[11.5px] text-coral mt-1">{bookingDateError}</div>}
                     </div>
-                    <div>
-                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_out')}</div>
-                      <input required type="date" value={bookingForm.checkOut}
-                        onChange={e => setBookingForm(f => ({ ...f, checkOut: e.target.value }))}
-                        className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
-                    </div>
-                  </div>
+                  )}
                   <div>
                     <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.guests')}</div>
                     <input type="number" min={1} max={20} value={bookingForm.guests}
