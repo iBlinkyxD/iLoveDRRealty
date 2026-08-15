@@ -26,6 +26,19 @@
       }
     ]
   },
+  "realtors": {
+    "eyebrow": "◆ Agentes inmobiliarios",
+    "heading": "Agentes en la plataforma",
+    "sub": "Asesores licenciados que trabajan junto a nuestros principales — cada uno con profunda especialización en su mercado y tipo de propiedad.",
+    "badge": "◆ Agente",
+    "bios": [
+      {
+        "role": "Asesor Inmobiliario · Corredor de Terrenos",
+        "bio": "Con más de 20 años atendiendo a inversores locales e internacionales, especializado en fincas agrícolas, granjas, propiedades turísticas, venta de terrenos, adquisiciones y oportunidades de inversión en la RD.",
+        "region": "A nivel nacional"
+      }
+    ]
+  },
   "cta": {
     "heading": "¿Listo para comenzar tu viaje en la RD?",
     "sub": "Conéctate con el agente adecuado para tus objetivos — ya sea que estés comprando, invirtiendo o reubicándote.",

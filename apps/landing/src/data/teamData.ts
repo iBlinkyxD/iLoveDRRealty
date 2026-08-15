@@ -23,6 +23,18 @@ export const PRINCIPALS: Principal[] = [
     img: '/team/xavier.jpeg', bgPos: 'center 15%' },
 ]
 
+export interface Realtor {
+  id: string; name: string; role: string; bio: string
+  langs: string; region: string; img: string; bgPos?: string
+}
+
+export const REALTORS: Realtor[] = [
+  { id: 'francy', name: 'Francy Apolinar Dominguez Sanchez', role: 'Real Estate Advisor · Land Broker',
+    bio: 'With 20+ years serving local and international investors, specializing in agricultural estates, farms, tourism properties, land sales, acquisitions, and investment opportunities in the DR.',
+    langs: 'ES · EN', region: 'Nationwide',
+    img: '/team/francy.jpeg', bgPos: 'center 20%' },
+]
+
 export const AGENTS: Agent[] = [
   // Emil's team — Rodríguez Realty Group
   { name: 'Carla Méndez',       role: 'Senior Agent',   team: 'emil',   specialty: 'Luxury Residential',

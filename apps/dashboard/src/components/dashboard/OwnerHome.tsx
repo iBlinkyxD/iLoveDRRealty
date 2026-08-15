@@ -7,6 +7,7 @@ import { getOwnerBookings, type Booking } from '../../api/bookings'
 import { getOwnerInquiries, type Inquiry } from '../../api/inquiries'
 import { getMyAgent } from '../../api/auth'
 import type { UserInfo } from '../../lib/auth'
+import { PAYPAL_ENABLED } from '../../lib/features'
 
 export const OWNER_KPIS: { label: string; value: string; sub: string; accent?: string }[] = [
   { label: 'Active Listings',    value: '—', sub: '' },
@@ -110,11 +111,13 @@ export function OwnerHome({ go, tone, user }: { go: (v: string) => void; tone: s
   ]
 
   const calendlyLinked = !!user.calendly_url
-  const paypalLinked = !!user.paypal_email
+  // While PayPal is disabled we neither ask owners to link an account nor block
+  // listing submission on it — they could never satisfy the requirement.
+  const paypalMissing = PAYPAL_ENABLED && !user.paypal_email
 
   return (
     <>
-      {!paypalLinked && (
+      {paypalMissing && (
         <div className="flex items-center gap-3 px-4 py-3 mb-3 rounded-xl border" style={{ background: '#fffbeb', borderColor: '#fde68a' }}>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#f59e0b1a' }}>
             <Wallet size={16} style={{ color: '#d97706' }} />
@@ -160,9 +163,9 @@ export function OwnerHome({ go, tone, user }: { go: (v: string) => void; tone: s
             action={
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => calendlyLinked && paypalLinked && go('submit-listing')}
-                  disabled={!calendlyLinked || !paypalLinked}
-                  title={!paypalLinked ? t('paypal_banner.disabled_tooltip') : !calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+                  onClick={() => calendlyLinked && !paypalMissing && go('submit-listing')}
+                  disabled={!calendlyLinked || paypalMissing}
+                  title={paypalMissing ? t('paypal_banner.disabled_tooltip') : !calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
                   className="text-xs font-bold bg-transparent border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ color: tone }}
                 >

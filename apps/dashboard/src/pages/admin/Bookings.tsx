@@ -4,6 +4,7 @@ import { getAdminBookings, releasePayout, type Booking } from '../../api/booking
 import { fmtPrice } from '../../components/dashboard/shared'
 import { BookingDetailPanel } from '../../components/dashboard/BookingDetailPanel'
 import { TONE, FilterPills } from './shared'
+import { PAYPAL_ENABLED } from '../../lib/features'
 
 const COLS = 'grid-cols-[32px_1.5fr_1.3fr_155px_95px_145px_108px]'
 
@@ -236,7 +237,7 @@ export function AdminBookings() {
                 const payStyle   = b.payment_status ? PAYMENT_STYLE[b.payment_status] : null
                 const statusColor = STATUS_COLOR[b.status] ?? '#64748b'
                 const payoutInfo = b.payout_status ? PAYOUT_STYLE[b.payout_status] : null
-                const showRelease = b.payment_status === 'captured' && b.payout_status !== 'paid'
+                const showRelease = PAYPAL_ENABLED && b.payment_status === 'captured' && b.payout_status !== 'paid'
 
                 return (
                   <div
@@ -358,7 +359,7 @@ export function AdminBookings() {
                 const nights     = nightsBetween(b.check_in, b.check_out)
                 const payStyle   = b.payment_status ? PAYMENT_STYLE[b.payment_status] : null
                 const statusColor = STATUS_COLOR[b.status] ?? '#64748b'
-                const showRelease = b.payment_status === 'captured' && b.payout_status !== 'paid'
+                const showRelease = PAYPAL_ENABLED && b.payment_status === 'captured' && b.payout_status !== 'paid'
 
                 return (
                   <div

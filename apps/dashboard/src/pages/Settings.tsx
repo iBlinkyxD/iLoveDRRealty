@@ -10,6 +10,7 @@ import type { UserInfo } from '../lib/auth'
 import type { Role } from '../App'
 import { changePassword, deactivateAccount, linkGoogle, requestAccountDeletion, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../api/auth'
 import { ConfirmModal } from '../components/shared/ConfirmModal'
+import { PAYPAL_ENABLED } from '../lib/features'
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488] disabled:bg-[#f4f5f7] disabled:text-dim'
 
@@ -797,7 +798,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
           </div>
 
           {/* PayPal email — Owner only */}
-          {role === 'Owner' && (
+          {PAYPAL_ENABLED && role === 'Owner' && (
             <div className="rounded-xl border border-line overflow-hidden mt-4">
               <div className="px-4 py-3 bg-[#f8f9fc] border-b border-line flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-[#003087]/10 flex items-center justify-center shrink-0">

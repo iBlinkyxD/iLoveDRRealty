@@ -26,6 +26,19 @@
       }
     ]
   },
+  "realtors": {
+    "eyebrow": "◆ Realtor agents",
+    "heading": "Agents on the platform",
+    "sub": "Licensed advisors working alongside our principals — each with deep specialization in their market and property type.",
+    "badge": "◆ Realtor",
+    "bios": [
+      {
+        "role": "Real Estate Advisor · Land Broker",
+        "bio": "With 20+ years serving local and international investors, specializing in agricultural estates, farms, tourism properties, land sales, acquisitions, and investment opportunities in the DR.",
+        "region": "Nationwide"
+      }
+    ]
+  },
   "cta": {
     "heading": "Ready to start your DR journey?",
     "sub": "Connect with the right agent for your goals — whether you're buying, investing, or relocating.",

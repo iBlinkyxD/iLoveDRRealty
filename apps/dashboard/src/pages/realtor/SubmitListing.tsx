@@ -7,6 +7,7 @@ import 'react-international-phone/style.css'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import { submitListing, updateListing, uploadListingImages, uploadAgreementPdf, type Listing } from '../../api/listings'
 import { RichTextEditor } from '../../components/RichTextEditor'
+import { PAYPAL_ENABLED } from '../../lib/features'
 
 const REGIONS = [
   'Cap Cana', 'Cabarete', 'Jarabacoa', 'Las Terrenas', 'Punta Cana',
@@ -551,7 +552,7 @@ function FormSections({
                 </p>
               </div>
             </div>
-            {(form.price_per_day as string) && (
+            {PAYPAL_ENABLED && (form.price_per_day as string) && (
               <div>
                 <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">
                   Owner PayPal Email <span className="text-red-500">*</span>
@@ -1196,7 +1197,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
     if (isRentMode && !form.price_per_day && !form.price_per_month) {
       toast.error(t('submit_listing_page.toast_rent_price_required')); return
     }
-    if (isRentMode && form.price_per_day && !form.owner_paypal_email.trim()) {
+    if (PAYPAL_ENABLED && isRentMode && form.price_per_day && !form.owner_paypal_email.trim()) {
       toast.error('Owner PayPal email is required when a daily rate is set.'); return
     }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) {
@@ -1465,7 +1466,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
     if (isRentMode && !form.price_per_day && !form.price_per_month) {
       toast.error(t('submit_listing_page.toast_rent_price_required')); return
     }
-    if (isRentMode && form.price_per_day && !form.owner_paypal_email.trim()) {
+    if (PAYPAL_ENABLED && isRentMode && form.price_per_day && !form.owner_paypal_email.trim()) {
       toast.error('Owner PayPal email is required when a daily rate is set.'); return
     }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) {

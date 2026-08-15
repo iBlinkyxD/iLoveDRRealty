@@ -1,7 +1,7 @@
 'use client'
 import { useNav } from '../hooks/useNav'
 import { useTranslation } from 'react-i18next'
-import { PRINCIPALS, TEAM_STATS } from '../data/teamData'
+import { PRINCIPALS, REALTORS, TEAM_STATS } from '../data/teamData'
 
 
 export default function Team() {
@@ -9,6 +9,7 @@ export default function Team() {
   const { t } = useTranslation('team')
   const statsLabels = t('stats', { returnObjects: true }) as string[]
   const bios = t('principals.bios', { returnObjects: true }) as Array<{ role: string; bio: string }>
+  const realtorBios = t('realtors.bios', { returnObjects: true }) as Array<{ role: string; bio: string; region: string }>
 
   return (
     <div>
@@ -62,6 +63,37 @@ export default function Team() {
                 <h3 className="font-sans text-4.75 font-bold text-ink leading-[1.15]">{p.name}</h3>
                 <div className="text-2.75 font-bold tracking-[.08em] uppercase text-coral mt-1">{bios[i]?.role ?? p.role}</div>
                 <p className="text-3.25 text-ink2 leading-[1.55] mt-3">{bios[i]?.bio ?? p.bio}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── REALTOR AGENTS ── */}
+      <div className="max-w-295 mx-auto pt-10 px-4 sm:px-6 pb-5">
+        <div className="mb-6">
+          <div className="font-sans text-2.75 font-bold tracking-[.22em] uppercase text-coral">{t('realtors.eyebrow')}</div>
+          <h2 className="font-sans text-6.5 font-semibold text-ink mt-2 mb-1.5">{t('realtors.heading')}</h2>
+          <p className="font-sans text-sm text-dim max-w-145 leading-[1.55]">
+            {t('realtors.sub')}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {REALTORS.map((r, i) => (
+            <div key={r.id} className="bg-paper border border-line-soft rounded-2xl overflow-hidden shadow-[rgba(0,16,46,.25)_0px_8px_24px_-18px]">
+              <div className="relative h-55" style={{ backgroundImage: `url(${r.img})`, backgroundSize: 'cover', backgroundPosition: r.bgPos ?? 'center top' }}>
+                <div className="absolute inset-0"
+                  style={{ background: 'linear-gradient(0deg,rgba(0,16,46,.4),transparent 55%)' }} />
+                <div className="absolute top-3 left-3 bg-coral text-white py-1 px-2.5 rounded-full text-2.5 font-extrabold tracking-[.12em] uppercase">
+                  {t('realtors.badge')}
+                </div>
+              </div>
+              <div className="py-4.5 px-5 font-sans">
+                <h3 className="font-sans text-4.75 font-bold text-ink leading-[1.15]">{r.name}</h3>
+                <div className="text-2.75 font-bold tracking-[.08em] uppercase text-coral mt-1">{realtorBios[i]?.role ?? r.role}</div>
+                <p className="text-3.25 text-ink2 leading-[1.55] mt-3">{realtorBios[i]?.bio ?? r.bio}</p>
+                <div className="text-2.75 text-dim mt-3.5 pt-3 border-t border-line-soft">{r.langs} · {realtorBios[i]?.region ?? r.region}</div>
               </div>
             </div>
           ))}

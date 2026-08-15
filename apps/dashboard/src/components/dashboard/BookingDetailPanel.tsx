@@ -2,6 +2,7 @@ import { X, CalendarDays, Users, Mail, Phone, CreditCard, ExternalLink, StickyNo
 import { useState } from 'react'
 import type { Booking } from '../../api/bookings'
 import { fmtPrice } from './shared'
+import { PAYPAL_ENABLED } from '../../lib/features'
 
 function fmtDate(s: string): string {
   return new Date(s + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -64,8 +65,8 @@ export function BookingDetailPanel({
   const nights = nightsBetween(booking.check_in, booking.check_out)
   const payStyle = booking.payment_status ? PAYMENT_STYLES[booking.payment_status] : null
   const isPending = booking.status === 'pending'
-  const showRelease = isAdmin && booking.payment_status === 'captured' && booking.payout_status !== 'paid'
-  const showRequest = !isAdmin && booking.payment_status === 'captured' && booking.payout_status === 'failed'
+  const showRelease = PAYPAL_ENABLED && isAdmin && booking.payment_status === 'captured' && booking.payout_status !== 'paid'
+  const showRequest = PAYPAL_ENABLED && !isAdmin && booking.payment_status === 'captured' && booking.payout_status === 'failed'
 
   async function run(fn: () => Promise<void>) {
     setActing(true)

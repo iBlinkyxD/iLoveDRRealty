@@ -35,8 +35,11 @@ import 'react-international-phone/style.css'
 import { createBooking, createPaymentAuth, getUnavailableDates, type BookedRange } from "../api/bookings";
 import { getMe } from "../api/auth";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { PAYPAL_ENABLED } from "../lib/features";
 
-const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || ''
+// Empty while PAYPAL_ENABLED is off, which collapses every PayPal branch below
+// and falls the booking form back to a no-payment "Request to book".
+const PAYPAL_CLIENT_ID = PAYPAL_ENABLED ? (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '') : ''
 import { useTranslation } from 'react-i18next'
 
 function Slider({
@@ -1301,9 +1304,12 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                       </div>
                     </PayPalScriptProvider>
                   )}
-                  <p className="text-[11px] text-ink3 leading-relaxed mt-2">
-                    {t('booking.deposit_disclaimer')}
-                  </p>
+                  {/* Non-refundable payment terms — only meaningful when we actually collect payment */}
+                  {PAYPAL_ENABLED && (
+                    <p className="text-[11px] text-ink3 leading-relaxed mt-2">
+                      {t('booking.deposit_disclaimer')}
+                    </p>
+                  )}
                 </form>
               ) : (
                 <button onClick={() => {

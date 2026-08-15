@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next'
 import type { AdminListing } from '../../api/admin'
 import { TONE } from '../../pages/admin/shared'
 import { ConfirmModal } from '../shared/ConfirmModal'
+import { PAYPAL_ENABLED } from '../../lib/features'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -421,7 +422,7 @@ export function ListingDetailPanel({
             )}
 
             {/* Owner PayPal payout email (daily rental only) */}
-            {listing.price_per_day != null && listing.owner_paypal_email && (
+            {PAYPAL_ENABLED && listing.price_per_day != null && listing.owner_paypal_email && (
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-line-soft bg-paper2">
                 <Mail size={15} className="text-dim shrink-0" />
                 <div className="min-w-0">

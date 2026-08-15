@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { StatusPill, fmtPrice } from '../../components/dashboard/shared'
 import { getOwnerBookings, acceptBooking, declineBooking, requestPayout, type Booking } from '../../api/bookings'
 import { BookingDetailPanel } from '../../components/dashboard/BookingDetailPanel'
+import { PAYPAL_ENABLED } from '../../lib/features'
 
 function fmtDate(s: string): string {
   return new Date(s + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -70,7 +71,7 @@ function BookingRow({
   const name = booking.guest_name ?? t('bookings_page.guest_fallback')
   const nights = nightsBetween(booking.check_in, booking.check_out)
 
-  const showRequest = booking.payment_status === 'captured' && booking.payout_status === 'failed'
+  const showRequest = PAYPAL_ENABLED && booking.payment_status === 'captured' && booking.payout_status === 'failed'
 
   return (
     <div

@@ -9,6 +9,7 @@ import { submitListing, updateListing, uploadListingImages, uploadAgreementPdf }
 import type { AdminListing } from '../../api/admin'
 import { RichTextEditor } from '../../components/RichTextEditor'
 import { TONE } from './shared'
+import { PAYPAL_ENABLED } from '../../lib/features'
 
 const REGIONS = [
   'Cap Cana', 'Cabarete', 'Jarabacoa', 'Las Terrenas', 'Punta Cana',
@@ -408,7 +409,7 @@ function AdminFormBody({
                 </p>
               </div>
             </div>
-            {(form.price_per_day as string) && (
+            {PAYPAL_ENABLED && (form.price_per_day as string) && (
               <div>
                 <div className="text-[11.5px] font-semibold text-dim uppercase tracking-wide mb-1.5">
                   Owner PayPal Email <span className="text-red-500">*</span>
@@ -966,7 +967,7 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
     const isRentMode = form.transaction === 'rent' || form.transaction === 'both'
     if (!form.title.trim() || !form.location || (!isRentMode && !form.price)) { toast.error(t('submit_listing.toast_required')); return }
     if (isRentMode && !(form.price_per_day as string) && !(form.price_per_month as string)) { toast.error(t('submit_listing.toast_rent_price_required')); return }
-    if (isRentMode && (form.price_per_day as string) && !(form.owner_paypal_email as string).trim()) { toast.error('Owner PayPal email is required when a daily rate is set.'); return }
+    if (PAYPAL_ENABLED && isRentMode && (form.price_per_day as string) && !(form.owner_paypal_email as string).trim()) { toast.error('Owner PayPal email is required when a daily rate is set.'); return }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) { toast.error('You must accept the co-listing terms before submitting.'); return }
     setSubmitting(true)
     try {
@@ -1217,7 +1218,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
     const isRentMode = form.transaction === 'rent' || form.transaction === 'both'
     if (!form.title.trim() || !form.location || (!isRentMode && !form.price)) { toast.error(t('submit_listing.toast_required')); return }
     if (isRentMode && !(form.price_per_day as string) && !(form.price_per_month as string)) { toast.error(t('submit_listing.toast_rent_price_required')); return }
-    if (isRentMode && (form.price_per_day as string) && !(form.owner_paypal_email as string).trim()) { toast.error('Owner PayPal email is required when a daily rate is set.'); return }
+    if (PAYPAL_ENABLED && isRentMode && (form.price_per_day as string) && !(form.owner_paypal_email as string).trim()) { toast.error('Owner PayPal email is required when a daily rate is set.'); return }
     if (form.co_listing_enabled && !form.co_listing_agreement_accepted) { toast.error('You must accept the co-listing terms before saving.'); return }
     setSubmitting(true)
     try {
