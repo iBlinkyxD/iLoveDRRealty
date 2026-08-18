@@ -460,6 +460,8 @@
     "upload_hint":     "JPEG, JPG, PNG, WebP · max 25 MB each · up to 25 photos",
     "thumbnail":       "Thumbnail",
     "select_region":   "Select region…",
+    "region_group_popular":   "Popular areas",
+    "region_group_provinces": "All provinces",
     "for_sale":        "For Sale",
     "for_rent":        "For Rent",
     "add":             "Add",

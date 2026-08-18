@@ -3,7 +3,7 @@ import { GoogleMap, OverlayView, useJsApiLoader } from '@react-google-maps/api'
 import { useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fmt, type Listing } from '../data/listings'
-import { DR_REGIONS } from '../data/searchData'
+import { DR_REGIONS, coordsForRegion, isLocality } from '../data/searchData'
 import { supabaseImgUrl } from '../api/imgUrl'
 
 const titleCase = (s: string) =>
@@ -19,11 +19,10 @@ function coordsForListing(l: Listing): { lat: number; lng: number } {
   if (l.latitude != null && l.longitude != null) {
     return { lat: l.latitude, lng: l.longitude }
   }
-  const match = (s: string, key: string) =>
-    new RegExp(key.replace('á', '[áa]').replace('ú', '[úu]'), 'i').test(s)
-  const base = DR_REGIONS.find(reg => match(l.region, reg.key))
-    ?? DR_REGIONS.find(reg => reg.key === 'Santo Domingo')
-    ?? DR_REGIONS[0]
+  // No exact coordinates — pin on the region the listing was filed under, with a
+  // deterministic offset so the address stays approximate and stacked listings
+  // in one region fan out instead of overlapping.
+  const base = coordsForRegion(l.region) ?? DR_REGIONS[0]
   const seed = (strHash(l.id) * 9301 + 49297) % 233280
   const rand = (i: number) => (((seed * (i + 1)) % 233280) / 233280) * 2 - 1
   return { lat: base.lat + rand(1) * 0.055, lng: base.lng + rand(2) * 0.075 }
@@ -84,10 +83,11 @@ function LiveMap({ apiKey, hovered, listings, onSelect, currency, dopRate, regio
   useEffect(() => {
     if (!mapRef.current) return
     if (region) {
-      const match = DR_REGIONS.find(r => r.key === region)
+      const match = coordsForRegion(region)
       if (match) {
-        mapRef.current.panTo({ lat: match.lat, lng: match.lng })
-        mapRef.current.setZoom(12)
+        mapRef.current.panTo(match)
+        // Provinces cover far more ground than a resort town, so sit back a bit.
+        mapRef.current.setZoom(isLocality(region) ? 12 : 10)
       }
     } else {
       mapRef.current.panTo(MAP_CENTER)

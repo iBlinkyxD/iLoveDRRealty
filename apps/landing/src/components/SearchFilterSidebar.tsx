@@ -1,10 +1,10 @@
 'use client'
-import { type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X } from 'lucide-react'
+import { X, ChevronDown } from 'lucide-react'
+import { POPULAR_AREAS, OTHER_PROVINCES, PRICE_MAX } from '../data/searchData'
 
-const TYPES       = ['All', 'Villa', 'Apartment', 'Condo', 'Land', 'Commercial']
-const ALL_REGIONS = ['Punta Cana', 'Santo Domingo', 'Cap Cana', 'Las Terrenas', 'Samaná', 'Jarabacoa', 'Santiago', 'Puerto Plata', 'Sosúa', 'Cabarete']
+const TYPES = ['All', 'Villa', 'Apartment', 'Condo', 'Land', 'Commercial']
 
 function FilterGroup({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -68,6 +68,10 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
     allAmenities, chips, resultsCount, clearAll, mobile = false, onClose,
   } = props
 
+  // Start expanded when the active region is one of the less common provinces,
+  // so a shared/bookmarked URL doesn't hide the chip that is currently applied.
+  const [showAllRegions, setShowAllRegions] = useState(() => !!region && OTHER_PROVINCES.includes(region))
+
   const filterContent = (
     <>
       <FilterGroup label={t('sidebar.property_type')}>
@@ -92,11 +96,11 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
             onChange={e => setMinPrice(+e.target.value.replace(/[^0-9]/g, '') || 0)}
             className="flex-1 min-w-0 py-2 px-2.5 rounded-md border border-line text-3.25 font-sans text-ink outline-none" />
           <span className="text-dim text-xs">—</span>
-          <input type="text" value={maxPrice < 3_000_000 ? maxPrice.toLocaleString() : ''} placeholder="Max"
-            onChange={e => setMaxPrice(+e.target.value.replace(/[^0-9]/g, '') || 3_000_000)}
+          <input type="text" value={maxPrice < PRICE_MAX ? maxPrice.toLocaleString() : ''} placeholder="Max"
+            onChange={e => setMaxPrice(+e.target.value.replace(/[^0-9]/g, '') || PRICE_MAX)}
             className="flex-1 min-w-0 py-2 px-2.5 rounded-md border border-line text-3.25 font-sans text-ink outline-none" />
         </div>
-        <input type="range" min={0} max={3_000_000} step={50_000} value={maxPrice}
+        <input type="range" min={0} max={PRICE_MAX} step={50_000} value={maxPrice}
           onChange={e => setMaxPrice(+e.target.value)}
           className="w-full mt-2 accent-coral" />
         <div className="flex justify-between text-[10.5px] text-dim">
@@ -113,7 +117,7 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
       </FilterGroup>
 
       <FilterGroup label={t('sidebar.region')}>
-        {ALL_REGIONS.map(r => {
+        {POPULAR_AREAS.map(r => {
           const key = r === 'Samaná' ? 'Las Terrenas' : r
           return (
             <Chip key={r} active={region === key} onClick={() => setRegion(region === key ? null : key)} tone="coral">
@@ -121,6 +125,17 @@ export function SearchFilterSidebar(props: FilterSidebarProps) {
             </Chip>
           )
         })}
+        {showAllRegions &&
+          OTHER_PROVINCES.map(r => (
+            <Chip key={r} active={region === r} onClick={() => setRegion(region === r ? null : r)} tone="coral">
+              {r}
+            </Chip>
+          ))}
+        <button onClick={() => setShowAllRegions(v => !v)}
+          className="flex items-center gap-1 mt-1 bg-transparent border-none p-0 cursor-pointer font-sans text-[12.5px] font-semibold text-dim hover:text-ink transition-colors">
+          {showAllRegions ? t('sidebar.fewer_regions') : t('sidebar.more_regions')}
+          <ChevronDown size={13} className={`transition-transform ${showAllRegions ? 'rotate-180' : ''}`} />
+        </button>
       </FilterGroup>
 
       <FilterGroup label={t('sidebar.amenities')}>

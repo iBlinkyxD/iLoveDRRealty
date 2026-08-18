@@ -4,11 +4,8 @@ import { ArrowLeft, ImagePlus, X, Star, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { submitListing, updateListing, uploadListingImages, type Listing } from '../../api/listings'
 import { RichTextEditor } from '../../components/RichTextEditor'
+import { REGION_GROUPS } from '../../data/regions'
 
-const REGIONS = [
-  'Cap Cana', 'Cabarete', 'Jarabacoa', 'Las Terrenas', 'Punta Cana',
-  'Puerto Plata', 'Samaná', 'Santo Domingo', 'Santiago', 'Sosúa',
-]
 const TYPES    = ['villa', 'apartment', 'condo', 'land', 'commercial']
 const FEATURES = [
   'Pool', 'Ocean View', 'Beachfront', 'Oceanfront', 'Furnished', 'Beach Access', 'Mountain View',
@@ -328,7 +325,11 @@ function FormSections({
                 required
               >
                 <option value="">{t('submit_listing_page.select_region')}</option>
-                {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                {REGION_GROUPS.map(g => (
+                  <optgroup key={g.key} label={t(`submit_listing_page.region_group_${g.key}`)}>
+                    {g.regions.map(r => <option key={r} value={r}>{r}</option>)}
+                  </optgroup>
+                ))}
               </select>
             </div>
             <div>

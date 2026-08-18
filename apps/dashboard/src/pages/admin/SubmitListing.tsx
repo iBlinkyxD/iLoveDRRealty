@@ -6,11 +6,8 @@ import { submitListing, updateListing, uploadListingImages } from '../../api/lis
 import type { AdminListing } from '../../api/admin'
 import { RichTextEditor } from '../../components/RichTextEditor'
 import { TONE } from './shared'
+import { REGION_GROUPS } from '../../data/regions'
 
-const REGIONS = [
-  'Cap Cana', 'Cabarete', 'Jarabacoa', 'Las Terrenas', 'Punta Cana',
-  'Puerto Plata', 'Samaná', 'Santo Domingo', 'Santiago', 'Sosúa',
-]
 const TYPES    = ['villa', 'apartment', 'condo', 'land', 'commercial']
 const FEATURES = [
   'Pool', 'Ocean View', 'Beachfront', 'Oceanfront', 'Furnished', 'Beach Access', 'Mountain View',
@@ -233,7 +230,11 @@ function AdminFormBody({
               </div>
               <select className={inp + ' cursor-pointer'} value={form.location as string} onChange={e => set('location', e.target.value)} required>
                 <option value="">{t('submit_listing.select_region')}</option>
-                {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                {REGION_GROUPS.map(g => (
+                  <optgroup key={g.key} label={t(`submit_listing.region_group_${g.key}`)}>
+                    {g.regions.map(r => <option key={r} value={r}>{r}</option>)}
+                  </optgroup>
+                ))}
               </select>
             </div>
             <div>

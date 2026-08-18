@@ -9,6 +9,7 @@ import { supabaseImgUrl } from '../api/imgUrl'
 import { getMySavedIds, saveHome, unsaveHome } from '../api/savedHomes'
 import { SearchFilterSidebar } from '../components/SearchFilterSidebar'
 import { SearchMapSidebar } from '../components/SearchMapSidebar'
+import { PRICE_MAX } from '../data/searchData'
 import { useTranslation } from 'react-i18next'
 
 type TagTone = 'sand' | 'coral' | 'sea' | 'gold' | 'green'
@@ -142,7 +143,7 @@ export default function Search() {
   })
   const [maxPrice, setMaxPrice] = useState(() => {
     const b = searchParams.get('budget')
-    return b ? Number(b) : 3_000_000
+    return b ? Number(b) : PRICE_MAX
   })
   const [beds,     setBeds]     = useState(() => searchParams.get('beds') ?? 'any')
   const [sort,     setSort]     = useState<'new' | 'low' | 'high' | 'roi'>(() => {
@@ -206,7 +207,7 @@ export default function Search() {
     if (type    !== 'All')         params.set('type',     type)
     if (region)                    params.set('location', region)
     if (minPrice > 0)              params.set('minPrice', String(minPrice))
-    if (maxPrice < 3_000_000)      params.set('budget',   String(maxPrice))
+    if (maxPrice < PRICE_MAX)      params.set('budget',   String(maxPrice))
     if (beds    !== 'any')         params.set('beds',     beds)
     if (sort    !== 'new')         params.set('sort',     sort)
     if (minROI  > 0)               params.set('roi',      String(minROI))
@@ -220,6 +221,10 @@ export default function Search() {
     return [...seen].sort()
   }, [listings])
 
+  // A max at (or above) the top of the slider reads as "$3M+" — treat it as no
+  // upper bound so listings priced above it are not silently filtered out.
+  const priceCeiling = maxPrice >= PRICE_MAX ? Infinity : maxPrice
+
   const results = useMemo(() => {
     let r = listings.filter(l =>
       (purpose === 'sale' || l.purpose === purpose || (purpose === 'investment' && l.roi >= 7)) &&
@@ -227,7 +232,7 @@ export default function Search() {
       (!region || regionOf(l) === region) &&
       l.roi >= minROI &&
       (beds === 'any' || l.bd >= +beds) &&
-      (l.purpose === 'rent' || (l.price >= minPrice && l.price <= maxPrice)) &&
+      (l.purpose === 'rent' || (l.price >= minPrice && l.price <= priceCeiling)) &&
       (amenities.size === 0 || [...amenities].every(a => l.features.includes(a)))
     )
     if (sort === 'new')  r = [...r].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
@@ -235,7 +240,7 @@ export default function Search() {
     if (sort === 'high') r = [...r].sort((a, b) => b.price - a.price)
     if (sort === 'roi')  r = [...r].sort((a, b) => b.roi   - a.roi)
     return r
-  }, [listings, purpose, type, minPrice, maxPrice, sort, region, minROI, beds, amenities])
+  }, [listings, purpose, type, minPrice, priceCeiling, sort, region, minROI, beds, amenities])
 
   const insights = useMemo(() => {
     if (!results.length) return null
@@ -271,11 +276,11 @@ export default function Search() {
   if (minROI > 0)         chips.push({ label: t('chip_roi', { roi: minROI }), clear: () => setMinROI(0) })
   amenities.forEach(a => chips.push({ label: a, clear: () => { const n = new Set(amenities); n.delete(a); setAmenities(n) } }))
   invFlags.forEach(f  => chips.push({ label: f, clear: () => { const n = new Set(invFlags);  n.delete(f); setInvFlags(n)  } }))
-  if (minPrice > 0 || maxPrice < 3_000_000)
-    chips.push({ label: `${fmt(minPrice)} – ${fmt(maxPrice)}`, clear: () => { setMinPrice(0); setMaxPrice(3_000_000) } })
+  if (minPrice > 0 || maxPrice < PRICE_MAX)
+    chips.push({ label: `${fmt(minPrice)} – ${fmt(maxPrice)}`, clear: () => { setMinPrice(0); setMaxPrice(PRICE_MAX) } })
 
   const clearAll = () => {
-    setPurpose('sale'); setType('All'); setMinPrice(0); setMaxPrice(3_000_000)
+    setPurpose('sale'); setType('All'); setMinPrice(0); setMaxPrice(PRICE_MAX)
     setBeds('any'); setRegion(null); setMinROI(0); setAmenities(new Set()); setInvFlags(new Set())
   }
 

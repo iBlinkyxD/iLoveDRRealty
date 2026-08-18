@@ -460,6 +460,8 @@
     "upload_hint":     "JPEG, JPG, PNG, WebP · máx. 25 MB cada una · hasta 25 fotos",
     "thumbnail":       "Miniatura",
     "select_region":   "Seleccionar región…",
+    "region_group_popular":   "Zonas populares",
+    "region_group_provinces": "Todas las provincias",
     "for_sale":        "En venta",
     "for_rent":        "En alquiler",
     "add":             "Agregar",

@@ -56,6 +56,8 @@
     "bedrooms":           "Dormitorios",
     "any":                "Cualquiera",
     "region":             "Región",
+    "more_regions":       "Más regiones",
+    "fewer_regions":      "Menos regiones",
     "amenities":          "Comodidades",
     "investment_filters": "Filtros de inversión",
     "managed":            "Gestionado",

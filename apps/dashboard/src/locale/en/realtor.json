@@ -165,6 +165,8 @@
     "for_rent":            "For Rent",
     "field_region":        "Region *",
     "select_region":       "Select region…",
+    "region_group_popular":   "Popular areas",
+    "region_group_provinces": "All provinces",
     "field_price":         "Price *",
     "field_description":   "Description",
     "field_bedrooms":      "Bedrooms",

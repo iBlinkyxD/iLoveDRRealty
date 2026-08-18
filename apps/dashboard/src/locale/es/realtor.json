@@ -165,6 +165,8 @@
     "for_rent":            "En alquiler",
     "field_region":        "Región *",
     "select_region":       "Seleccionar región…",
+    "region_group_popular":   "Zonas populares",
+    "region_group_provinces": "Todas las provincias",
     "field_price":         "Precio *",
     "field_description":   "Descripción",
     "field_bedrooms":      "Dormitorios",
