@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import { register, googleAuth } from '../api/auth'
 import { useGoogleLogin } from '@react-oauth/google'
 import { useTranslation } from 'react-i18next'
+import { usePlatformStats } from '../hooks/usePlatformStats'
 
 type Fields = { name: string; phone: string; email: string; password: string; confirmPassword: string; agreed: boolean }
 type FieldErrors = Partial<Record<keyof Fields, string>>
@@ -18,6 +19,8 @@ export default function Signup() {
   const go = useNav()
   const router = useRouter()
   const { t } = useTranslation('auth')
+  const platformStats = usePlatformStats()
+  const registeredCount = platformStats ? platformStats.registered_users.toLocaleString() : '—'
 
   const schema = useMemo(() => Yup.object({
     name:            Yup.string().required(t('signup.validation.name_required')).min(2, t('signup.validation.name_min')),
@@ -117,7 +120,7 @@ export default function Signup() {
           <div className="text-2.75 font-bold tracking-[.18em] uppercase text-gold mb-3.5">{t('signup.eyebrow')}</div>
           <h1 className="font-sans text-[clamp(26px,3vw,40px)] font-extrabold text-white leading-[1.1] tracking-[-.02em] mb-4.5 max-w-90">
             {t('signup.heading_pre')}{' '}
-            <span className="text-coral">{t('signup.heading_count')}</span> {t('signup.heading_post')}
+            <span className="text-coral">{registeredCount}</span> {t('signup.heading_post')}
           </h1>
           <p className="text-3.75 text-white/65 leading-[1.7] max-w-80 mb-10">
             {t('signup.sub')}

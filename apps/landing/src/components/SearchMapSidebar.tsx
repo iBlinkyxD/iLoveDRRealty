@@ -2,7 +2,7 @@
 import { GoogleMap, OverlayView, useJsApiLoader } from '@react-google-maps/api'
 import { useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { fmt, type Listing } from '../data/listings'
+import { fmt, fmtDOP, type Listing } from '../data/listings'
 import { DR_REGIONS, coordsForRegion, isLocality } from '../data/searchData'
 import { supabaseImgUrl } from '../api/imgUrl'
 
@@ -50,11 +50,13 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 function fmtPill(l: { price: number; purpose: string }, currency: 'USD' | 'DOP', dopRate: number): string {
   if (currency === 'DOP') {
     const dp = Math.round(l.price * dopRate)
-    const short = dp >= 1_000_000 ? `RD$${(dp / 1_000_000).toFixed(1)}M` : `RD$${Math.round(dp / 1_000)}K`
-    return l.purpose === 'rent' ? `RD$${dp.toLocaleString()}/mo` : short
+    return l.purpose === 'rent' ? `RD$${dp.toLocaleString()}/mo` : fmtDOP(dp)
   }
   const p = l.price
-  const short = p >= 1_000_000 ? `$${(p / 1_000_000).toFixed(1)}M USD` : `$${Math.round(p / 1_000)}K USD`
+  const short =
+    p >= 1_000_000_000_000 ? `$${(p / 1_000_000_000_000).toFixed(2)}T USD` :
+    p >= 1_000_000_000 ? `$${(p / 1_000_000_000).toFixed(2)}B USD` :
+    p >= 1_000_000 ? `$${(p / 1_000_000).toFixed(1)}M USD` : `$${Math.round(p / 1_000)}K USD`
   return l.purpose === 'rent' ? `$${Math.round(p).toLocaleString()} USD/mo` : short
 }
 
@@ -230,10 +232,11 @@ export function SearchMapSidebar({
   const { t } = useTranslation('search')
   const fmtMedian = (v: number) => {
     if (currency === 'DOP') {
-      const dp = Math.round(v * dopRate)
-      return dp >= 1_000_000 ? `RD$${(dp / 1_000_000).toFixed(1)}M` : `RD$${Math.round(dp / 1_000)}K`
+      return fmtDOP(Math.round(v * dopRate))
     }
-    return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M USD` : `$${Math.round(v / 1_000)}K USD`
+    return v >= 1_000_000_000_000 ? `$${(v / 1_000_000_000_000).toFixed(2)}T USD` :
+      v >= 1_000_000_000 ? `$${(v / 1_000_000_000).toFixed(2)}B USD` :
+      v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M USD` : `$${Math.round(v / 1_000)}K USD`
   }
 
   return (
@@ -275,7 +278,7 @@ export function SearchMapSidebar({
                 <div className="text-[10.5px] text-dim mt-px truncate">{l.region}</div>
                 <div className="text-[11.5px] font-bold text-coral mt-0.5">
                   {currency === 'DOP'
-                    ? (() => { const dp = Math.round(l.price * dopRate); return dp >= 1_000_000 ? `RD$${(dp/1_000_000).toFixed(1)}M` : `RD$${Math.round(dp/1_000)}K` })()
+                    ? fmtDOP(Math.round(l.price * dopRate))
                     : `${fmt(l.price)} USD`}
                 </div>
               </div>

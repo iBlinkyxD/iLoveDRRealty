@@ -10,7 +10,11 @@ export function Pipeline() {
         const st = STAGE_TONE[stage]
         const total = items.reduce((s, p) => {
           const n = parseFloat(p.value.replace(/[^0-9.]/g, ''))
-          return s + (p.value.includes('M') ? n * 1_000_000 : p.value.includes('K') ? n * 1_000 : n)
+          const mult = p.value.includes('T') ? 1_000_000_000_000
+            : p.value.includes('B') ? 1_000_000_000
+            : p.value.includes('M') ? 1_000_000
+            : p.value.includes('K') ? 1_000 : 1
+          return s + n * mult
         }, 0)
         return (
           <div key={stage} className="bg-paper border border-line rounded-2xl overflow-hidden">
@@ -20,7 +24,10 @@ export function Pipeline() {
                 <span className="text-xs font-bold py-0.75 px-2.25 rounded-full" style={{ color: st, background: `${st}20` }}>{items.length}</span>
               </div>
               <div className="text-xs text-dim mt-0.75">
-                ${total >= 1_000_000 ? (total / 1_000_000).toFixed(2) + 'M' : (total / 1_000).toFixed(0) + 'K'} {t('pipeline_page.total')}
+                ${total >= 1_000_000_000_000 ? (total / 1_000_000_000_000).toFixed(2) + 'T'
+                  : total >= 1_000_000_000 ? (total / 1_000_000_000).toFixed(2) + 'B'
+                  : total >= 1_000_000 ? (total / 1_000_000).toFixed(2) + 'M'
+                  : (total / 1_000).toFixed(0) + 'K'} {t('pipeline_page.total')}
               </div>
             </div>
             <div className="p-3.5 flex flex-col gap-2.5">

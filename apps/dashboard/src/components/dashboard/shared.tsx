@@ -66,4 +66,6 @@ export function RoleKpiCard({ label, value, sub, accent }: {
 }
 
 export const fmtPrice = (n: number) =>
+  n >= 1_000_000_000_000 ? `$${(n / 1_000_000_000_000).toFixed(2)}T` :
+  n >= 1_000_000_000 ? `$${(n / 1_000_000_000).toFixed(2)}B` :
   n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` : `$${(n / 1_000).toFixed(0)}K`

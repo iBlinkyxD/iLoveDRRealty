@@ -33,4 +33,13 @@ export const LISTINGS: Listing[] = [
 ]
 
 export const fmt = (n: number) =>
-  n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` : n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`
+  n >= 1_000_000_000_000 ? `$${(n / 1_000_000_000_000).toFixed(2)}T` :
+  n >= 1_000_000_000 ? `$${(n / 1_000_000_000).toFixed(2)}B` :
+  n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` :
+  n >= 1_000 ? `$${(n / 1_000).toFixed(0)}K` : `$${n}`
+
+export const fmtDOP = (n: number) =>
+  n >= 1_000_000_000_000 ? `RD$${(n / 1_000_000_000_000).toFixed(2)}T` :
+  n >= 1_000_000_000 ? `RD$${(n / 1_000_000_000).toFixed(2)}B` :
+  n >= 1_000_000 ? `RD$${(n / 1_000_000).toFixed(1)}M` :
+  `RD$${Math.round(n / 1_000)}K`

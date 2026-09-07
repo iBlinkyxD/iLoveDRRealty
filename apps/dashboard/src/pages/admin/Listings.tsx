@@ -32,6 +32,8 @@ const STATUS_STYLE: Record<string, { color: string; bg: string; label: string; a
 }
 
 function fmtPrice(n: number) {
+  if (n >= 1_000_000_000_000) return `$${(n / 1_000_000_000_000).toFixed(2)}T`
+  if (n >= 1_000_000_000)     return `$${(n / 1_000_000_000).toFixed(2)}B`
   return n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` : `$${Math.round(n / 1_000)}K`
 }
 

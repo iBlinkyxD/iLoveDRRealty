@@ -6,16 +6,11 @@ import toast from 'react-hot-toast'
 import { login, getMe, googleAuth } from '../api/auth'
 import { useGoogleLogin } from '@react-oauth/google'
 import { useTranslation } from 'react-i18next'
+import { usePlatformStats } from '../hooks/usePlatformStats'
+import { fmt } from '../data/listings'
 
 const _dashRaw = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://app.ilovedrrealty.com'
 const DASHBOARD_URL = _dashRaw.startsWith('http') ? _dashRaw : `https://${_dashRaw}`
-
-const STATS = [
-  { value: '4.9',    labelKey: 'login.stats.rating',  Icon: Star,      iconCls: 'text-gold fill-gold' },
-  { value: '4,800+', labelKey: 'login.stats.listings', Icon: Home,      iconCls: 'text-white/80'       },
-  { value: '12K+',   labelKey: 'login.stats.buyers',   Icon: Users,     iconCls: 'text-white/80'       },
-  { value: '$2.4B',  labelKey: 'login.stats.volume',   Icon: Handshake, iconCls: 'text-white/80'       },
-]
 
 export default function Login() {
   const go = useNav()
@@ -26,6 +21,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [checking, setChecking] = useState(true)
+  const platformStats = usePlatformStats()
+
+  const STATS = [
+    { value: '4.9', labelKey: 'login.stats.rating', Icon: Star, iconCls: 'text-gold fill-gold' },
+    { value: platformStats ? platformStats.active_listings.toLocaleString() : '—', labelKey: 'login.stats.listings', Icon: Home, iconCls: 'text-white/80' },
+    { value: platformStats ? platformStats.registered_users.toLocaleString() : '—', labelKey: 'login.stats.buyers', Icon: Users, iconCls: 'text-white/80' },
+    { value: platformStats ? fmt(platformStats.total_value) : '—', labelKey: 'login.stats.volume', Icon: Handshake, iconCls: 'text-white/80' },
+  ]
 
   const handleGoogleLogin = useGoogleLogin({
     prompt: 'select_account',

@@ -3,7 +3,7 @@ import { useNav } from '../hooks/useNav'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useState, useMemo, useEffect, type ReactNode } from 'react'
 import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp, SlidersHorizontal } from 'lucide-react'
-import { fmt, type Listing } from '../data/listings'
+import { fmt, fmtDOP, type Listing } from '../data/listings'
 import { fetchListings } from '../api/listings'
 import { supabaseImgUrl } from '../api/imgUrl'
 import { getMySavedIds, saveHome, unsaveHome } from '../api/savedHomes'
@@ -64,13 +64,9 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
     : null
   const effectivePrice = discountedPrice ?? l.price
   const dp = currency === 'DOP' ? Math.round(effectivePrice * dopRate) : null
-  const displayPrice = dp != null
-    ? dp >= 1_000_000 ? `RD$${(dp / 1_000_000).toFixed(1)}M` : `RD$${Math.round(dp / 1_000)}K`
-    : `${fmt(effectivePrice)} USD`
+  const displayPrice = dp != null ? fmtDOP(dp) : `${fmt(effectivePrice)} USD`
   const origDp = currency === 'DOP' && discountedPrice ? Math.round(l.price * dopRate) : null
-  const displayOrig = origDp != null
-    ? origDp >= 1_000_000 ? `RD$${(origDp / 1_000_000).toFixed(1)}M` : `RD$${Math.round(origDp / 1_000)}K`
-    : discountedPrice ? `${fmt(l.price)} USD` : null
+  const displayOrig = origDp != null ? fmtDOP(origDp) : discountedPrice ? `${fmt(l.price)} USD` : null
   return (
     <div
       onMouseEnter={() => { setHot(true); onHover?.(l) }}

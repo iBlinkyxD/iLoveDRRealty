@@ -2,12 +2,8 @@ import React from 'react'
 import { Search, TrendingUp, Layers } from 'lucide-react'
 import { c } from '../design'
 
-export const STATS = [
-  { value: '4,800+', key: 'active_listings' },
-  { value: '$2.4B',  key: 'properties_listed' },
-  { value: '320+',   key: 'verified_realtors' },
-  { value: '12K+',   key: 'registered_buyers' },
-]
+// Values are bound to live platform data at render time — see usePlatformStats().
+export const STATS_KEYS = ['active_listings', 'properties_listed', 'verified_realtors', 'registered_buyers'] as const
 
 // Text (mistake / lesson) lives in locales/*/landing.json — indexed by position
 export const MISTAKES = [

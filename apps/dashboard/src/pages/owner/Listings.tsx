@@ -17,8 +17,10 @@ const STATUS_MAP: Record<string, { label: string; bg: string; color: string; fil
 }
 
 function fmtPrice(price: number): string {
-  if (price >= 1_000_000) return `$${(price / 1_000_000).toFixed(2)}M`
-  if (price >= 1_000)     return `$${Math.round(price / 1_000)}K`
+  if (price >= 1_000_000_000_000) return `$${(price / 1_000_000_000_000).toFixed(2)}T`
+  if (price >= 1_000_000_000)     return `$${(price / 1_000_000_000).toFixed(2)}B`
+  if (price >= 1_000_000)         return `$${(price / 1_000_000).toFixed(2)}M`
+  if (price >= 1_000)             return `$${Math.round(price / 1_000)}K`
   return `$${price}`
 }
 

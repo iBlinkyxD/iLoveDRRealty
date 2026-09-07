@@ -2,14 +2,20 @@
 import { useNav } from '../hooks/useNav'
 import { useState, useEffect } from 'react'
 import { Search, Check, ArrowRight, MapPin, ChevronLeft, ChevronRight } from 'lucide-react'
-import { STATS, MISTAKES, ROLES } from '../data/landingData'
+import { STATS_KEYS, MISTAKES, ROLES } from '../data/landingData'
 import { fetchListings, fetchDealListings } from '../api/listings'
 import type { ApiDealListing } from '../api/listings'
-import type { Listing } from '../data/listings'
+import { fmtDOP, type Listing } from '../data/listings'
 import { supabaseImgUrl } from '../api/imgUrl'
+import { usePlatformStats } from '../hooks/usePlatformStats'
 import { useTranslation, Trans } from 'react-i18next'
 
 type GoFn = (page: string, slug?: string, params?: Record<string, string>) => void
+
+const fmtP = (n: number) =>
+  n >= 1_000_000_000_000 ? `$${(n / 1_000_000_000_000).toFixed(2)}T` :
+  n >= 1_000_000_000 ? `$${(n / 1_000_000_000).toFixed(2)}B` :
+  n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` : `$${(n / 1_000).toFixed(0)}K`
 
 function CurrencyToggle({ currency, onChange }: { currency: 'USD' | 'DOP'; onChange: (c: 'USD' | 'DOP') => void }) {
   return (
@@ -27,7 +33,6 @@ function CurrencyToggle({ currency, onChange }: { currency: 'USD' | 'DOP'; onCha
 
 function HeroListingCard({ prop, go }: { prop: Listing; go: GoFn }) {
   const { t } = useTranslation('landing')
-  const fmtP = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`
   return (
     <div
       onClick={() => go('detail', undefined, { id: String(prop.id) })}
@@ -57,8 +62,6 @@ function HeroListingCard({ prop, go }: { prop: Listing; go: GoFn }) {
 
 function PropertyCard({ prop, go, currency, dopRate }: { prop: Listing; go: GoFn; currency: 'USD' | 'DOP'; dopRate: number }) {
   const { t } = useTranslation('landing')
-  const fmtP = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : `$${(n / 1e3).toFixed(0)}K`
-  const fmtDOP = (n: number) => n >= 1_000_000 ? `RD$${(n / 1_000_000).toFixed(1)}M` : `RD$${Math.round(n / 1_000)}K`
   const tag = prop.tags?.[0]?.[0] ?? ''
   const discountedPrice = prop.is_deal && prop.deal_discount_value
     ? (prop.deal_discount_type === 'fixed'
@@ -135,6 +138,13 @@ export default function Landing() {
   const [dealHovered, setDealHovered] = useState(false)
   const [currency,  setCurrency]  = useState<'USD' | 'DOP'>('DOP')
   const [dopRate,   setDopRate]   = useState(59.5)
+  const platformStats = usePlatformStats()
+  const statValues: Record<typeof STATS_KEYS[number], string> = {
+    active_listings:     platformStats ? platformStats.active_listings.toLocaleString() : '—',
+    properties_listed:   platformStats ? fmtP(platformStats.total_value) : '—',
+    verified_realtors:   platformStats ? platformStats.realtors.toLocaleString() : '—',
+    registered_buyers:   platformStats ? platformStats.registered_users.toLocaleString() : '—',
+  }
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -287,9 +297,9 @@ export default function Landing() {
       {/* ─────────────────────── Stats strip ─────────────────────── */}
       <div className="bg-ink border-t border-[rgba(246,241,231,.08)]">
         <div className="max-w-310 mx-auto px-4 sm:px-6 py-6.5 grid grid-cols-2 sm:flex sm:flex-wrap gap-6 sm:justify-between">
-          {STATS.map(({ value, key }) => (
+          {STATS_KEYS.map(key => (
             <div key={key}>
-              <div className="font-sans text-7.5 font-semibold text-white">{value}</div>
+              <div className="font-sans text-7.5 font-semibold text-white">{statValues[key]}</div>
               <div className="font-sans text-3 text-[rgba(246,241,231,0.55)] tracking-[0.04em] mt-0.5">{t(`stats.${key}`)}</div>
             </div>
           ))}
@@ -397,7 +407,6 @@ export default function Landing() {
                     ))}
                   </div>
                   {(() => {
-                    const fmtDOP = (n: number) => n >= 1_000_000 ? `RD$${(n / 1_000_000).toFixed(1)}M` : `RD$${Math.round(n / 1_000)}K`
                     const fmtUSD = (n: number) => `$${Number(n).toLocaleString()}`
                     const effectivePrice = deal.deal_discount_value
                       ? (deal.deal_discount_type === 'fixed'
