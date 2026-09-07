@@ -459,8 +459,20 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
             {shareOpen && (() => {
               const shareUrl = canonicalUrl || (typeof window !== "undefined" ? window.location.href : "");
               const priceStr = listing.transaction === "rent" ? `${fmt(listing.price)}/mo` : fmt(listing.price);
-              const waText = encodeURIComponent(`*${listing.title}*\n${listing.location} · ${priceStr}\n\n${shareUrl}`);
-              const xText = encodeURIComponent(`${listing.title} — ${priceStr} in ${listing.location}`);
+              const waFacts = [
+                `💰 ${priceStr}`,
+                listing.bedrooms ? `🛏 ${listing.bedrooms} bd` : null,
+                listing.bathrooms ? `🛁 ${listing.bathrooms} ba` : null,
+                listing.area_sqft ? `📐 ${listing.area_sqft.toLocaleString()} ft²` : null,
+              ].filter(Boolean).join(" · ");
+              const waText = encodeURIComponent(`🏝️ *${listing.title}*\n${waFacts}\n📍 ${listing.location}\n\n${shareUrl}`);
+              const region = listing.location.split(",")[0].trim();
+              const regionTag = region.normalize("NFD").replace(/\p{Mn}/gu, "").replace(/[^a-zA-Z0-9]/g, "");
+              const listedWord = listing.transaction === "rent" ? "for rent" : "on the market";
+              const xText = encodeURIComponent(
+                `New ${listedWord} 🌊 ${priceStr}${listing.bedrooms ? ` · ${listing.bedrooms} bed` : ""} in ${listing.location}\n#DominicanRepublic${regionTag ? ` #${regionTag}RealEstate` : ""}`
+              );
+              const smsText = `Thought you'd like this one 👀 — ${priceStr} in ${listing.location}\n${shareUrl}`;
               const platforms = [
                 {
                   label: "Facebook",
@@ -507,7 +519,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                 {
                   label: "Message",
                   bg: "#34C759",
-                  href: `sms:?body=${encodeURIComponent(`${listing.title} — ${priceStr} in ${listing.location}\n${shareUrl}`)}`,
+                  href: `sms:?body=${encodeURIComponent(smsText)}`,
                   icon: (
                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

@@ -12,6 +12,13 @@ interface RawListing {
   price: number
   location: string
   images: string[]
+  share_image_url: string | null
+  bedrooms: number | null
+  bathrooms: number | null
+  area_sqft: number | null
+  tag: string | null
+  tags: string[]
+  updated_at: string | null
 }
 
 async function getListing(id: string): Promise<RawListing | null> {
@@ -49,30 +56,45 @@ export async function generateMetadata({
       ? `$${Number(listing.price).toLocaleString()}/mo`
       : `$${Number(listing.price).toLocaleString()}`
 
-  const rawDesc = listing.description ?? ''
-  const plainDesc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-  const description = plainDesc
-    ? `${plainDesc.slice(0, 150)}${plainDesc.length > 150 ? '…' : ''}`
-    : `${listing.type} in ${listing.location} — ${priceStr}.`
+  const title = listing.bedrooms
+    ? `${listing.bedrooms}BR ${listing.title} · ${priceStr}`
+    : `${listing.title} · ${priceStr}`
 
+  const highlightTag = listing.tags?.[0] ?? listing.tag ?? null
+  const description = [
+    listing.bedrooms ? `${listing.bedrooms} bed` : null,
+    listing.bathrooms ? `${listing.bathrooms} bath` : null,
+    listing.area_sqft ? `${listing.area_sqft.toLocaleString()} ft²` : null,
+    highlightTag,
+    listing.location,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  const rawImage =
+    listing.share_image_url ?? listing.images?.[0] ?? 'https://ilovedrrealty.com/iLoveDRRealty_Dark.png'
+  // Cache-bust the branded image so a re-generated version isn't stuck behind
+  // a stale scrape cache at the same URL — the raw fallback photo doesn't change.
   const image =
-    listing.images?.[0] ?? 'https://ilovedrrealty.com/iLoveDRRealty_Dark.png'
+    listing.share_image_url && listing.updated_at
+      ? `${rawImage}?v=${new Date(listing.updated_at).getTime()}`
+      : rawImage
 
   return {
-    title: listing.title,
+    title,
     description,
     alternates: {
       canonical: `https://ilovedrrealty.com/listing/${id}/`,
     },
     openGraph: {
-      title: listing.title,
+      title,
       description,
       images: [{ url: image, width: 1200, height: 630, alt: listing.title }],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: listing.title,
+      title,
       description,
       images: [image],
     },

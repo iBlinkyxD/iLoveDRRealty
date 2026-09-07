@@ -1,7 +1,9 @@
 'use client'
 import { useTranslation } from 'react-i18next'
 import { useNav } from '../hooks/useNav'
+import { useSearchParams } from 'next/navigation'
 import { useState, type ChangeEvent } from 'react'
+import { Home, TrendingUp } from 'lucide-react'
 import { I, CHANNELS } from '../data/contactData'
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
@@ -17,26 +19,44 @@ function Icon({ d, size = 20 }: { d: string; size?: number }) {
   )
 }
 
+const BUYER_INTEREST_VALUES = [
+  'Buying a property',
+  'Renting a property',
+  'Investment advice',
+  'Relocation help',
+  'General inquiry',
+]
+
+const SELLER_INTEREST_VALUES = [
+  'Selling my property',
+  'Listing a rental (long or short-term)',
+  'Property valuation',
+  'General inquiry',
+]
+
 export default function Contact() {
   const go = useNav()
   const { t } = useTranslation('contact')
+  const searchParams = useSearchParams()
   const channelsText = t('channels.items', { returnObjects: true }) as Array<{ title: string; desc: string; value: string }>
-  const interestOptions = t('form.interest_options', { returnObjects: true }) as string[]
+  const buyerInterestOptions = t('form.interest_options', { returnObjects: true }) as string[]
+  const sellerInterestOptions = t('form.interest_options_selling', { returnObjects: true }) as string[]
 
-  const INTEREST_VALUES = [
-    'Buying a property',
-    'Renting a property',
-    'Listing my property',
-    'Investment advice',
-    'Relocation help',
-    'General inquiry',
-  ]
+  const [tab, setTab] = useState<'buyer' | 'seller'>(searchParams.get('type') === 'sell' ? 'seller' : 'buyer')
+  const interestValues = tab === 'seller' ? SELLER_INTEREST_VALUES : BUYER_INTEREST_VALUES
+  const interestOptions = tab === 'seller' ? sellerInterestOptions : buyerInterestOptions
 
-  const [form, setForm] = useState({ name: '', email: '', phone: '', interest: 'Buying a property', message: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', interest: BUYER_INTEREST_VALUES[0], message: '' })
   const [agreed, setAgreed] = useState(false)
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function switchTab(next: 'buyer' | 'seller') {
+    setTab(next)
+    const values = next === 'seller' ? SELLER_INTEREST_VALUES : BUYER_INTEREST_VALUES
+    setForm(f => ({ ...f, interest: values[0] }))
+  }
 
   async function handleSubmit() {
     if (!agreed || loading) return
@@ -44,6 +64,7 @@ export default function Contact() {
     setError(null)
     try {
       await submitContactLead({
+        tab,
         name: form.name,
         email: form.email,
         phone: form.phone || undefined,
@@ -171,7 +192,21 @@ export default function Contact() {
               </div>
             ) : (
               <>
-                <h3 className="font-sans text-2xl font-bold text-ink mb-6">{t('form.heading')}</h3>
+                <h3 className="font-sans text-2xl font-bold text-ink mb-4.5">{t('form.heading')}</h3>
+
+                <div className="flex gap-2 mb-6">
+                  {(['buyer', 'seller'] as const).map(tab_key => (
+                    <button
+                      key={tab_key}
+                      type="button"
+                      onClick={() => switchTab(tab_key)}
+                      className={`flex items-center gap-1.75 py-2 px-4 rounded-full text-3.25 font-bold border-none cursor-pointer transition-colors duration-150 ${tab === tab_key ? 'bg-coral text-white' : 'bg-paper2 text-ink2'}`}
+                    >
+                      {tab_key === 'buyer' ? <Home size={14} /> : <TrendingUp size={14} />}
+                      {tab_key === 'buyer' ? t('form.tab_buying') : t('form.tab_selling')}
+                    </button>
+                  ))}
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
@@ -203,8 +238,8 @@ export default function Contact() {
                 <div className="mt-4">
                   <label className="text-xs font-semibold text-ink2 mb-1.5 block">{t('form.interest_label')}</label>
                   <select value={form.interest} onChange={set('interest')} className={`${inputCls} cursor-pointer`}>
-                    {INTEREST_VALUES.map((val, i) => (
-                      <option key={val} value={val}>{interestOptions[i]}</option>
+                    {interestValues.map((val, i) => (
+                      <option key={val} value={val}>{interestOptions[i] ?? val}</option>
                     ))}
                   </select>
                 </div>
@@ -212,7 +247,7 @@ export default function Contact() {
                 <div className="mt-4">
                   <label className="text-xs font-semibold text-ink2 mb-1.5 block">{t('form.message_label')}</label>
                   <textarea rows={4} value={form.message} onChange={set('message')}
-                    placeholder={t('form.message_placeholder')} className={`${inputCls} resize-y`} />
+                    placeholder={tab === 'seller' ? t('form.message_placeholder_selling') : t('form.message_placeholder')} className={`${inputCls} resize-y`} />
                 </div>
 
                 <label className="flex items-start gap-2.5 my-4 text-[12.5px] text-ink2 leading-[1.55] cursor-pointer">

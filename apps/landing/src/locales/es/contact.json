@@ -9,7 +9,7 @@
     "heading": "Múltiples formas de conectar",
     "sub": "Somos un equipo bilingüe con base en la RD. Elige el canal que mejor te funcione.",
     "items": [
-      { "title": "WhatsApp", "desc": "Respuesta más rápida — chatea con nuestro equipo", "value": "+1 (809) 555-0147" },
+      { "title": "WhatsApp", "desc": "Respuesta más rápida — chatea con nuestro equipo", "value": "(809) 610-8094" },
       { "title": "Reservar una llamada", "desc": "Llamada de descubrimiento gratuita de 15 min", "value": "Programar ahora →" },
       { "title": "Oficina", "desc": "Av. Winston Churchill, Santo Domingo", "value": "Lun–Sáb · 9am–6pm" }
     ]
@@ -23,6 +23,8 @@
   },
   "form": {
     "heading": "Envíanos un mensaje",
+    "tab_buying": "Quiero comprar",
+    "tab_selling": "Quiero vender",
     "name_label": "Nombre completo",
     "name_placeholder": "Tu nombre completo",
     "email_label": "Correo electrónico",
@@ -32,13 +34,19 @@
     "interest_options": [
       "Comprar una propiedad",
       "Alquilar una propiedad",
-      "Publicar mi propiedad",
       "Asesoramiento de inversión",
       "Ayuda con la reubicación",
       "Consulta general"
     ],
+    "interest_options_selling": [
+      "Vender mi propiedad",
+      "Publicar un alquiler (largo o corto plazo)",
+      "Avalúo de propiedad",
+      "Consulta general"
+    ],
     "message_label": "Mensaje",
     "message_placeholder": "Cuéntanos lo que buscas…",
+    "message_placeholder_selling": "Cuéntanos sobre tu propiedad (ubicación, tipo, precio…)",
     "consent": "Acepto ser contactado sobre mi consulta y acepto la política de privacidad.",
     "submit": "Enviar mensaje",
     "submitting": "Enviando…"

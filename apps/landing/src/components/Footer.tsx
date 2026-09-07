@@ -37,7 +37,7 @@ export default function Footer() {
           </p>
           <div className="flex gap-2.5">
             <a
-              href="https://wa.me/18298001234"
+              href="https://wa.me/18096108094"
               className="inline-flex items-center gap-1.75 text-[12.5px] text-paper2/70 no-underline py-1.75 px-3.5 rounded-full border border-paper2/15"
             >
               💬 WhatsApp
@@ -73,7 +73,7 @@ export default function Footer() {
           </div>
           <div className="flex flex-col gap-2.5 text-3.5 text-paper2/65">
             <span>📍 Dominican Republic</span>
-            <span>📞 +1 (829) 800-1234</span>
+            <span>📞 (809) 610-8094</span>
             <span>✉️ ilovedrrealty@gmail.com</span>
           </div>
           <button

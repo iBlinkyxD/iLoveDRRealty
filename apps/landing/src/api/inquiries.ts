@@ -21,13 +21,14 @@ export async function submitInquiry(data: LeadCreate): Promise<void> {
 }
 
 export async function submitContactLead(data: {
+  tab: 'buyer' | 'seller'
   name: string
   email: string
   phone?: string
   interest: string
   message?: string
 }): Promise<void> {
-  const type = data.interest === 'Listing my property' ? 'seller_interest' : 'buyer_interest'
+  const type = data.tab === 'seller' ? 'seller_interest' : 'buyer_interest'
   const parts = [`Interest: ${data.interest}`, data.message].filter(Boolean)
   await client.post('/leads', {
     type,

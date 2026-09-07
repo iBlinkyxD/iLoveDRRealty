@@ -10,7 +10,7 @@ export const I = {
 }
 
 export const CHANNELS = [
-  { icon: I.msg,   title: 'WhatsApp',     desc: 'Fastest reply — chat with our team', value: '+1 (809) 555-0147', color: c.green },
+  { icon: I.msg,   title: 'WhatsApp',     desc: 'Fastest reply — chat with our team', value: '(809) 610-8094', color: c.green },
   { icon: I.cal,   title: 'Book a call',  desc: 'Free 15-min discovery call',          value: 'Schedule now →',   color: c.coral },
   { icon: I.globe, title: 'Office',        desc: 'Av. Winston Churchill, Santo Domingo', value: 'Mon–Sat · 9am–6pm', color: c.sea },
 ]
