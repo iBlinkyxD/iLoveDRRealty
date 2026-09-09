@@ -113,7 +113,7 @@ function PropertyCard({ l, go, onHover, currency, dopRate, savedIds, onToggleSav
         <div className="flex gap-4 mt-3.5 pt-3.25 border-t border-line-soft text-ink2 text-[12.5px]">
           {l.bd > 0 && <span className="flex items-center gap-1.25"><BedDouble size={15} />{l.bd} {t('card.bd')}</span>}
           {l.ba > 0 && <span className="flex items-center gap-1.25"><Bath size={15} />{l.ba} {t('card.ba')}</span>}
-          <span className="flex items-center gap-1.25"><Maximize2 size={15} />{l.m2} m²</span>
+          {l.m2 > 0 && <span className="flex items-center gap-1.25"><Maximize2 size={15} />{l.m2} m²</span>}
         </div>
       </div>
     </div>
