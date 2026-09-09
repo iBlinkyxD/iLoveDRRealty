@@ -1,7 +1,10 @@
 'use client'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useNav } from '../hooks/useNav'
 import { useTranslation } from 'react-i18next'
+import { isStandalonePage } from '../lib/constants'
+import { trackWhatsAppConversion } from '../lib/gtag'
 
 const NAV_GROUPS = [
   {
@@ -16,8 +19,11 @@ const NAV_GROUPS = [
 
 export default function Footer() {
   const go = useNav()
+  const pathname = usePathname()
   const { t } = useTranslation('footer')
   const year = new Date().getFullYear()
+
+  if (isStandalonePage(pathname)) return null
 
   return (
     <footer className="bg-ink text-paper2/60 font-sans">
@@ -38,6 +44,9 @@ export default function Footer() {
           <div className="flex gap-2.5">
             <a
               href="https://wa.me/18096108094"
+              target="_blank"
+              rel="noopener"
+              onClick={trackWhatsAppConversion}
               className="inline-flex items-center gap-1.75 text-[12.5px] text-paper2/70 no-underline py-1.75 px-3.5 rounded-full border border-paper2/15"
             >
               💬 WhatsApp
@@ -93,8 +102,8 @@ export default function Footer() {
           </span>
           <div className="flex flex-wrap gap-4 sm:gap-5 text-3 items-center justify-center">
             <span className="font-sans italic text-paper2/25 tracking-[.04em]">{t('tagline')}</span>
-            <button onClick={() => go('contact')} className="bg-transparent border-none cursor-pointer p-0 text-3 text-paper2/35 font-sans">{t('privacy')}</button>
-            <button onClick={() => go('contact')} className="bg-transparent border-none cursor-pointer p-0 text-3 text-paper2/35 font-sans">{t('terms')}</button>
+            <Link href="/privacy-policy/" className="text-3 text-paper2/35 font-sans no-underline">{t('privacy')}</Link>
+            <Link href="/terms-of-service/" className="text-3 text-paper2/35 font-sans no-underline">{t('terms')}</Link>
           </div>
         </div>
       </div>

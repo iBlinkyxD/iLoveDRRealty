@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Menu, X, LayoutDashboard, LogOut } from 'lucide-react'
 import { getMe, logout } from '../api/auth'
 import { useTranslation } from 'react-i18next'
+import { isStandalonePage } from '../lib/constants'
 
 const _dashRaw = process.env.NEXT_PUBLIC_DASHBOARD_URL ?? 'https://app.ilovedrrealty.com'
 const DASHBOARD_URL = _dashRaw.startsWith('http') ? _dashRaw : `https://${_dashRaw}`
@@ -145,6 +146,8 @@ export default function Navbar() {
     setOpen(false)
     window.location.reload()
   }
+
+  if (isStandalonePage(pathname)) return null
 
   return (
     <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-3.5 border-b border-line">

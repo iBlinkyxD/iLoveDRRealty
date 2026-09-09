@@ -7,6 +7,8 @@ import { Toaster } from 'react-hot-toast'
 import GoogleAuthProvider from '../components/GoogleAuthProvider'
 import LeadCaptureProvider from '../components/LeadCaptureProvider'
 import I18nProvider from '../components/I18nProvider'
+import TrackingCapture from '../components/TrackingCapture'
+import { GTAG_ID } from '../lib/gtag'
 
 export const metadata: Metadata = {
   title: {
@@ -37,6 +39,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        {/* Google tag (gtag.js) — installed once sitewide per Website-Developer-Only-Instructions.md */}
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`} strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GTAG_ID}');
+          `}
+        </Script>
+        <TrackingCapture />
         <I18nProvider>
         <GoogleAuthProvider>
           <LeadCaptureProvider>

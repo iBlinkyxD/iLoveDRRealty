@@ -9,6 +9,8 @@ import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
 import { isValidPhoneNumber } from 'libphonenumber-js'
 import { submitContactLead } from '../api/inquiries'
+import { trackFormConversion } from '../lib/gtag'
+import { getTrackingReferenceLine } from '../lib/tracking'
 
 function Icon({ d, size = 20 }: { d: string; size?: number }) {
   return (
@@ -63,14 +65,17 @@ export default function Contact() {
     setLoading(true)
     setError(null)
     try {
+      const trackingLine = getTrackingReferenceLine()
+      const message = [form.message || undefined, trackingLine].filter(Boolean).join('\n\n')
       await submitContactLead({
         tab,
         name: form.name,
         email: form.email,
         phone: form.phone || undefined,
         interest: form.interest,
-        message: form.message || undefined,
+        message: message || undefined,
       })
+      trackFormConversion()
       setSent(true)
     } catch {
       setError('Something went wrong. Please try again.')
