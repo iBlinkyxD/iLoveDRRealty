@@ -992,8 +992,11 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           </div>
         )}
 
-        {/* ── RIGHT sticky sidebar ── */}
-        <div className="lg:sticky lg:top-22.5 border border-line rounded-2xl p-5.5 bg-white shadow-[0_18px_44px_-30px_rgba(0,16,46,.4)]">
+        {/* ── RIGHT sticky sidebar ──
+            max-h/overflow keeps the card's bottom (the inquiry form's Send button)
+            from ever sitting under the fixed Tidio chat bubble on short viewports —
+            it scrolls internally instead of extending past the reserved bottom zone. */}
+        <div className="lg:sticky lg:top-22.5 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:overscroll-contain border border-line rounded-2xl p-5.5 bg-white shadow-[0_18px_44px_-30px_rgba(0,16,46,.4)]">
           {/* Transaction type label + currency toggle */}
           <div className="flex items-center justify-between mb-4">
             <span
