@@ -9,9 +9,11 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { AdminListing } from '../../api/admin'
+import type { AdminListing, AdminUser } from '../../api/admin'
+import { assignAdminListing } from '../../api/admin'
 import { TONE } from '../../pages/admin/shared'
 import { ConfirmModal } from '../shared/ConfirmModal'
+import { RealtorCombobox } from './RealtorCombobox'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
@@ -51,6 +53,7 @@ const STATUS_CHIP: Record<string, { bg: string; color: string; label: string }> 
 
 interface Props {
   listing: AdminListing
+  realtors: AdminUser[]
   onClose: () => void
   onEdit: () => void
   onApprove: () => void
@@ -58,11 +61,12 @@ interface Props {
   onArchive: () => void
   onSetDeal?: (value: number | null, type: 'pct' | 'fixed') => Promise<void>
   onClearDeal?: () => void
+  onAssigned: (listingId: string, realtorId: string | null, realtorName: string, realtorEmail: string) => void
   working: boolean
 }
 
 export function ListingDetailPanel({
-  listing, onClose, onEdit, onApprove, onReject, onArchive, onSetDeal, onClearDeal, working,
+  listing, realtors, onClose, onEdit, onApprove, onReject, onArchive, onSetDeal, onClearDeal, onAssigned, working,
 }: Props) {
   const { t } = useTranslation('admin')
   const [imgIdx,             setImgIdx]             = useState(0)
@@ -73,6 +77,17 @@ export function ListingDetailPanel({
   const [discountType,  setDiscountType]  = useState<'pct' | 'fixed'>('pct')
   const [discountValue, setDiscountValue] = useState('')
   const [dealWorking,   setDealWorking]   = useState(false)
+  const [assignSaving,  setAssignSaving]  = useState(false)
+
+  async function handleAssign(realtorId: string) {
+    setAssignSaving(true)
+    try {
+      await assignAdminListing(listing.id, realtorId || null)
+      const r = realtors.find(r => r.id === realtorId)
+      onAssigned(listing.id, realtorId || null, r?.display_name || r?.email || '', r?.email || '')
+    } catch {}
+    setAssignSaving(false)
+  }
 
   const DEPOSIT_LABELS: Record<string, string> = {
     first:      t('listing_panel.deposit_first'),
@@ -300,6 +315,19 @@ export function ListingDetailPanel({
 
           {/* White body — rounded top overlaps navy */}
           <div className="bg-paper rounded-t-3xl -mt-5 px-5 pt-6 pb-6 space-y-6 min-h-full">
+
+            {/* Assigned realtor */}
+            <div>
+              <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">
+                {t('listing_panel.assigned_to')}
+              </div>
+              <RealtorCombobox
+                realtors={realtors}
+                currentId={listing.assigned_realtor_id}
+                onSelect={handleAssign}
+                saving={assignSaving}
+              />
+            </div>
 
             {/* Property Information */}
             <div>

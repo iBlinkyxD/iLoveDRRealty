@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  X, CheckCircle2, XCircle, Archive, Send, GitCompare, Clock, ChevronDown, ChevronUp,
+  X, CheckCircle2, XCircle, Archive, Send, GitCompare, Clock, ChevronDown, ChevronUp, UserCheck, UserX,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { getListingHistory } from '../../api/admin'
@@ -55,6 +55,10 @@ const DIFF_LABELS: Record<string, string> = {
 }
 
 const ARRAY_FIELDS = new Set(['features', 'images', 'tags', 'video_links', 'included_utilities'])
+
+// Only these event types use `note` as a rejection/cancellation reason (red styling).
+// Other event types (e.g. realtor_assigned) use `note` for neutral context instead.
+const REASON_NOTE_EVENTS = new Set(['rejected', 'edit_rejected'])
 
 function formatVal(key: string, val: unknown): string {
   if (val == null) return '—'
@@ -115,6 +119,8 @@ function EventRow({ event }: { event: ListingEvent }) {
     edit_submitted: { label: t('history_panel.event_edit_submitted'), Icon: GitCompare,   color: '#7c3aed', bg: '#ede9fe' },
     edit_approved:  { label: t('history_panel.event_edit_approved'),  Icon: CheckCircle2, color: '#16a34a', bg: '#dcfce7' },
     edit_rejected:  { label: t('history_panel.event_edit_rejected'),  Icon: XCircle,      color: '#dc2626', bg: '#fee2e2' },
+    realtor_assigned:   { label: t('history_panel.event_realtor_assigned'),   Icon: UserCheck, color: '#0d9488', bg: '#ccfbf1' },
+    realtor_unassigned: { label: t('history_panel.event_realtor_unassigned'), Icon: UserX,     color: '#6b7280', bg: '#f3f4f6' },
   }
   const DEFAULT_META: EventMeta = { label: 'Event', Icon: Clock, color: '#6b7280', bg: '#f3f4f6' }
 
@@ -158,9 +164,15 @@ function EventRow({ event }: { event: ListingEvent }) {
         </div>
 
         {event.note && (
-          <div className="mt-2 px-3 py-2 rounded-lg bg-red-50 border border-red-100 text-[12px] text-red-700">
-            {event.note}
-          </div>
+          REASON_NOTE_EVENTS.has(event.event_type) ? (
+            <div className="mt-2 px-3 py-2 rounded-lg bg-red-50 border border-red-100 text-[12px] text-red-700">
+              {event.note}
+            </div>
+          ) : (
+            <div className="mt-2 px-3 py-2 rounded-lg bg-paper2 border border-line-soft text-[12px] text-ink2">
+              {event.note}
+            </div>
+          )
         )}
 
         {hasDiff && (

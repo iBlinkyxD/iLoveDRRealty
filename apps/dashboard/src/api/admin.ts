@@ -71,6 +71,9 @@ export interface AdminListing {
   submitted_by_name: string | null
   submitted_by_email: string | null
   owner_id: string | null
+  assigned_realtor_id: string | null
+  assigned_realtor_name: string | null
+  assigned_realtor_email: string | null
   reviewed_by_name: string | null
   reviewed_by_email: string | null
   reviewed_at: string | null
@@ -105,6 +108,10 @@ export async function rejectAdminListing(id: string, reason: string): Promise<vo
 
 export async function archiveAdminListing(id: string): Promise<void> {
   await client.post(`/admin/listings/${id}/archive`)
+}
+
+export async function assignAdminListing(id: string, realtorId: string | null): Promise<void> {
+  await client.put(`/admin/listings/${id}/assign`, { realtor_id: realtorId })
 }
 
 export interface AdminListingEdit {

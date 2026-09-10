@@ -93,6 +93,8 @@
     "toast_edit_approved":      "Edit approved — listing updated.",
     "toast_edit_rejected":      "Edit rejected.",
     "toast_archived":           "Listing archived.",
+    "toast_assigned":           "Realtor assigned.",
+    "toast_unassigned":         "Realtor unassigned.",
     "toast_deal_set":           "Deal of the Week set!",
     "toast_deal_request_rejected": "Deal request rejected.",
     "toast_deal_cleared":       "Deal cleared.",
@@ -172,6 +174,7 @@
     "rejected_by":    "Rejected by",
     "archived_by":    "Archived by",
     "reviewed_by":    "Reviewed by",
+    "assigned_to":    "Assigned to",
     "total_views":    "Total views",
     "section_property_info": "Property Information",
     "section_features":      "Features",
@@ -316,7 +319,9 @@
     "event_archived":       "Archived",
     "event_edit_submitted": "Edit Submitted",
     "event_edit_approved":  "Edit Approved",
-    "event_edit_rejected":  "Edit Rejected"
+    "event_edit_rejected":  "Edit Rejected",
+    "event_realtor_assigned":   "Realtor Assigned",
+    "event_realtor_unassigned": "Realtor Unassigned"
   },
   "user_panel": {
     "section_contact":  "Contact Information",

@@ -93,6 +93,8 @@
     "toast_edit_approved":      "Edición aprobada — propiedad actualizada.",
     "toast_edit_rejected":      "Edición rechazada.",
     "toast_archived":           "Propiedad archivada.",
+    "toast_assigned":           "Agente asignado.",
+    "toast_unassigned":         "Agente desasignado.",
     "toast_deal_set":           "¡Oferta de la semana establecida!",
     "toast_deal_request_rejected": "Solicitud de oferta rechazada.",
     "toast_deal_cleared":       "Oferta eliminada.",
@@ -172,6 +174,7 @@
     "rejected_by":    "Rechazado por",
     "archived_by":    "Archivado por",
     "reviewed_by":    "Revisado por",
+    "assigned_to":    "Asignado a",
     "total_views":    "Total de vistas",
     "section_property_info": "Información de la propiedad",
     "section_features":      "Características",
@@ -316,7 +319,9 @@
     "event_archived":       "Archivada",
     "event_edit_submitted": "Edición enviada",
     "event_edit_approved":  "Edición aprobada",
-    "event_edit_rejected":  "Edición rechazada"
+    "event_edit_rejected":  "Edición rechazada",
+    "event_realtor_assigned":   "Agente asignado",
+    "event_realtor_unassigned": "Agente desasignado"
   },
   "user_panel": {
     "section_contact":  "Información de contacto",

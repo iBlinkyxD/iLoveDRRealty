@@ -3,17 +3,17 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Check, X, Home, Search, MoreHorizontal, Archive,
-  MapPin, Pencil, GitCompare, Eye, Plus, CheckCircle2, XCircle, Star, Clock, Sparkles,
+  MapPin, Pencil, GitCompare, Eye, Plus, CheckCircle2, XCircle, Star, Clock, Sparkles, UserCheck, UserX,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
   getAdminListings, approveAdminListing, rejectAdminListing, archiveAdminListing,
   getAdminListingEdits, approveListingEdit, rejectListingEdit,
   getAdminDealRequests, approveDealRequest, rejectDealRequest,
-  clearListingDeal, setListingDeal,
-  getAdminActivityLog,
+  clearListingDeal, setListingDeal, assignAdminListing,
+  getAdminActivityLog, getAdminUsers,
 } from '../../api/admin'
-import type { AdminListing, AdminListingEdit, ActivityEntry, DealRequest } from '../../api/admin'
+import type { AdminListing, AdminListingEdit, ActivityEntry, DealRequest, AdminUser } from '../../api/admin'
 import { AdminEditListing, AdminSubmitListing } from './SubmitListing'
 import { TONE, FilterPills } from './shared'
 import { ListingDetailPanel } from '../../components/admin/ListingDetailPanel'
@@ -158,14 +158,16 @@ function ActionMenu({ onView, onEdit, onHistory, onSetDeal, onArchive }: { onVie
 
 type EventMeta = { Icon: typeof CheckCircle2; color: string }
 const EVENT_META: Record<string, EventMeta> = {
-  listing_approved: { Icon: CheckCircle2, color: '#16a34a' },
-  listing_rejected: { Icon: XCircle,      color: '#dc2626' },
-  listing_archived: { Icon: Archive,      color: '#7884a0' },
-  edit_approved:    { Icon: CheckCircle2, color: '#16a34a' },
-  edit_rejected:    { Icon: XCircle,      color: '#dc2626' },
+  listing_approved:   { Icon: CheckCircle2, color: '#16a34a' },
+  listing_rejected:   { Icon: XCircle,      color: '#dc2626' },
+  listing_archived:   { Icon: Archive,      color: '#7884a0' },
+  edit_approved:      { Icon: CheckCircle2, color: '#16a34a' },
+  edit_rejected:      { Icon: XCircle,      color: '#dc2626' },
+  listing_assigned:   { Icon: UserCheck,    color: '#0d9488' },
+  listing_unassigned: { Icon: UserX,        color: '#7884a0' },
 }
 const DEFAULT_META: EventMeta = { Icon: CheckCircle2, color: '#7884a0' }
-const LISTING_EVENTS = new Set(['listing_approved', 'listing_rejected', 'listing_archived', 'edit_approved', 'edit_rejected'])
+const LISTING_EVENTS = new Set(['listing_approved', 'listing_rejected', 'listing_archived', 'edit_approved', 'edit_rejected', 'listing_assigned', 'listing_unassigned'])
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -178,6 +180,7 @@ export function AdminListings() {
   const [all,          setAll]          = useState<AdminListing[]>([])
   const [edits,        setEdits]        = useState<AdminListingEdit[]>([])
   const [dealRequests, setDealRequests] = useState<DealRequest[]>([])
+  const [realtors,     setRealtors]     = useState<AdminUser[]>([])
   const [filter,       setFilter]       = useState<string>('All')
   const [coFilter,     setCoFilter]     = useState<string>('All')
   const [query,        setQuery]        = useState('')
@@ -202,16 +205,19 @@ export function AdminListings() {
   async function load() {
     setLoading(true)
     setActLoading(true)
-    const [data, editData, dealData, act] = await Promise.all([
+    const [data, editData, dealData, act, realtorUsers, adminUsers] = await Promise.all([
       getAdminListings(),
       getAdminListingEdits(),
       getAdminDealRequests('pending'),
       getAdminActivityLog(25),
+      getAdminUsers('realtor'),
+      getAdminUsers('admin'),
     ])
     setAll(data)
     setEdits(editData)
     setDealRequests(dealData)
     setActivity(act)
+    setRealtors([...realtorUsers, ...adminUsers])
     setLoading(false)
     setActLoading(false)
   }
@@ -335,6 +341,17 @@ export function AdminListings() {
       await load()
       toast.success(t('listings_page.toast_deal_set'))
     } finally { setWorking(false) }
+  }
+
+  function handleAssigned(listingId: string, realtorId: string | null, realtorName: string, realtorEmail: string) {
+    const patch = {
+      assigned_realtor_id: realtorId,
+      assigned_realtor_name: realtorId ? realtorName : null,
+      assigned_realtor_email: realtorId ? realtorEmail : null,
+    }
+    setAll(prev => prev.map(l => l.id === listingId ? { ...l, ...patch } : l))
+    setSelected(prev => prev && prev.id === listingId ? { ...prev, ...patch } : prev)
+    toast.success(realtorId ? t('listings_page.toast_assigned') : t('listings_page.toast_unassigned'))
   }
 
   async function handleClearDeal(id: string) {
@@ -836,11 +853,13 @@ export function AdminListings() {
       {selected && (
         <ListingDetailPanel
           listing={selected}
+          realtors={realtors}
           onClose={() => setSelected(null)}
           onEdit={() => setEditing(true)}
           onApprove={() => handleApprove(selected.id)}
           onReject={(reason) => handleReject(selected.id, reason)}
           onArchive={() => setConfirmArchive(selected)}
+          onAssigned={handleAssigned}
           onSetDeal={selected.status === 'active' && !selected.is_deal
             ? async (value, type) => {
                 await setListingDeal(selected.id, value, type)
