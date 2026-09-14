@@ -6,7 +6,8 @@
     "listings":  { "title": "Propiedades",               "sub": "Gestionar solicitudes de propiedades"                       },
     "leads":     { "title": "Contactos",                 "sub": "Consultas, reservas e intereses de compradores/vendedores"  },
     "analytics": { "title": "Analíticas",                "sub": "Métricas de la plataforma · Mayo 2026"                      },
-    "settings":  { "title": "Configuración",             "sub": "Configuración de la plataforma"                             }
+    "settings":  { "title": "Configuración",             "sub": "Configuración de la plataforma"                             },
+    "bulk-import": { "title": "Importación masiva",      "sub": "Crear propiedades en masa desde un archivo CSV de un socio" }
   },
   "home_page": {
     "approval_queue":        "Cola de aprobación",
@@ -562,5 +563,30 @@
     "util_security":         "Seguridad",
     "util_parking":          "Estacionamiento",
     "util_laundry":          "Lavandería"
+  },
+  "bulk_import_page": {
+    "upload_title":    "Subir CSV",
+    "upload_desc":     "Sube un archivo CSV de un socio para crear propiedades en masa. Cada fila se convierte en una propiedad; las fotos se descargan de la columna photo_urls y se alojan en nuestro almacenamiento.",
+    "choose_file":     "Elegir archivo CSV…",
+    "start_import":    "Iniciar importación",
+    "uploading":       "Subiendo…",
+    "job_title":       "Progreso de la importación",
+    "progress":        "{{processed}} / {{total}} filas procesadas",
+    "succeeded":       "Exitosas",
+    "skipped":         "Omitidas",
+    "failed":          "Fallidas",
+    "status_pending":  "Pendiente",
+    "status_running":  "En proceso",
+    "status_completed":"Completada",
+    "status_failed":   "Fallida",
+    "status_succeeded":"Exitosa",
+    "status_skipped":  "Omitida",
+    "col_row":         "Fila",
+    "col_source_ref":  "Referencia",
+    "col_status":      "Estado",
+    "col_message":     "Mensaje",
+    "history_title":   "Importaciones recientes",
+    "toast_started":   "Importación iniciada.",
+    "toast_error":     "No se pudo iniciar la importación. Verifica el archivo e intenta de nuevo."
   }
 }

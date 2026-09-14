@@ -86,9 +86,12 @@ export interface AdminListing {
   co_listing_brokerage: string | null
   co_listing_agent_name: string | null
   co_listing_agent_contact: string | null
+  co_listing_agent_email: string | null
   co_listing_commission_split: number | null
   co_listing_notes: string | null
   co_listing_status: string | null
+  currency: string
+  source_ref: string | null
 }
 
 export async function getAdminListings(status?: string): Promise<AdminListing[]> {
@@ -276,4 +279,44 @@ export async function updatePlatformSettings(data: { notify_email: string }): Pr
 
 export async function changeUserRole(userId: string, role: string): Promise<void> {
   await client.put(`/admin/users/${userId}/role`, { role })
+}
+
+export interface BulkImportRowResult {
+  row: number
+  source_ref: string | null
+  status: 'succeeded' | 'skipped' | 'failed'
+  listing_id: string | null
+  message: string | null
+}
+
+export interface BulkImportJob {
+  id: string
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  total_rows: number
+  processed_rows: number
+  succeeded_count: number
+  skipped_count: number
+  failed_count: number
+  results: BulkImportRowResult[]
+  created_at: string
+  completed_at: string | null
+}
+
+export async function bulkImportListings(csv: File): Promise<BulkImportJob> {
+  const fd = new FormData()
+  fd.append('csv_file', csv)
+  const res = await client.post<BulkImportJob>('/admin/listings/bulk-import', fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
+}
+
+export async function getBulkImportJob(jobId: string): Promise<BulkImportJob> {
+  const res = await client.get<BulkImportJob>(`/admin/listings/bulk-import/${jobId}`)
+  return res.data
+}
+
+export async function listBulkImportJobs(): Promise<BulkImportJob[]> {
+  const res = await client.get<BulkImportJob[]>('/admin/listings/bulk-import')
+  return res.data
 }

@@ -6,7 +6,8 @@
     "listings":  { "title": "Listings",           "sub": "Manage listings requests"                            },
     "leads":     { "title": "Leads",              "sub": "Inquiries, bookings, and buyer/seller interest"      },
     "analytics": { "title": "Analytics",          "sub": "Platform metrics · May 2026"                         },
-    "settings":  { "title": "Settings",           "sub": "Platform configuration"                              }
+    "settings":  { "title": "Settings",           "sub": "Platform configuration"                              },
+    "bulk-import": { "title": "Bulk Import",      "sub": "Create listings in bulk from a partner CSV file"     }
   },
   "home_page": {
     "approval_queue":        "Approval queue",
@@ -562,5 +563,30 @@
     "util_security":         "Security",
     "util_parking":          "Parking",
     "util_laundry":          "Laundry"
+  },
+  "bulk_import_page": {
+    "upload_title":    "Upload CSV",
+    "upload_desc":     "Upload a partner CSV file to create listings in bulk. Each row becomes a listing; photos are downloaded from the photo_urls column and re-hosted on our storage.",
+    "choose_file":     "Choose CSV file…",
+    "start_import":    "Start Import",
+    "uploading":       "Uploading…",
+    "job_title":       "Import Progress",
+    "progress":        "{{processed}} / {{total}} rows processed",
+    "succeeded":       "Succeeded",
+    "skipped":         "Skipped",
+    "failed":          "Failed",
+    "status_pending":  "Pending",
+    "status_running":  "Running",
+    "status_completed":"Completed",
+    "status_failed":   "Failed",
+    "status_succeeded":"Succeeded",
+    "status_skipped":  "Skipped",
+    "col_row":         "Row",
+    "col_source_ref":  "Source Ref",
+    "col_status":      "Status",
+    "col_message":     "Message",
+    "history_title":   "Recent Imports",
+    "toast_started":   "Import started.",
+    "toast_error":     "Failed to start import. Check the file and try again."
   }
 }

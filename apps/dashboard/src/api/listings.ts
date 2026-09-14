@@ -50,9 +50,12 @@ export interface Listing {
   co_listing_brokerage: string | null
   co_listing_agent_name: string | null
   co_listing_agent_contact: string | null
+  co_listing_agent_email: string | null
   co_listing_commission_split: number | null
   co_listing_notes: string | null
   co_listing_status: string | null
+  currency: string
+  source_ref: string | null
 }
 
 export interface ListingUpdate {
