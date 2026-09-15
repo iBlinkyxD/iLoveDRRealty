@@ -143,6 +143,7 @@ function AdminFormBody({
   addCustomUtility: () => void; removeCustomUtility: (u: string) => void
 }) {
   const { t } = useTranslation('admin')
+  const [descLang, setDescLang] = useState<'en' | 'es'>('en')
   const features          = form.features as string[]
   const tags              = form.tags as string[]
   const videoLinks        = form.video_links as string[]
@@ -261,8 +262,23 @@ function AdminFormBody({
             </div>
           </div>
           <div>
-            <Lbl>{t('submit_listing.lbl_description')}</Lbl>
-            <RichTextEditor value={form.description as string} onChange={v => set('description', v)} tone={tone} />
+            <div className="flex items-center justify-between mb-1.5">
+              <Lbl>{t('submit_listing.lbl_description')}</Lbl>
+              <div className="flex items-center gap-0.5 rounded-lg border border-line p-0.5">
+                {(['en', 'es'] as const).map(lang => (
+                  <button key={lang} type="button" onClick={() => setDescLang(lang)}
+                    className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide transition-colors"
+                    style={{ background: descLang === lang ? tone : 'transparent', color: descLang === lang ? 'white' : '#64748b' }}>
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {descLang === 'en' ? (
+              <RichTextEditor value={form.description as string} onChange={v => set('description', v)} tone={tone} />
+            ) : (
+              <RichTextEditor value={(form.description_es as string) ?? ''} onChange={v => set('description_es', v)} tone={tone} />
+            )}
           </div>
         </div>
       </Sec>
@@ -652,7 +668,7 @@ const CO_LISTING_STATUSES = [
 
 const EMPTY_FORM = {
   title: '', type: 'villa', transaction: 'sale', location: '', price: '',
-  description: '', bedrooms: '', bathrooms: '', area_sqft: '', lot_size_sqft: '',
+  description: '', description_es: '', bedrooms: '', bathrooms: '', area_sqft: '', lot_size_sqft: '',
   construction_status: '', year_built: '', roi: '',
   seller_financing: false, hoa: false, hoa_fee: '', tax_exempt: false, gated_community: false,
   features: [] as string[], maps_url: '', latitude: '', longitude: '',
@@ -762,6 +778,7 @@ export function AdminSubmitListing({ go, tone }: { go: (v: string) => void; tone
       const isRent = form.transaction === 'rent'
       await submitListing({
         title: form.title.trim(), description: form.description || undefined,
+        description_es: form.description_es || undefined,
         type: form.type, transaction: form.transaction,
         price: priceUSD, location: form.location,
         bedrooms: form.bedrooms ? parseInt(form.bedrooms) : undefined,
@@ -853,6 +870,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
     location:            listing.location,
     price:               String(listing.price),
     description:         listing.description ?? '',
+    description_es:      listing.description_es ?? '',
     bedrooms:            listing.bedrooms      != null ? String(listing.bedrooms)      : '',
     bathrooms:           listing.bathrooms     != null ? String(listing.bathrooms)     : '',
     area_sqft:           listing.area_sqft     != null ? String(listing.area_sqft)     : '',
@@ -976,6 +994,7 @@ export function AdminEditListing({ listing, onBack, onSaved }: {
       const isRent = form.transaction === 'rent'
       const updated = await updateListing(listing.id, {
         title: form.title.trim(), description: form.description || undefined,
+        description_es: form.description_es || undefined,
         type: form.type, transaction: form.transaction,
         price: priceUSD, location: form.location,
         bedrooms: form.bedrooms ? parseInt(form.bedrooms) : undefined,

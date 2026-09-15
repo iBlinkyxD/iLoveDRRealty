@@ -209,6 +209,7 @@ function FormSections({
 
   const [customInput, setCustomInput] = useState('')
   const [customUtilityInput, setCustomUtilityInput] = useState('')
+  const [descLang, setDescLang] = useState<'en' | 'es'>('en')
   const customFeatures  = features.filter(f => !FEATURES.includes(f))
   const customUtilities = includedUtilities.filter(u => !INCLUDED_UTILITIES.includes(u))
 
@@ -365,12 +366,31 @@ function FormSections({
           </div>
 
           <div>
-            <Lbl>{t('submit_listing_page.field_description')}</Lbl>
-            <RichTextEditor
-              value={form.description as string}
-              onChange={v => set('description', v)}
-              tone={tone}
-            />
+            <div className="flex items-center justify-between mb-1.5">
+              <Lbl>{t('submit_listing_page.field_description')}</Lbl>
+              <div className="flex items-center gap-0.5 rounded-lg border border-line p-0.5">
+                {(['en', 'es'] as const).map(lang => (
+                  <button key={lang} type="button" onClick={() => setDescLang(lang)}
+                    className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide transition-colors"
+                    style={{ background: descLang === lang ? tone : 'transparent', color: descLang === lang ? 'white' : '#64748b' }}>
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {descLang === 'en' ? (
+              <RichTextEditor
+                value={form.description as string}
+                onChange={v => set('description', v)}
+                tone={tone}
+              />
+            ) : (
+              <RichTextEditor
+                value={(form.description_es as string) ?? ''}
+                onChange={v => set('description_es', v)}
+                tone={tone}
+              />
+            )}
           </div>
         </div>
       </Sec>
@@ -847,7 +867,7 @@ function FormSections({
 
 const EMPTY_FORM = {
   title: '', type: 'villa', transaction: 'sale', location: '', price: '',
-  description: '', bedrooms: '', bathrooms: '', area_sqft: '', lot_size_sqft: '',
+  description: '', description_es: '', bedrooms: '', bathrooms: '', area_sqft: '', lot_size_sqft: '',
   construction_status: '', year_built: '', roi: '',
   seller_financing: false, hoa: false, hoa_fee: '', tax_exempt: false, gated_community: false,
   features: [] as string[], maps_url: '', latitude: '', longitude: '',
@@ -935,6 +955,7 @@ export function SubmitListing({ go, tone }: { go: (v: string) => void; tone: str
       await submitListing({
         title:               form.title.trim(),
         description:         form.description || undefined,
+        description_es:      form.description_es || undefined,
         type:                form.type,
         transaction:         form.transaction,
         price:               priceUSD,
@@ -1041,6 +1062,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
     location:            listing.location,
     price:               String(listing.price),
     description:         listing.description ?? '',
+    description_es:      listing.description_es ?? '',
     bedrooms:            listing.bedrooms      != null ? String(listing.bedrooms)      : '',
     bathrooms:           listing.bathrooms     != null ? String(listing.bathrooms)     : '',
     area_sqft:           listing.area_sqft     != null ? String(listing.area_sqft)     : '',
@@ -1138,6 +1160,7 @@ export function EditListing({ listing, tone, onBack, onSaved }: {
       const updated = await updateListing(listing.id, {
         title:               form.title.trim(),
         description:         form.description || undefined,
+        description_es:      form.description_es || undefined,
         type:                form.type,
         transaction:         form.transaction,
         price:               priceUSD,
