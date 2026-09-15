@@ -1,7 +1,7 @@
 'use client'
 import { useNav } from '../hooks/useNav'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { useState, useMemo, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { BedDouble, Bath, Maximize2, MapPin, Heart, TrendingUp, SlidersHorizontal } from 'lucide-react'
 import { fmt, fmtDOP, type Listing } from '../data/listings'
 import { fetchListings } from '../api/listings'
@@ -9,7 +9,7 @@ import { supabaseImgUrl } from '../api/imgUrl'
 import { getMySavedIds, saveHome, unsaveHome } from '../api/savedHomes'
 import { SearchFilterSidebar } from '../components/SearchFilterSidebar'
 import { SearchMapSidebar } from '../components/SearchMapSidebar'
-import { PRICE_MAX } from '../data/searchData'
+import { PRICE_MAX, FEATURES } from '../data/searchData'
 import { useTranslation } from 'react-i18next'
 
 type TagTone = 'sand' | 'coral' | 'sea' | 'gold' | 'green'
@@ -21,16 +21,59 @@ const TONE_CLASSES: Record<TagTone, string> = {
   green: 'bg-[#1f7a3d] text-white border border-[#1f7a3d]',
 }
 
-function regionOf(l: Listing): string {
-  const r = l.region
-  if (/Punta Cana/.test(r))                            return 'Punta Cana'
-  if (/Cap Cana/.test(r))                              return 'Cap Cana'
-  if (/Santo Domingo|SD Este|Naco|Piantini/.test(r))   return 'Santo Domingo'
-  if (/Las Terrenas|Saman/.test(r))                    return 'Las Terrenas'
-  if (/Sos[uú]a/.test(r))                              return 'Sosúa'
-  if (/Cabarete/.test(r))                              return 'Cabarete'
-  if (/Puerto Plata/.test(r))                          return 'Puerto Plata'
-  return r
+function pageWindow(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages = new Set([1, total, current - 1, current, current + 1])
+  const sorted = [...pages].filter(p => p >= 1 && p <= total).sort((a, b) => a - b)
+  const out: (number | '…')[] = []
+  let prev = 0
+  for (const p of sorted) {
+    if (prev && p - prev > 1) out.push('…')
+    out.push(p)
+    prev = p
+  }
+  return out
+}
+
+function PaginationBar({
+  page, totalPages, border, onPrev, onNext, onSetPage,
+}: {
+  page: number; totalPages: number; border: 'border-b' | 'border-t'
+  onPrev: () => void; onNext: () => void; onSetPage: (p: number) => void
+}) {
+  const { t } = useTranslation('search')
+  if (totalPages <= 1) return null
+  return (
+    <div className={`flex items-center justify-center gap-1.5 py-4 flex-wrap ${border} border-line-soft`}>
+      <button
+        disabled={page <= 1}
+        onClick={() => { onPrev(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+        className="py-2 px-3.5 rounded-full border border-line bg-paper text-ink text-3.25 font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {t('pagination.prev')}
+      </button>
+      {pageWindow(page, totalPages).map((p, i) =>
+        p === '…' ? (
+          <span key={`e${i}`} className="px-1 text-dim text-3.25">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => { onSetPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            className={`w-9 h-9 rounded-full text-3.25 font-semibold cursor-pointer ${p === page ? 'bg-ink text-paper' : 'bg-paper border border-line text-ink'}`}
+          >
+            {p}
+          </button>
+        )
+      )}
+      <button
+        disabled={page >= totalPages}
+        onClick={() => { onNext(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+        className="py-2 px-3.5 rounded-full border border-line bg-paper text-ink text-3.25 font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {t('pagination.next')}
+      </button>
+    </div>
+  )
 }
 
 const titleCase = (s: string) =>
@@ -126,8 +169,17 @@ export default function Search() {
   const searchParams = useSearchParams()
   const router   = useRouter()
   const pathname = usePathname()
-  const [listings, setListings] = useState<Listing[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const PAGE_SIZE = 24
+  const [listings,    setListings]    = useState<Listing[]>([])
+  const [total,       setTotal]       = useState(0)
+  const [medianPrice, setMedianPrice] = useState<number | null>(null)
+  const [avgRoi,      setAvgRoi]      = useState<number | null>(null)
+  const [alsoLike,    setAlsoLike]    = useState<Listing[]>([])
+  const [loading,     setLoading]     = useState(true)
+  const [page,        setPage]        = useState(() => {
+    const p = searchParams.get('page')
+    return p ? Math.max(1, Number(p)) : 1
+  })
   const [purpose,  setPurpose]  = useState<'sale' | 'rent' | 'investment'>(() => {
     const p = searchParams.get('purpose')
     return (p === 'rent' || p === 'investment') ? p : 'sale'
@@ -161,12 +213,20 @@ export default function Search() {
   const [savedIds,    setSavedIds]    = useState<Set<string>>(new Set())
   const [isLoggedIn,  setIsLoggedIn]  = useState(false)
 
+  // Price/ROI sliders fire on every drag pixel — debounce them before they
+  // trigger a server refetch. Discrete filters (purpose, type, region, beds,
+  // sort, amenity toggles) refetch immediately.
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState(minPrice)
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState(maxPrice)
+  const [debouncedMinROI,   setDebouncedMinROI]   = useState(minROI)
   useEffect(() => {
-    fetchListings()
-      .then(setListings)
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+    const timer = setTimeout(() => {
+      setDebouncedMinPrice(minPrice)
+      setDebouncedMaxPrice(maxPrice)
+      setDebouncedMinROI(minROI)
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [minPrice, maxPrice, minROI])
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -207,62 +267,60 @@ export default function Search() {
     if (beds    !== 'any')         params.set('beds',     beds)
     if (sort    !== 'new')         params.set('sort',     sort)
     if (minROI  > 0)               params.set('roi',      String(minROI))
+    if (page    > 1)               params.set('page',     String(page))
     const qs = params.toString()
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-  }, [purpose, type, region, minPrice, maxPrice, beds, sort, minROI, pathname, router])
+  }, [purpose, type, region, minPrice, maxPrice, beds, sort, minROI, page, pathname, router])
 
-  const allAmenities = useMemo(() => {
-    const seen = new Set<string>()
-    listings.forEach(l => l.features.forEach(f => seen.add(f)))
-    return [...seen].sort()
-  }, [listings])
+  // Any filter change resets to page 1. `page` is deliberately excluded from
+  // this effect's own deps — only filter changes should trigger the reset.
+  useEffect(() => {
+    setPage(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purpose, type, region, debouncedMinPrice, debouncedMaxPrice, beds, debouncedMinROI, sort, amenities])
 
-  // A max at (or above) the top of the slider reads as "$3M+" — treat it as no
-  // upper bound so listings priced above it are not silently filtered out.
-  const priceCeiling = maxPrice >= PRICE_MAX ? Infinity : maxPrice
+  useEffect(() => {
+    setLoading(true)
+    fetchListings({
+      page,
+      pageSize: PAGE_SIZE,
+      purpose: purpose === 'sale' ? undefined : purpose,
+      type: type === 'All' ? undefined : type,
+      region: region ?? undefined,
+      minPrice: debouncedMinPrice > 0 ? debouncedMinPrice : undefined,
+      maxPrice: debouncedMaxPrice < PRICE_MAX ? debouncedMaxPrice : undefined,
+      beds: beds === 'any' ? undefined : Number(beds),
+      minRoi: debouncedMinROI > 0 ? debouncedMinROI : undefined,
+      features: amenities.size > 0 ? [...amenities] : undefined,
+      sort,
+    })
+      .then(res => {
+        setListings(res.items)
+        setTotal(res.total)
+        setMedianPrice(res.medianPrice)
+        setAvgRoi(res.avgRoi)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [page, purpose, type, region, debouncedMinPrice, debouncedMaxPrice, beds, debouncedMinROI, amenities, sort])
 
-  const results = useMemo(() => {
-    let r = listings.filter(l =>
-      (purpose === 'sale' || l.purpose === purpose || (purpose === 'investment' && l.roi >= 7)) &&
-      (type === 'All' || l.type === type) &&
-      (!region || regionOf(l) === region) &&
-      l.roi >= minROI &&
-      (beds === 'any' || l.bd >= +beds) &&
-      (l.purpose === 'rent' || (l.price >= minPrice && l.price <= priceCeiling)) &&
-      (amenities.size === 0 || [...amenities].every(a => l.features.includes(a)))
-    )
-    if (sort === 'new')  r = [...r].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
-    if (sort === 'low')  r = [...r].sort((a, b) => a.price - b.price)
-    if (sort === 'high') r = [...r].sort((a, b) => b.price - a.price)
-    if (sort === 'roi')  r = [...r].sort((a, b) => b.roi   - a.roi)
-    return r
-  }, [listings, purpose, type, minPrice, priceCeiling, sort, region, minROI, beds, amenities])
+  // "You might also like": a handful of nearby suggestions outside the current
+  // page's results — falls back to non-regional suggestions if none are nearby.
+  useEffect(() => {
+    const ids = listings.map(l => l.id)
+    if (!ids.length) { setAlsoLike([]); return }
+    let cancelled = false
+    const tryFetch = (withRegion: boolean) =>
+      fetchListings({ region: withRegion ? (region ?? undefined) : undefined, excludeIds: ids, pageSize: 3, includeAggregates: false })
+    ;(region ? tryFetch(true) : tryFetch(false))
+      .then(res => (region && res.items.length === 0) ? tryFetch(false) : res)
+      .then(res => { if (!cancelled) setAlsoLike(res.items) })
+      .catch(() => { if (!cancelled) setAlsoLike([]) })
+    return () => { cancelled = true }
+  }, [listings, region])
 
-  const insights = useMemo(() => {
-    if (!results.length) return null
-    const avg    = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length
-    const median = (xs: number[]) => {
-      const s = [...xs].sort((a, b) => a - b)
-      return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2
-    }
-    const sales  = results.filter(l => l.purpose === 'sale')
-    const yields = results.filter(l => l.roi > 0).map(l => l.roi)
-    return {
-      count:    results.length,
-      median:   sales.length  ? median(sales.map(l => l.price)) : 0,
-      avgYield: yields.length ? avg(yields) : 0,
-    }
-  }, [results])
-
-  const alsoLike = useMemo(() => {
-    const ids  = new Set(results.map(l => l.id))
-    const rest = listings.filter(l => !ids.has(l.id))
-    if (region) {
-      const nearby = rest.filter(l => regionOf(l) === region)
-      return nearby.length ? nearby.slice(0, 3) : rest.slice(0, 3)
-    }
-    return rest.slice(0, 3)
-  }, [listings, results, region])
+  const insights = total > 0 ? { count: total, median: medianPrice ?? 0, avgYield: avgRoi ?? 0 } : null
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const chips: { label: string; clear: () => void }[] = []
   if (purpose !== 'sale') chips.push({ label: purpose === 'rent' ? t('chips.rent') : t('chips.investment'), clear: () => setPurpose('sale') })
@@ -283,7 +341,7 @@ export default function Search() {
   const filterProps = {
     type, purpose, minPrice, maxPrice, beds, region, minROI, amenities, invFlags,
     setType, setPurpose, setMinPrice, setMaxPrice, setBeds, setRegion, setMinROI, setAmenities, setInvFlags,
-    allAmenities, chips, resultsCount: results.length, clearAll,
+    allAmenities: FEATURES, chips, resultsCount: total, clearAll,
   }
 
   return (
@@ -296,7 +354,7 @@ export default function Search() {
       <main className="min-w-0">
         <div className="flex items-start justify-between flex-wrap gap-3 mb-3.5">
           <h1 className="font-sans text-5 sm:text-6.5 font-semibold text-ink leading-[1.1] m-0">
-            {t('results_count', { count: results.length })}{' '}
+            {t('results_count', { count: total })}{' '}
             <span className="text-dim text-3.25 sm:text-3.75 font-sans font-normal">
               {region ? t('location_in', { region }) : t('location_across')}
             </span>
@@ -366,20 +424,30 @@ export default function Search() {
               </div>
             ))}
           </div>
-        ) : results.length === 0 ? (
+        ) : listings.length === 0 ? (
           <div className="p-15 text-center text-dim border border-dashed border-line rounded-2xl">
             {t('empty')}
           </div>
         ) : (
-          <div className={`grid gap-4.5 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
-            {results.map(l => <PropertyCard key={l.id} l={l} go={go} onHover={setHovered} currency={currency} dopRate={dopRate} savedIds={savedIds} onToggleSave={handleToggleSave} />)}
-          </div>
+          <>
+            <PaginationBar
+              page={page} totalPages={totalPages} border="border-b"
+              onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} onSetPage={setPage}
+            />
+            <div className={`grid gap-4.5 ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+              {listings.map(l => <PropertyCard key={l.id} l={l} go={go} onHover={setHovered} currency={currency} dopRate={dopRate} savedIds={savedIds} onToggleSave={handleToggleSave} />)}
+            </div>
+            <PaginationBar
+              page={page} totalPages={totalPages} border="border-t"
+              onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} onSetPage={setPage}
+            />
+          </>
         )}
       </main>
 
       <SearchMapSidebar
         hovered={hovered}
-        results={results}
+        results={listings}
         alsoLike={alsoLike}
         insights={insights}
         currency={currency}

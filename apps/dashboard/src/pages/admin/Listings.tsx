@@ -7,13 +7,13 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
-  getAdminListings, approveAdminListing, rejectAdminListing, archiveAdminListing,
+  getAdminListings, getAdminListing, approveAdminListing, rejectAdminListing, archiveAdminListing,
   getAdminListingEdits, approveListingEdit, rejectListingEdit,
   getAdminDealRequests, approveDealRequest, rejectDealRequest,
   clearListingDeal, setListingDeal, assignAdminListing,
-  getAdminActivityLog, getAdminUsers,
+  getAdminActivityLog, getAdminUsers, getAdminStats,
 } from '../../api/admin'
-import type { AdminListing, AdminListingEdit, ActivityEntry, DealRequest, AdminUser } from '../../api/admin'
+import type { AdminListing, AdminListingEdit, ActivityEntry, DealRequest, AdminUser, AdminStats } from '../../api/admin'
 import { AdminEditListing, AdminSubmitListing } from './SubmitListing'
 import { TONE, FilterPills } from './shared'
 import { ListingDetailPanel } from '../../components/admin/ListingDetailPanel'
@@ -23,6 +23,77 @@ import { ConfirmModal } from '../../components/shared/ConfirmModal'
 
 const titleCase = (s: string) =>
   s === s.toUpperCase() ? s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : s
+
+function pageWindow(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages = new Set([1, total, current - 1, current, current + 1])
+  const sorted = [...pages].filter(p => p >= 1 && p <= total).sort((a, b) => a - b)
+  const out: (number | '…')[] = []
+  let prev = 0
+  for (const p of sorted) {
+    if (prev && p - prev > 1) out.push('…')
+    out.push(p)
+    prev = p
+  }
+  return out
+}
+
+function PaginationBar({
+  page, totalPages, total, pageSize, tone, border, onPrev, onNext, onSetPage,
+}: {
+  page: number; totalPages: number; total: number; pageSize: number; tone: string
+  border: 'border-b' | 'border-t'
+  onPrev: () => void; onNext: () => void; onSetPage: (p: number) => void
+}) {
+  const { t } = useTranslation('admin')
+  return (
+    <div className={`flex items-center justify-between gap-3 flex-wrap px-4 sm:px-5.5 py-3.5 ${border} border-line`}>
+      <span className="text-[12px] text-dim">
+        {t('listings_page.showing_range', {
+          from: total === 0 ? 0 : (page - 1) * pageSize + 1,
+          to: Math.min(page * pageSize, total),
+          total,
+        })}
+      </span>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1.5">
+          <button
+            disabled={page <= 1}
+            onClick={onPrev}
+            className="py-1.5 px-3 rounded-lg border border-line bg-paper text-ink text-[12px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {t('listings_page.prev')}
+          </button>
+          {pageWindow(page, totalPages).map((p, i) =>
+            p === '…' ? (
+              <span key={`e${i}`} className="px-1 text-dim text-[12px]">…</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => onSetPage(p)}
+                className="w-8 h-8 rounded-lg text-[12px] font-semibold cursor-pointer"
+                style={{
+                  background: p === page ? tone : 'transparent',
+                  color: p === page ? '#fff' : '#33425f',
+                  border: `1px solid ${p === page ? tone : '#e4ddcf'}`,
+                }}
+              >
+                {p}
+              </button>
+            )
+          )}
+          <button
+            disabled={page >= totalPages}
+            onClick={onNext}
+            className="py-1.5 px-3 rounded-lg border border-line bg-paper text-ink text-[12px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {t('listings_page.next')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; label: string; accent: string }> = {
   pending_approval: { color: '#a16207', bg: '#fef9c3', label: 'Pending',  accent: '#f0a800' },
@@ -174,17 +245,25 @@ const LISTING_EVENTS = new Set(['listing_approved', 'listing_rejected', 'listing
 const STATUS_FILTERS = ['All', 'Active', 'Rejected', 'Archived'] as const
 const CO_LISTING_FILTERS = ['All', 'Co-Listed', 'No Co-Listing'] as const
 const COLS = 'grid-cols-[2fr_0.9fr_1fr_1fr_1.6fr_1fr_40px]'
+const PAGE_SIZE = 50
 
 export function AdminListings() {
   const { t } = useTranslation('admin')
-  const [all,          setAll]          = useState<AdminListing[]>([])
+  const [mainItems,    setMainItems]    = useState<AdminListing[]>([])
+  const [mainTotal,    setMainTotal]    = useState(0)
+  const [pendingItems, setPendingItems] = useState<AdminListing[]>([])
+  const [dealItems,    setDealItems]    = useState<AdminListing[]>([])
+  const [stats,        setStats]        = useState<AdminStats | null>(null)
+  const [page,         setPage]         = useState(1)
   const [edits,        setEdits]        = useState<AdminListingEdit[]>([])
   const [dealRequests, setDealRequests] = useState<DealRequest[]>([])
   const [realtors,     setRealtors]     = useState<AdminUser[]>([])
   const [filter,       setFilter]       = useState<string>('All')
   const [coFilter,     setCoFilter]     = useState<string>('All')
   const [query,        setQuery]        = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [loading,      setLoading]      = useState(true)
+  const [tableLoading, setTableLoading] = useState(true)
   const [working,      setWorking]      = useState(false)
   const [rejectingDealId, setRejectingDealId] = useState<string | null>(null)
   const [dealRejectReason, setDealRejectReason] = useState('')
@@ -202,65 +281,88 @@ export function AdminListings() {
   const [actLoading,   setActLoading]   = useState(true)
   const [searchParams, setSearchParams] = useSearchParams()
 
+  async function loadMainTable() {
+    setTableLoading(true)
+    const res = await getAdminListings({
+      page, pageSize: PAGE_SIZE,
+      status: filter === 'All' ? undefined : filter.toLowerCase(),
+      excludeStatus: filter === 'All' ? 'pending_approval' : undefined,
+      coListingEnabled: coFilter === 'All' ? undefined : coFilter === 'Co-Listed',
+      q: debouncedQuery.trim() || undefined,
+    })
+    setMainItems(res.items)
+    setMainTotal(res.total)
+    setTableLoading(false)
+  }
+
   async function load() {
     setLoading(true)
     setActLoading(true)
-    const [data, editData, dealData, act, realtorUsers, adminUsers] = await Promise.all([
-      getAdminListings(),
+    const [pendingRes, dealRes, editData, dealData, act, realtorUsers, adminUsers, statsRes] = await Promise.all([
+      getAdminListings({ status: 'pending_approval', pageSize: 200 }),
+      getAdminListings({ isDeal: true, pageSize: 50 }),
       getAdminListingEdits(),
       getAdminDealRequests('pending'),
       getAdminActivityLog(25),
       getAdminUsers('realtor'),
       getAdminUsers('admin'),
+      getAdminStats(),
     ])
-    setAll(data)
+    setPendingItems(pendingRes.items)
+    setDealItems(dealRes.items)
     setEdits(editData)
     setDealRequests(dealData)
     setActivity(act)
     setRealtors([...realtorUsers, ...adminUsers])
+    setStats(statsRes)
     setLoading(false)
     setActLoading(false)
+    await loadMainTable()
   }
 
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const didMountTable = useRef(false)
+  useEffect(() => {
+    if (!didMountTable.current) { didMountTable.current = true; return }
+    loadMainTable()
+  }, [page, filter, coFilter, debouncedQuery]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 350)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  // Any filter/search change resets to page 1; `page` is deliberately excluded
+  // from these deps so this only fires on an actual filter change.
+  useEffect(() => {
+    setPage(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, coFilter, debouncedQuery])
+
   useEffect(() => {
     const openId = searchParams.get('openId')
-    if (!openId || all.length === 0) return
-    const listing = all.find(l => l.id === openId)
-    if (listing) {
-      setSelected(listing)
-      setSearchParams({}, { replace: true })
-    }
-  }, [all]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!openId) return
+    getAdminListing(openId)
+      .then(listing => { setSelected(listing); setSearchParams({}, { replace: true }) })
+      .catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const pending  = all.filter(l => l.status === 'pending_approval')
-  const nonPending = all.filter(l => l.status !== 'pending_approval')
+  function updateListingEverywhere(updated: AdminListing) {
+    const apply = (l: AdminListing) => l.id === updated.id ? updated : l
+    setMainItems(prev => prev.map(apply))
+    setPendingItems(prev => prev.map(apply))
+    setDealItems(prev => prev.map(apply))
+  }
 
-  const afterFilter = filter === 'All' ? nonPending : nonPending.filter(l => {
-    if (filter === 'Active')   return l.status === 'active'
-    if (filter === 'Rejected') return l.status === 'rejected'
-    if (filter === 'Archived') return l.status === 'archived'
-    return true
-  })
-
-  const afterCoFilter = coFilter === 'All' ? afterFilter : afterFilter.filter(l =>
-    coFilter === 'Co-Listed' ? l.co_listing_enabled : !l.co_listing_enabled
-  )
-
-  const visible = query.trim()
-    ? afterCoFilter.filter(l =>
-        l.title.toLowerCase().includes(query.toLowerCase()) ||
-        l.location.toLowerCase().includes(query.toLowerCase())
-      )
-    : afterCoFilter
+  const totalPages = Math.max(1, Math.ceil(mainTotal / PAGE_SIZE))
 
   const counts = {
-    total:    all.length,
-    pending:  pending.length,
-    active:   all.filter(l => l.status === 'active').length,
-    rejected: all.filter(l => l.status === 'rejected').length,
-    archived: all.filter(l => l.status === 'archived').length,
+    total:    (stats?.active_listings ?? 0) + (stats?.pending_listings ?? 0) + (stats?.rejected_listings ?? 0) + (stats?.archived_listings ?? 0),
+    pending:  stats?.pending_listings ?? 0,
+    active:   stats?.active_listings ?? 0,
+    rejected: stats?.rejected_listings ?? 0,
+    archived: stats?.archived_listings ?? 0,
     edits:    edits.length,
   }
 
@@ -349,7 +451,10 @@ export function AdminListings() {
       assigned_realtor_name: realtorId ? realtorName : null,
       assigned_realtor_email: realtorId ? realtorEmail : null,
     }
-    setAll(prev => prev.map(l => l.id === listingId ? { ...l, ...patch } : l))
+    const apply = (l: AdminListing) => l.id === listingId ? { ...l, ...patch } : l
+    setMainItems(prev => prev.map(apply))
+    setPendingItems(prev => prev.map(apply))
+    setDealItems(prev => prev.map(apply))
     setSelected(prev => prev && prev.id === listingId ? { ...prev, ...patch } : prev)
     toast.success(realtorId ? t('listings_page.toast_assigned') : t('listings_page.toast_unassigned'))
   }
@@ -406,7 +511,7 @@ export function AdminListings() {
         onBack={() => setEditing(false)}
         onSaved={(updated: AdminListing) => {
           const merged = { ...selected, ...updated }
-          setAll(prev => prev.map(l => l.id === merged.id ? merged : l))
+          updateListingEverywhere(merged)
           setSelected(merged)
           setEditing(false)
         }}
@@ -452,7 +557,7 @@ export function AdminListings() {
           <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
             <div className="font-sans text-[17px] font-bold text-ink">
               {t('listings_page.title')}
-              {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({visible.length})</span>}
+              {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({mainTotal})</span>}
             </div>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -482,16 +587,16 @@ export function AdminListings() {
           </div>
 
           {/* ── Pending Approval section ─────────────────────────────── */}
-          {!loading && pending.length > 0 && (
+          {!loading && pendingItems.length > 0 && (
             <div className="border-b border-line">
               <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
-                  {t('listings_page.pending_approval_banner', { count: pending.length })}
+                  {t('listings_page.pending_approval_banner', { count: pendingItems.length })}
                 </span>
               </div>
               <div className="divide-y divide-line-soft">
-                {pending.map(l => (
+                {pendingItems.map(l => (
                   <div key={l.id} className="px-4 sm:px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/70 transition-colors cursor-pointer" onClick={() => setSelected(l)}>
                     {l.images?.[0] ? (
                       <img src={l.images[0]} alt="" className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg object-cover shrink-0" />
@@ -582,17 +687,17 @@ export function AdminListings() {
           )}
 
           {/* ── Active Deals section ─────────────────────────────────── */}
-          {!loading && all.some(l => l.is_deal) && (
+          {!loading && dealItems.length > 0 && (
             <div className="border-b border-line">
               <div className="px-4 sm:px-5.5 py-2.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                 <Star size={11} fill="#f59e0b" style={{ color: '#f59e0b' }} />
                 <span className="text-[11px] font-bold uppercase tracking-[.07em] text-amber-700">
-                  {t('listings_page.active_deals_banner', { count: all.filter(l => l.is_deal).length })}
+                  {t('listings_page.active_deals_banner', { count: dealItems.length })}
                 </span>
               </div>
 
               <div className="divide-y divide-line-soft">
-                {all.filter(l => l.is_deal).map(l => (
+                {dealItems.map(l => (
                   <div key={l.id} className="px-4 sm:px-5.5 py-3 flex items-center gap-3 hover:bg-amber-50/50 transition-colors cursor-pointer" onClick={() => setSelected(l)}>
                     {l.images?.[0] ? (
                       <img src={l.images[0]} alt="" className="w-10 h-10 sm:w-14 sm:h-9 rounded-lg object-cover shrink-0" />
@@ -699,6 +804,14 @@ export function AdminListings() {
             </div>
           )}
 
+          {/* Pagination (top) */}
+          {!loading && !tableLoading && mainTotal > 0 && (
+            <PaginationBar
+              page={page} totalPages={totalPages} total={mainTotal} pageSize={PAGE_SIZE} tone={TONE} border="border-b"
+              onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} onSetPage={setPage}
+            />
+          )}
+
           {/* Desktop table header */}
           <div className={`hidden sm:grid ${COLS} px-5.5 py-2.5 border-b border-line bg-nav/5`}>
             {[t('listings_page.header_property'), t('listings_page.header_type'), t('listings_page.header_price'), t('listings_page.header_status'), t('listings_page.header_submitted_by'), t('listings_page.header_updated'), ''].map((h, i) => (
@@ -707,7 +820,7 @@ export function AdminListings() {
           </div>
 
           {/* Rows */}
-          {loading ? (
+          {loading || tableLoading ? (
             <div className="divide-y divide-line-soft">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="px-5.5 py-4 animate-pulse flex items-center gap-3">
@@ -719,13 +832,13 @@ export function AdminListings() {
                 </div>
               ))}
             </div>
-          ) : visible.length === 0 ? (
+          ) : mainItems.length === 0 ? (
             <div className="py-12 text-center text-sm text-dim">
               {query.trim() ? t('listings_page.no_results', { query }) : t('listings_page.no_listings')}
             </div>
           ) : (
             <div className="divide-y divide-line-soft">
-              {visible.map(l => (
+              {mainItems.map(l => (
                 <div key={l.id}>
                   {/* Desktop row */}
                   <div
@@ -805,6 +918,14 @@ export function AdminListings() {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && !tableLoading && mainTotal > 0 && (
+            <PaginationBar
+              page={page} totalPages={totalPages} total={mainTotal} pageSize={PAGE_SIZE} tone={TONE} border="border-t"
+              onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} onSetPage={setPage}
+            />
           )}
         </div>
       </div>{/* end left column */}

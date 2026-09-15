@@ -14,6 +14,10 @@
   "chip_beds": "{{beds}}+ beds",
   "chip_roi": "ROI {{roi}}%+",
   "empty": "No properties match these filters. Try widening your price range or clearing a region.",
+  "pagination": {
+    "prev": "Prev",
+    "next": "Next"
+  },
   "yield": "% yield",
   "per_month": " / mo",
   "chips": {

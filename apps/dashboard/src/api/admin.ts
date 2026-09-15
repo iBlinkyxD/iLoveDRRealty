@@ -37,6 +37,7 @@ export interface AdminListing {
   id: string
   title: string
   description: string | null
+  description_es: string | null
   type: string
   transaction: string
   price: number
@@ -94,10 +95,40 @@ export interface AdminListing {
   source_ref: string | null
 }
 
-export async function getAdminListings(status?: string): Promise<AdminListing[]> {
-  const res = await client.get<AdminListing[]>('/admin/listings', {
-    params: status ? { status } : undefined,
+export interface AdminListingsQuery {
+  page?: number
+  pageSize?: number
+  status?: string
+  excludeStatus?: string
+  coListingEnabled?: boolean
+  isDeal?: boolean
+  q?: string
+}
+
+export interface AdminListingsPage {
+  items: AdminListing[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export async function getAdminListings(query: AdminListingsQuery = {}): Promise<AdminListingsPage> {
+  const res = await client.get<AdminListingsPage>('/admin/listings', {
+    params: {
+      page: query.page,
+      page_size: query.pageSize,
+      status: query.status,
+      exclude_status: query.excludeStatus,
+      co_listing_enabled: query.coListingEnabled,
+      is_deal: query.isDeal,
+      q: query.q,
+    },
   })
+  return res.data
+}
+
+export async function getAdminListing(id: string): Promise<AdminListing> {
+  const res = await client.get<AdminListing>(`/admin/listings/${id}`)
   return res.data
 }
 
@@ -148,6 +179,8 @@ export async function rejectListingEdit(id: string, reason: string): Promise<voi
 export interface AdminStats {
   active_listings: number
   pending_listings: number
+  archived_listings: number
+  rejected_listings: number
   total_users: number
 }
 

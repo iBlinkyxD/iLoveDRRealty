@@ -154,8 +154,8 @@ export default function Landing() {
   }, [])
 
   useEffect(() => {
-    fetchListings().then(all => {
-      const shuffled = [...all]
+    fetchListings({ pageSize: 50, includeAggregates: false }).then(res => {
+      const shuffled = [...res.items]
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
         ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]

@@ -80,6 +80,9 @@
     "header_views":         "Views",
     "header_leads":         "Leads",
     "header_updated":       "Updated",
+    "showing_range":        "Showing {{from}}–{{to}} of {{total}}",
+    "prev":                 "Prev",
+    "next":                 "Next",
     "no_results":           "No results for \"{{query}}\"",
     "no_filter_listings":   "No {{filter}} listings."
   },

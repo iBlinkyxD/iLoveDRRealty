@@ -4,6 +4,7 @@ export interface Listing {
   id: string
   title: string
   description: string | null
+  description_es: string | null
   type: string
   transaction: string
   price: number
@@ -61,6 +62,7 @@ export interface Listing {
 export interface ListingUpdate {
   title?: string
   description?: string
+  description_es?: string
   type?: string
   transaction?: string
   price?: number
@@ -102,6 +104,7 @@ export interface ListingUpdate {
 export interface ListingCreate {
   title: string
   description?: string
+  description_es?: string
   type: string
   transaction: string
   price: number
@@ -156,6 +159,34 @@ export async function submitListing(data: ListingCreate): Promise<Listing> {
 
 export async function getMyListings(): Promise<Listing[]> {
   const res = await client.get<Listing[]>('/listings/mine')
+  return res.data
+}
+
+export interface MyListingsQuery {
+  page?: number
+  pageSize?: number
+  status?: string
+  q?: string
+  pendingReview?: boolean
+}
+
+export interface MyListingsPage {
+  items: Listing[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export async function getMyListingsPage(query: MyListingsQuery = {}): Promise<MyListingsPage> {
+  const res = await client.get<MyListingsPage>('/listings/mine/page', {
+    params: {
+      page: query.page,
+      page_size: query.pageSize,
+      status: query.status,
+      q: query.q,
+      pending_review: query.pendingReview,
+    },
+  })
   return res.data
 }
 

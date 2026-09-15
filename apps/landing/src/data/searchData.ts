@@ -49,6 +49,18 @@ export const OTHER_PROVINCES = DR_PROVINCES.filter(p => !POPULAR_AREAS.includes(
 export const PRICE_MAX = 3_000_000
 
 /**
+ * Amenity checkboxes for the search filter sidebar. A static list rather than
+ * derived from loaded listings, since search results are now server-paginated
+ * and no longer hold every listing client-side to scan. Kept in sync with the
+ * dashboard's listing form (apps/dashboard/src/pages/admin/SubmitListing.tsx)
+ * and the backend (realty-api/utils/listing_constants.py).
+ */
+export const FEATURES = [
+  'Pool', 'Ocean View', 'Beachfront', 'Oceanfront', 'Furnished', 'Beach Access',
+  'Mountain View', 'Parking', 'Gym', 'Smart Home', 'Backup Generator', 'Solar Panels',
+]
+
+/**
  * Provincial capitals — where a listing pins when it has no explicit lat/lng.
  * Capitals rather than geometric centroids, since that is where inventory
  * actually concentrates. The 10 popular areas are not here; their finer-grained

@@ -110,12 +110,12 @@ export function AdminHome({ go }: { go: (v: string, openId?: string) => void }) 
 
   useEffect(() => {
     Promise.all([
-      getAdminListings('pending_approval'),
+      getAdminListings({ status: 'pending_approval', pageSize: 50 }),
       getAdminUpgradeRequests('pending'),
       getAdminLeads({ status: 'new' }),
     ])
-      .then(([listings, upgrades, leads]) => {
-        setPendingListings(listings)
+      .then(([listingsPage, upgrades, leads]) => {
+        setPendingListings(listingsPage.items)
         setPendingUpgrades(upgrades)
         setNewLeads(leads)
       })

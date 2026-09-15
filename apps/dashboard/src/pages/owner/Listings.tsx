@@ -3,11 +3,82 @@ import {
   Building2, Search, MoreHorizontal, Home, Pencil, Trash2, EyeOff, MapPin, Star, Clock, MessageCircle, X, UserCircle,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { getMyListings, type Listing } from '../../api/listings'
+import { getMyListingsPage, type Listing } from '../../api/listings'
 import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
 import { submitLead } from '../../api/leads'
 import { getMe, getMyAgent } from '../../api/auth'
 import toast from 'react-hot-toast'
+
+function pageWindow(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages = new Set([1, total, current - 1, current, current + 1])
+  const sorted = [...pages].filter(p => p >= 1 && p <= total).sort((a, b) => a - b)
+  const out: (number | '…')[] = []
+  let prev = 0
+  for (const p of sorted) {
+    if (prev && p - prev > 1) out.push('…')
+    out.push(p)
+    prev = p
+  }
+  return out
+}
+
+function PaginationBar({
+  page, totalPages, total, pageSize, tone, border, onPrev, onNext, onSetPage,
+}: {
+  page: number; totalPages: number; total: number; pageSize: number; tone: string
+  border: 'border-b' | 'border-t'
+  onPrev: () => void; onNext: () => void; onSetPage: (p: number) => void
+}) {
+  const { t } = useTranslation('owner')
+  return (
+    <div className={`flex items-center justify-between gap-3 flex-wrap px-4 sm:px-5.5 py-3.5 ${border} border-line`}>
+      <span className="text-[12px] text-dim">
+        {t('listings_page.showing_range', {
+          from: total === 0 ? 0 : (page - 1) * pageSize + 1,
+          to: Math.min(page * pageSize, total),
+          total,
+        })}
+      </span>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1.5">
+          <button
+            disabled={page <= 1}
+            onClick={onPrev}
+            className="py-1.5 px-3 rounded-lg border border-line bg-paper text-ink text-[12px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {t('listings_page.prev')}
+          </button>
+          {pageWindow(page, totalPages).map((p, i) =>
+            p === '…' ? (
+              <span key={`e${i}`} className="px-1 text-dim text-[12px]">…</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => onSetPage(p)}
+                className="w-8 h-8 rounded-lg text-[12px] font-semibold cursor-pointer"
+                style={{
+                  background: p === page ? tone : 'transparent',
+                  color: p === page ? '#fff' : '#33425f',
+                  border: `1px solid ${p === page ? tone : '#e4ddcf'}`,
+                }}
+              >
+                {p}
+              </button>
+            )
+          )}
+          <button
+            disabled={page >= totalPages}
+            onClick={onNext}
+            className="py-1.5 px-3 rounded-lg border border-line bg-paper text-ink text-[12px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {t('listings_page.next')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 const STATUS_MAP: Record<string, { label: string; bg: string; color: string; filter: string }> = {
   active:           { label: 'Active',   bg: '#dcfce7', color: '#15803d', filter: 'Active'   },
@@ -267,24 +338,48 @@ function PendingReviewsCard({ items, tone, onSelect }: { items: Listing[]; tone:
 
 const COLS    = 'grid-cols-[2fr_0.8fr_1fr_1fr_0.7fr_0.7fr_1fr_1fr_40px]'
 const FILTERS = ['All', 'Active', 'Review', 'Rejected', 'Archived'] as const
+const PAGE_SIZE = 50
+
+// UI filter pill -> the DB status value it maps to (inverse of STATUS_MAP's `filter` field)
+function filterToStatus(f: string): string | undefined {
+  if (f === 'All') return undefined
+  if (f === 'Review') return 'pending_approval'
+  return f.toLowerCase()
+}
 
 export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => void }) {
   const { t } = useTranslation('owner')
-  const [listings, setListings] = useState<Listing[]>([])
+  const [mainItems, setMainItems] = useState<Listing[]>([])
+  const [mainTotal, setMainTotal] = useState(0)
+  const [pendingReviews, setPendingReviews] = useState<Listing[]>([])
+  const [page,     setPage]     = useState(1)
   const [agent, setAgent] = useState<{ name: string; email: string; phone: string | null } | null>(null)
   const [loading,  setLoading]  = useState(true)
+  const [tableLoading, setTableLoading] = useState(true)
   const [loadingAgent, setLoadingAgent] = useState(true)
   const [filter,   setFilter]   = useState<typeof FILTERS[number]>('All')
   const [query,    setQuery]    = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [selected,  setSelected]  = useState<Listing | null>(null)
   const [openDeal,  setOpenDeal]  = useState(false)
   const [requestChangeListing, setRequestChangeListing] = useState<Listing | null>(null)
 
-  function load() {
-    getMyListings()
-      .then(setListings)
-      .catch(() => {})
-      .finally(() => setLoading(false))
+  const statusParam = filterToStatus(filter)
+
+  async function loadMainTable() {
+    setTableLoading(true)
+    const res = await getMyListingsPage({ page, pageSize: PAGE_SIZE, status: statusParam, q: debouncedQuery.trim() || undefined })
+    setMainItems(res.items)
+    setMainTotal(res.total)
+    setTableLoading(false)
+  }
+
+  async function load() {
+    setLoading(true)
+    const reviewRes = await getMyListingsPage({ pendingReview: true, pageSize: 200 })
+    setPendingReviews(reviewRes.items)
+    setLoading(false)
+    await loadMainTable()
   }
 
   useEffect(() => {
@@ -292,20 +387,26 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
     getMyAgent().then(d => {
       if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null })
     }).catch(() => {}).finally(() => setLoadingAgent(false))
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const afterFilter = filter === 'All'
-    ? listings
-    : listings.filter(l => (STATUS_MAP[l.status]?.filter ?? l.status) === filter)
+  const didMountTable = useRef(false)
+  useEffect(() => {
+    if (!didMountTable.current) { didMountTable.current = true; return }
+    loadMainTable()
+  }, [page, filter, debouncedQuery]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const visible = query.trim()
-    ? afterFilter.filter(l =>
-        l.title.toLowerCase().includes(query.toLowerCase()) ||
-        l.location.toLowerCase().includes(query.toLowerCase())
-      )
-    : afterFilter
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 350)
+    return () => clearTimeout(timer)
+  }, [query])
 
-  const pendingReviews = listings.filter(l => l.has_pending_deal_request || l.has_pending_edit)
+  useEffect(() => {
+    setPage(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, debouncedQuery])
+
+  const totalPages = Math.max(1, Math.ceil(mainTotal / PAGE_SIZE))
+  const isEmptyOverall = mainTotal === 0 && filter === 'All' && !debouncedQuery.trim()
 
   return (
     <>
@@ -353,7 +454,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
         <div className="px-4 sm:px-5.5 py-4 border-b border-line space-y-3">
           <div className="font-sans text-[17px] font-bold text-ink">
             {t('listings_page.title')}
-            {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({visible.length})</span>}
+            {!loading && <span className="ml-2 text-[13px] font-normal text-dim">({mainTotal})</span>}
           </div>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2">
@@ -386,6 +487,14 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
           </div>
         </div>
 
+        {/* Pagination (top) */}
+        {!loading && !tableLoading && mainTotal > 0 && (
+          <PaginationBar
+            page={page} totalPages={totalPages} total={mainTotal} pageSize={PAGE_SIZE} tone={tone} border="border-b"
+            onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} onSetPage={setPage}
+          />
+        )}
+
         {/* Desktop table header */}
         <div className={`hidden sm:grid ${COLS} px-5.5 py-2.5 border-b border-line bg-nav/5`}>
           {[t('listings_page.header_property'), t('listings_page.header_type'), t('listings_page.header_price'), t('listings_page.header_status'), t('listings_page.header_views'), t('listings_page.header_leads'), t('listings_page.header_realtor'), t('listings_page.header_updated'), ''].map((h, i) => (
@@ -394,7 +503,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
         </div>
 
         {/* Body */}
-        {loading ? (
+        {loading || tableLoading ? (
           <div className="divide-y divide-line-soft">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="px-5.5 py-4 animate-pulse flex items-center gap-3">
@@ -406,7 +515,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
               </div>
             ))}
           </div>
-        ) : listings.length === 0 ? (
+        ) : isEmptyOverall ? (
           <div className="py-14 flex flex-col items-center gap-4">
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center"
@@ -421,13 +530,13 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
               </div>
             </div>
           </div>
-        ) : visible.length === 0 ? (
+        ) : mainItems.length === 0 ? (
           <div className="py-12 text-center text-sm text-dim">
             {query.trim() ? t('listings_page.no_results', { query }) : t('listings_page.no_filter_listings', { filter: filter.toLowerCase() })}
           </div>
         ) : (
           <div className="divide-y divide-line-soft">
-            {visible.map(l => (
+            {mainItems.map(l => (
               <div key={l.id}>
                 {/* Desktop row */}
                 <div
@@ -504,6 +613,14 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
               </div>
             ))}
           </div>
+        )}
+
+        {/* Pagination (bottom) */}
+        {!loading && !tableLoading && mainTotal > 0 && (
+          <PaginationBar
+            page={page} totalPages={totalPages} total={mainTotal} pageSize={PAGE_SIZE} tone={tone} border="border-t"
+            onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} onSetPage={setPage}
+          />
         )}
       </div>
 

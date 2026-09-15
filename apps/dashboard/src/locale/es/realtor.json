@@ -80,6 +80,9 @@
     "header_views":         "Vistas",
     "header_leads":         "Contactos",
     "header_updated":       "Actualizado",
+    "showing_range":        "Mostrando {{from}}–{{to}} de {{total}}",
+    "prev":                 "Anterior",
+    "next":                 "Siguiente",
     "no_results":           "Sin resultados para «{{query}}»",
     "no_filter_listings":   "Sin propiedades {{filter}}."
   },

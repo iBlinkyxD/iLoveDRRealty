@@ -113,9 +113,8 @@ export async function recordListingView(id: string): Promise<void> {
   await client.post(`/listings/${id}/view`)
 }
 
-export async function fetchListings(): Promise<Listing[]> {
-  const res = await client.get<ApiListing[]>('/listings')
-  return res.data.map(l => ({
+function mapApiListing(l: ApiListing): Listing {
+  return {
     id: l.id,
     title: l.title,
     region: l.location,
@@ -136,5 +135,67 @@ export async function fetchListings(): Promise<Listing[]> {
     deal_discount_value: l.deal_discount_value,
     deal_discount_type: l.deal_discount_type,
     created_at: l.created_at,
-  }))
+  }
+}
+
+export interface ListingsQuery {
+  page?: number
+  pageSize?: number
+  purpose?: 'rent' | 'investment'
+  type?: string
+  region?: string
+  minPrice?: number
+  maxPrice?: number
+  beds?: number
+  minRoi?: number
+  features?: string[]
+  sort?: 'new' | 'low' | 'high' | 'roi'
+  excludeIds?: string[]
+  includeAggregates?: boolean
+}
+
+export interface ListingsPage {
+  items: Listing[]
+  total: number
+  page: number
+  pageSize: number
+  medianPrice: number | null
+  avgRoi: number | null
+}
+
+interface ApiListingPage {
+  items: ApiListing[]
+  total: number
+  page: number
+  page_size: number
+  median_price: number | null
+  avg_roi: number | null
+}
+
+export async function fetchListings(q: ListingsQuery = {}): Promise<ListingsPage> {
+  const res = await client.get<ApiListingPage>('/listings', {
+    params: {
+      page: q.page,
+      page_size: q.pageSize,
+      purpose: q.purpose,
+      type: q.type,
+      region: q.region,
+      min_price: q.minPrice,
+      max_price: q.maxPrice,
+      beds: q.beds,
+      min_roi: q.minRoi,
+      features: q.features,
+      sort: q.sort,
+      exclude_ids: q.excludeIds,
+      include_aggregates: q.includeAggregates,
+    },
+  })
+  return {
+    items: res.data.items.map(mapApiListing),
+    total: res.data.total,
+    page: res.data.page,
+    pageSize: res.data.page_size,
+    medianPrice: res.data.median_price,
+    avgRoi: res.data.avg_roi,
+  }
 }
