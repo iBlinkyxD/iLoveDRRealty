@@ -262,7 +262,7 @@ function youtubeEmbedUrl(url: string): string | null {
 function PropertyDetailInner({ id: idProp }: { id?: string }) {
   const params = useSearchParams();
   const go = useNav();
-  const { t } = useTranslation('property_detail')
+  const { t, i18n } = useTranslation('property_detail')
   const id = idProp ?? params.get("id") ?? "";
   const canonicalUrl = id
     ? `${typeof window !== "undefined" ? window.location.origin : "https://ilovedrrealty.com"}/listing/${id}/`
@@ -681,7 +681,8 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
           {/* Description */}
           {(() => {
             const fallback = `<p>Nestled along the pristine shores of ${listing.location.split(",")[0]}, this property is an architectural masterpiece that redefines Caribbean luxury — an extraordinary residence offering an unparalleled fusion of indoor-outdoor living in one of the DR's most sought-after destinations.</p>`
-            const raw = listing.description ?? fallback
+            const localized = i18n.language === 'es' ? (listing.description_es || listing.description) : listing.description
+            const raw = localized ?? fallback
             const html = raw.trimStart().startsWith('<') ? raw : `<p>${raw}</p>`
             const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
             return (

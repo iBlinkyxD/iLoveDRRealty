@@ -44,6 +44,7 @@ export interface ApiListingDetail {
   id: string
   title: string
   description: string | null
+  description_es: string | null
   type: string
   transaction: string
   price: number
