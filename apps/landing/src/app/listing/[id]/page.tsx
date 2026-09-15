@@ -32,14 +32,20 @@ async function getListing(id: string): Promise<RawListing | null> {
 }
 
 export async function generateStaticParams(): Promise<{ id: string }[]> {
+  const ids: { id: string }[] = []
+  const pageSize = 60
   try {
-    const res = await fetch(`${API_URL}/listings`)
-    if (!res.ok) return []
-    const data = (await res.json()) as { id: string }[]
-    return data.map(l => ({ id: l.id }))
+    for (let page = 1; ; page++) {
+      const res = await fetch(`${API_URL}/listings?page=${page}&page_size=${pageSize}&include_aggregates=false`)
+      if (!res.ok) break
+      const data = (await res.json()) as { items: { id: string }[]; total: number }
+      ids.push(...data.items.map(l => ({ id: l.id })))
+      if (ids.length >= data.total || data.items.length < pageSize) break
+    }
   } catch {
-    return []
+    return ids
   }
+  return ids
 }
 
 export async function generateMetadata({
