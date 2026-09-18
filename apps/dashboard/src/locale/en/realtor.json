@@ -136,6 +136,8 @@
     "filter_status_closed":    "Closed"
   },
   "bookings_page": {
+    "action_failed": "Couldn't complete that action. Please try again.",
+    "dates_conflict": "Those dates are already taken by another confirmed booking. Decline this request instead.",
     "empty_title":       "No bookings yet",
     "empty_sub":         "Booking requests for your listings will appear here.",
     "section_pending":   "Pending — Action Required",

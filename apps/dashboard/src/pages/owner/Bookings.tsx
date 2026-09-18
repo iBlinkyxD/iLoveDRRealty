@@ -187,6 +187,9 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
   const [bookings, setBookings]   = useState<Booking[]>([])
   const [loading, setLoading]     = useState(true)
   const [acting, setActing]       = useState<string | null>(null)
+  const [actionError, setActionError] = useState('')
+  const actionErrorFor = (err: any) =>
+    err?.response?.status === 409 ? t('bookings_page.dates_conflict') : t('bookings_page.action_failed')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const panelBooking = selectedId ? (bookings.find(b => b.id === selectedId) ?? null) : null
 
@@ -199,10 +202,12 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
 
   async function handleAccept(id: string) {
     setActing(id)
+    setActionError('')
     try {
       await acceptBooking(id)
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'confirmed', payment_status: b.payment_status === 'authorized' ? 'captured' : b.payment_status } : b))
-    } catch {
+    } catch (err: any) {
+      setActionError(actionErrorFor(err))
     } finally {
       setActing(null)
     }
@@ -210,10 +215,12 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
 
   async function handleDecline(id: string) {
     setActing(id)
+    setActionError('')
     try {
       await declineBooking(id)
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled', payment_status: b.payment_status === 'authorized' ? 'voided' : b.payment_status } : b))
-    } catch {
+    } catch (err: any) {
+      setActionError(actionErrorFor(err))
     } finally {
       setActing(null)
     }
@@ -269,6 +276,13 @@ export function OwnerBookings({ go, isAdmin }: { go?: (v: string) => void; isAdm
 
   return (
     <>
+      {actionError && (
+        <div role="alert" data-testid="booking-action-error"
+          className="mb-3 flex items-start justify-between gap-3 rounded-xl border border-coral/30 bg-coral/10 px-4 py-2.5 text-[12.5px] font-semibold text-coral">
+          <span>{actionError}</span>
+          <button type="button" onClick={() => setActionError('')} aria-label="Dismiss" className="cursor-pointer border-0 bg-transparent text-coral">×</button>
+        </div>
+      )}
       <div className="bg-paper border border-line rounded-xl overflow-hidden divide-y divide-line">
         {pending.length > 0 && (
           <div>

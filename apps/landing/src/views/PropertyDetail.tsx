@@ -352,6 +352,13 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
   }, [aPrice, aDown, aRate, aTerm]);
   const todayStr = new Date().toISOString().split('T')[0]
   const isDateBooked = (ds: string) => bookedRanges.some(r => ds >= r.check_in && ds < r.check_out)
+  // Stays are half-open [check_in, check_out): checking in on someone else's check-out day is fine
+  const rangeBooked = (ci: string, co: string) => bookedRanges.some(r => ci < r.check_out && co > r.check_in)
+  // A check-out is only invalid if the stay it ends would run into a booked one
+  const isCheckoutBlocked = (co: string, ci: string) =>
+    ci ? rangeBooked(ci, co) : bookedRanges.some(r => co > r.check_in && co <= r.check_out)
+  const bookingErrorFor = (err: any) =>
+    err?.response?.status === 409 ? t('booking.error_date_unavailable') : t('booking.error_generic')
 
   const handleInquiry = async (e: FormEvent) => {
     e.preventDefault()
@@ -365,6 +372,10 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
 
   const handleBooking = async (e: FormEvent) => {
     e.preventDefault()
+    if (bookingForm.checkIn && bookingForm.checkOut && rangeBooked(bookingForm.checkIn, bookingForm.checkOut)) {
+      setBookingError(t('booking.error_date_unavailable'))
+      return
+    }
     setBookingSending(true)
     setBookingError('')
     try {
@@ -379,8 +390,8 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
         phone: bookingForm.phone || undefined,
       })
       setBookingSent(true)
-    } catch {
-      setBookingError(t('booking.error_generic'))
+    } catch (err: any) {
+      setBookingError(bookingErrorFor(err))
     } finally { setBookingSending(false) }
   }
 
@@ -1229,8 +1240,9 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                                 setBookingDateError(t('booking.error_date_unavailable'))
                                 setBookingForm(f => ({ ...f, checkIn: '' }))
                               } else {
-                                setBookingDateError('')
-                                setBookingForm(f => ({ ...f, checkIn: val, checkOut: f.checkOut && f.checkOut <= val ? '' : f.checkOut }))
+                                const spansBooked = !!bookingForm.checkOut && rangeBooked(val, bookingForm.checkOut)
+                                setBookingDateError(spansBooked ? t('booking.error_date_unavailable') : '')
+                                setBookingForm(f => ({ ...f, checkIn: val, checkOut: f.checkOut && (f.checkOut <= val || spansBooked) ? '' : f.checkOut }))
                               }
                             }}
                             className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
@@ -1241,7 +1253,7 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                             min={bookingForm.checkIn || todayStr}
                             onChange={e => {
                               const val = e.target.value
-                              if (isDateBooked(val)) {
+                              if (isCheckoutBlocked(val, bookingForm.checkIn)) {
                                 setBookingDateError(t('booking.error_date_unavailable'))
                                 setBookingForm(f => ({ ...f, checkOut: '' }))
                               } else {
@@ -1290,6 +1302,10 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                               setBookingError(t('booking.error_contact'))
                               throw new Error('contact required')
                             }
+                            if (rangeBooked(bookingForm.checkIn, bookingForm.checkOut)) {
+                              setBookingError(t('booking.error_date_unavailable'))
+                              throw new Error('dates unavailable')
+                            }
                             setBookingError('')
                             const result = await createPaymentAuth({ listing_id: id, check_in: bookingForm.checkIn, check_out: bookingForm.checkOut })
                             return result.paypal_order_id
@@ -1309,8 +1325,8 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                                 paypal_order_id: data.orderID,
                               })
                               setBookingSent(true)
-                            } catch {
-                              setBookingError(t('booking.error_generic'))
+                            } catch (err: any) {
+                              setBookingError(bookingErrorFor(err))
                             } finally {
                               setBookingSending(false)
                             }

@@ -78,6 +78,8 @@
     "view_all":      "Ver {{count}} contactos →"
   },
   "bookings_page": {
+    "action_failed": "No se pudo completar la acción. Inténtalo de nuevo.",
+    "dates_conflict": "Esas fechas ya están ocupadas por otra reserva confirmada. Rechaza esta solicitud.",
     "empty_title":      "Sin reservas aún",
     "empty_sub":        "Las solicitudes de reserva aparecerán aquí una vez que tu agente publique tu propiedad.",
     "section_pending":  "Pendientes — Acción requerida",

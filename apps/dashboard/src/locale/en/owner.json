@@ -78,6 +78,8 @@
     "view_all":      "View all {{count}} leads →"
   },
   "bookings_page": {
+    "action_failed": "Couldn't complete that action. Please try again.",
+    "dates_conflict": "Those dates are already taken by another confirmed booking. Decline this request instead.",
     "empty_title":      "No bookings yet",
     "empty_sub":        "Booking requests will appear here once your realtor publishes your listing.",
     "section_pending":  "Pending — Action Required",
