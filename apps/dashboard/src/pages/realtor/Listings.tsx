@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { getMyListingsPage, type Listing } from '../../api/listings'
 import { EditListing } from './SubmitListing'
 import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
+import type { UserInfo } from '../../lib/auth'
 
 function pageWindow(current: number, total: number): (number | '…')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
@@ -99,6 +100,16 @@ function fmtPrice(price: number): string {
   if (price >= 1_000_000)         return `$${(price / 1_000_000).toFixed(2)}M`
   if (price >= 1_000)             return `$${Math.round(price / 1_000)}K`
   return `$${price}`
+}
+
+function fmtListingPrice(l: Listing) {
+  if (l.transaction === 'rent') {
+    const parts = []
+    if (l.price_per_day)   parts.push(`$${Number(l.price_per_day).toLocaleString()}/day`)
+    if (l.price_per_month) parts.push(`$${Number(l.price_per_month).toLocaleString()}/mo`)
+    if (parts.length) return parts.join(' · ')
+  }
+  return fmtPrice(Number(l.price))
 }
 
 function fmtType(s: string) {
@@ -277,8 +288,9 @@ function filterToStatus(f: string): string | undefined {
 
 const PAGE_SIZE = 50
 
-export function RealtorListings({ tone, go }: { tone: string; go: (v: string) => void }) {
+export function RealtorListings({ tone, go, user }: { tone: string; go: (v: string) => void; user?: UserInfo }) {
   const { t } = useTranslation('realtor')
+  const calendlyLinked = !!user?.calendly_url
   const [mainItems, setMainItems] = useState<Listing[]>([])
   const [mainTotal, setMainTotal] = useState(0)
   const [pendingReviews, setPendingReviews] = useState<Listing[]>([])
@@ -370,8 +382,10 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                 />
               </div>
               <button
-                onClick={() => go('submit-listing')}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 cursor-pointer border-0"
+                onClick={() => calendlyLinked && go('submit-listing')}
+                disabled={!calendlyLinked}
+                title={!calendlyLinked ? t('calendar_page.connect_desc') : undefined}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 border-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: tone }}
               >
                 <Plus size={13} /> {t('listings_page.add_listing')}
@@ -439,8 +453,10 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
               </div>
             </div>
             <button
-              onClick={() => go('submit-listing')}
-              className="flex items-center gap-1.5 py-2 px-5 rounded-full text-[13px] font-bold cursor-pointer"
+              onClick={() => calendlyLinked && go('submit-listing')}
+              disabled={!calendlyLinked}
+              title={!calendlyLinked ? t('calendar_page.connect_desc') : undefined}
+              className="flex items-center gap-1.5 py-2 px-5 rounded-full text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               style={{ background: tone, color: '#fff' }}
             >
               <Plus size={14} strokeWidth={2.5} />
@@ -482,7 +498,7 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                   {/* Type */}
                   <div className="text-[12px] text-ink2">{fmtType(l.type)}</div>
                   {/* Price */}
-                  <div className="text-[13px] font-semibold text-ink">{fmtPrice(Number(l.price))}</div>
+                  <div className="text-[13px] font-semibold text-ink">{fmtListingPrice(l)}</div>
                   {/* Status */}
                   <div><StatusChip status={l.status} /></div>
                   {/* Views */}
@@ -521,7 +537,7 @@ export function RealtorListings({ tone, go }: { tone: string; go: (v: string) =>
                     </div>
                     <div className="flex flex-col items-end gap-1.5 shrink-0">
                       <StatusChip status={l.status} />
-                      <div className="text-[11px] text-dim">{fmtPrice(Number(l.price))}</div>
+                      <div className="text-[11px] text-dim">{fmtListingPrice(l)}</div>
                     </div>
                   </div>
                   <div className="text-[11px] text-dim mt-2">

@@ -75,6 +75,8 @@
     "per_mo_usd": "USD / mo",
     "assoc_fee": "Association Fee",
     "deposit": "Deposit",
+    "daily_rate": "Short-Term (Daily)",
+    "monthly_rate": "Mid / Long-Term (Monthly)",
     "request_book": "Request to book",
     "listed_by": "Listed by",
     "message_agent": "Message Agent",
@@ -86,16 +88,26 @@
     "send": "Send"
   },
   "booking": {
+    "name": "Your name",
+    "email": "Email",
+    "phone": "Phone (optional)",
     "check_in": "Check-in",
     "check_out": "Check-out",
     "guests": "Guests",
     "notes": "Notes (optional)",
-    "error_auth": "Please log in to request a booking.",
-    "error_generic": "Something went wrong. Please try again."
+    "error_generic": "Something went wrong. Please try again.",
+    "error_dates": "Please select check-in and check-out dates.",
+    "error_contact": "Please enter your name and email.",
+    "error_date_unavailable": "That date is already booked. Please choose another.",
+    "deposit_disclaimer": "Payment is non-refundable once your booking is accepted by the owner. Exceptions may be considered only in documented cases of natural disasters, government-issued travel bans, or serious medical emergencies that prevent travel. All refund requests must be submitted in writing to I Love DR Realty and are subject to individual review and approval.",
+    "rental_type": "Rental type",
+    "daily": "Daily",
+    "monthly": "Monthly"
   },
   "unit": {
     "per_mo": "/ mo",
-    "per_yr": "/ yr"
+    "per_yr": "/ yr",
+    "per_day": "/ day"
   },
   "inquiry": {
     "name": "Your name",

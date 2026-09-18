@@ -19,9 +19,12 @@ import { OwnerLeads } from './owner/Leads'
 import { Earnings } from './owner/Earnings'
 import { RealtorListings } from './realtor/Listings'
 import { SubmitListing } from './realtor/SubmitListing'
+import { OwnerSubmitListing } from './owner/SubmitListing'
 import { RealtorCalendar } from './realtor/Calendar'
 import { RealtorLeads } from './realtor/Leads'
 import { Pipeline } from './realtor/Pipeline'
+import { RealtorBookings } from './realtor/Bookings'
+import { AdminBookings } from './admin/Bookings'
 import { UserSettings } from './Settings'
 import { Upgrade } from './buyer/Upgrade'
 
@@ -90,8 +93,8 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
             })}
           </div>
           {activeTab === 'Buyer'   && <BuyerHome go={go} />}
-          {activeTab === 'Owner'   && (isLocked('Owner')   ? <LockedView tab="Owner"   tone={tabTone} go={go} /> : <OwnerHome   go={go} tone={tabTone} />)}
-          {activeTab === 'Realtor' && (isLocked('Realtor') ? <LockedView tab="Realtor" tone={tabTone} go={go} /> : <RealtorHome go={go} tone={tabTone} />)}
+          {activeTab === 'Owner'   && (isLocked('Owner')   ? <LockedView tab="Owner"   tone={tabTone} go={go} user={user} /> : <OwnerHome   go={go} tone={tabTone} user={user} />)}
+          {activeTab === 'Realtor' && (isLocked('Realtor') ? <LockedView tab="Realtor" tone={tabTone} go={go} user={user} /> : <RealtorHome go={go} tone={tabTone} user={user} />)}
         </div>
       )
     }
@@ -105,15 +108,18 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
       // Owner
       case 'earnings':   return <Earnings tone={tone} go={go} />
       // Realtor
-      case 'pipeline':   return <Pipeline />
+      case 'pipeline':   return <Pipeline user={user} />
       // Shared by role
-      case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} go={go} /> : <RealtorListings tone={tone} go={go} />
-      case 'submit-listing':  return <SubmitListing go={go} tone={tone} />
-      case 'calendar':   return role === 'Owner' ? <OwnerCalendar tone={tone} /> : <RealtorCalendar />
-      case 'bookings':        return <BuyerBookings />
-      case 'owner-bookings':  return <OwnerBookings go={go} />
-      case 'leads':      return role === 'Owner' ? <OwnerLeads tone={tone} go={go} /> : <RealtorLeads go={go} />
-      case 'settings':   return <UserSettings user={user} role={role} tone={tone} onUserUpdate={onUserUpdate} />
+      case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} go={go} /> : <RealtorListings tone={tone} go={go} user={user} />
+      case 'submit-listing':  return role === 'Owner' ? <OwnerSubmitListing go={go} tone={tone} /> : <SubmitListing go={go} tone={tone} />
+      case 'calendar':   return role === 'Owner' ? <OwnerCalendar user={user} go={go} /> : <RealtorCalendar user={user} go={go} />
+      case 'bookings':        return role === 'Admin' ? <AdminBookings /> : <BuyerBookings />
+      case 'owner-bookings':    return <OwnerBookings go={go} />
+      case 'realtor-bookings':  return <RealtorBookings />
+      case 'leads':      return role === 'Owner' ? <OwnerLeads tone={tone} go={go} /> : <RealtorLeads go={go} user={user} />
+      case 'settings':
+      case 'settings:connections':
+        return <UserSettings user={user} role={role} tone={tone} onUserUpdate={onUserUpdate} initialTab={view === 'settings:connections' ? 'connections' : undefined} />
       case 'upgrade':    return <Upgrade />
       default:           return null
     }

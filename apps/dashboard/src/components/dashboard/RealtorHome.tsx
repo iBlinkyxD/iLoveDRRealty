@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import {
-  Building2, ClipboardList, Shuffle, Home, MessageCircle, Plus, Clock, Star, Pencil, type LucideIcon,
+  Building2, ClipboardList, Home, MessageCircle, Plus, Clock, Star, Pencil, CalendarDays, type LucideIcon,
 } from 'lucide-react'
+import type { UserInfo } from '../../lib/auth'
 import { useTranslation } from 'react-i18next'
 import { Card, StatusPill, RoleKpiCard, fmtPrice } from './shared'
 import { getMyListings, type Listing } from '../../api/listings'
@@ -70,7 +71,7 @@ function avatarTone(name: string): string {
   return tones[h % tones.length]
 }
 
-export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: string }) {
+export function RealtorHome({ go, tone, user }: { go: (v: string) => void; tone: string; user: UserInfo }) {
   const { t } = useTranslation('realtor')
   const { t: tCommon } = useTranslation('common')
 
@@ -104,6 +105,24 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
 
   return (
     <>
+      {!user.calendly_url && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-5 rounded-xl border" style={{ background: '#f0f7ff', borderColor: '#bfdbfe' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#006BFF18' }}>
+            <CalendarDays size={16} style={{ color: '#006BFF' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-semibold text-ink">Link your Calendly</div>
+            <div className="text-[11.5px] text-dim mt-0.5">Connect your scheduling page to share it with assigned leads and show it on your Calendar tab.</div>
+          </div>
+          <button
+            onClick={() => go('settings:connections')}
+            className="shrink-0 px-3.5 py-1.5 rounded-lg text-[12px] font-bold text-white border-0 cursor-pointer"
+            style={{ background: '#006BFF' }}
+          >
+            Connect
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3 mb-5 lg:grid-cols-4 lg:gap-4 lg:mb-6">
         {kpis.map((k, i) => <RoleKpiCard key={i} {...k} />)}
       </div>
@@ -165,17 +184,6 @@ export function RealtorHome({ go, tone }: { go: (v: string) => void; tone: strin
             )}
           </Card>
 
-          <Card title={<><Shuffle size={14} /> {t('pipeline.title')}</>} sub={t('pipeline.sub')}>
-            <div className="py-6 flex flex-col items-center gap-3 text-center">
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: `${tone}18` }}>
-                <Shuffle size={20} style={{ color: tone }} />
-              </div>
-              <div>
-                <div className="text-[13.5px] font-semibold text-ink mb-0.5">{t('pipeline.coming_soon')}</div>
-                <div className="text-[11.5px] text-dim max-w-55">{t('pipeline.coming_soon_sub')}</div>
-              </div>
-            </div>
-          </Card>
         </div>
 
         <div className="flex flex-col gap-5">

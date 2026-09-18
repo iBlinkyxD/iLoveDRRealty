@@ -8,4 +8,6 @@ export interface UserInfo {
   avatar_url?: string
   has_password?: boolean
   has_google?: boolean
+  calendly_url?: string
+  paypal_email?: string
 }

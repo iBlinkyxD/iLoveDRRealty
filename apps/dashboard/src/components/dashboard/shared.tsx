@@ -65,7 +65,12 @@ export function RoleKpiCard({ label, value, sub, accent }: {
   )
 }
 
-export const fmtPrice = (n: number) =>
-  n >= 1_000_000_000_000 ? `$${(n / 1_000_000_000_000).toFixed(2)}T` :
-  n >= 1_000_000_000 ? `$${(n / 1_000_000_000).toFixed(2)}B` :
-  n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` : `$${(n / 1_000).toFixed(0)}K`
+export const fmtPrice = (raw: number | string | null | undefined): string => {
+  const n = raw == null ? NaN : Number(raw)
+  if (isNaN(n)) return '$0'
+  if (n >= 1_000_000_000_000) return `$${(n / 1_000_000_000_000).toFixed(2)}T`
+  if (n >= 1_000_000_000)     return `$${(n / 1_000_000_000).toFixed(2)}B`
+  if (n >= 1_000_000)         return `$${(n / 1_000_000).toFixed(2)}M`
+  if (n >= 1_000)             return `$${(n / 1_000).toFixed(0)}K`
+  return `$${n.toFixed(0)}`
+}

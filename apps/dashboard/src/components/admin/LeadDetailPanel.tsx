@@ -44,9 +44,10 @@ interface Props {
   onStatusUpdated: (leadId: string, status: string) => void
   allowedStatuses?: readonly string[]
   updateStatusFn?: (leadId: string, status: string) => Promise<void>
+  calendlyUrl?: string
 }
 
-export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusUpdated, allowedStatuses, updateStatusFn }: Props) {
+export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusUpdated, allowedStatuses, updateStatusFn, calendlyUrl }: Props) {
   const { t } = useTranslation('admin')
 
   const TYPE_LABEL: Record<string, string> = {
@@ -376,8 +377,20 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
               </div>
             )}
 
-            {/* Assign Realtor — only shown when caller has realtors to choose from */}
-            {realtors.length > 0 && (
+            {/* Owner-managed listing — no realtor assignment */}
+            {lead.listing_owner_id ? (
+              <div className="flex items-center gap-3 px-3.5 py-3 rounded-xl border" style={{ background: '#7c3aed0d', borderColor: '#7c3aed30' }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#7c3aed18' }}>
+                  <UserCheck size={13} style={{ color: '#7c3aed' }} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[11.5px] font-semibold" style={{ color: '#7c3aed' }}>Owner managed</div>
+                  <div className="text-[11px] text-dim mt-0.5">
+                    This booking is handled directly by <span className="font-medium text-ink2">{lead.listing_owner_name ?? 'the owner'}</span>. No realtor assignment needed.
+                  </div>
+                </div>
+              </div>
+            ) : realtors.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">
                   <UserCheck size={11} />
@@ -417,59 +430,79 @@ export function LeadDetailPanel({ lead, realtors, onClose, onAssigned, onStatusU
             {/* Status */}
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-widest text-dim mb-3">{t('lead_panel.section_status')}</div>
-              <div className="flex gap-2 flex-wrap">
-                {(() => {
-                  const currentIndex = STATUSES.indexOf(lead.status as typeof STATUSES[number])
-                  return STATUSES.filter(s => !allowedStatuses || allowedStatuses.includes(s)).map(s => {
-                    const idx    = STATUSES.indexOf(s)
-                    const active = lead.status === s
-                    const past   = idx < currentIndex
-                    const c      = past ? '#cbd5e1' : STATUS_COLOR[s]
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => handleStatus(s)}
-                        disabled={statusSaving || past}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all"
-                        style={{
-                          background:  active ? c : 'transparent',
-                          color:       active ? 'white' : c,
-                          borderColor: c,
-                          cursor:      past ? 'default' : 'pointer',
-                        }}
-                      >
-                        {active && <Check size={11} />}
-                        {STATUS_LABEL[s]}
-                      </button>
-                    )
-                  })
-                })()}
-              </div>
-              {statusSaving && <div className="text-[11px] text-dim mt-1.5">{t('lead_panel.saving')}</div>}
+              {lead.listing_owner_id ? (
+                <div className="text-[12px] text-dim italic">Status is managed by the owner and cannot be changed here.</div>
+              ) : (
+                <>
+                  <div className="flex gap-2 flex-wrap">
+                    {(() => {
+                      const currentIndex = STATUSES.indexOf(lead.status as typeof STATUSES[number])
+                      return STATUSES.filter(s => !allowedStatuses || allowedStatuses.includes(s)).map(s => {
+                        const idx    = STATUSES.indexOf(s)
+                        const active = lead.status === s
+                        const past   = idx < currentIndex
+                        const c      = past ? '#cbd5e1' : STATUS_COLOR[s]
+                        return (
+                          <button
+                            key={s}
+                            onClick={() => handleStatus(s)}
+                            disabled={statusSaving || past}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all"
+                            style={{
+                              background:  active ? c : 'transparent',
+                              color:       active ? 'white' : c,
+                              borderColor: c,
+                              cursor:      past ? 'default' : 'pointer',
+                            }}
+                          >
+                            {active && <Check size={11} />}
+                            {STATUS_LABEL[s]}
+                          </button>
+                        )
+                      })
+                    })()}
+                  </div>
+                  {statusSaving && <div className="text-[11px] text-dim mt-1.5">{t('lead_panel.saving')}</div>}
+                </>
+              )}
             </div>
 
           </div>
         </div>
 
         {/* ── Footer ── */}
-        <div className="bg-paper border-t border-line px-5 py-4 shrink-0 flex gap-2">
-          {lead.ghl_contact_url && (
+        <div className="bg-paper border-t border-line px-5 py-4 shrink-0 flex flex-col gap-2">
+          {calendlyUrl && (
             <a
-              href={lead.ghl_contact_url}
+              href={calendlyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 hover:bg-line-soft no-underline"
+              className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border-0 text-[13px] font-bold text-white no-underline"
+              style={{ background: '#006BFF' }}
             >
-              <ExternalLink size={13} />
-              {t('lead_panel.open_ghl')}
+              <Calendar size={13} />
+              Schedule a Session
             </a>
           )}
-          <button
-            onClick={onClose}
-            className={`px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent ${lead.ghl_contact_url ? '' : 'w-full'}`}
-          >
-            {t('lead_panel.close')}
-          </button>
+          <div className="flex gap-2">
+            {lead.ghl_contact_url && (
+              <a
+                href={lead.ghl_contact_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 hover:bg-line-soft no-underline"
+              >
+                <ExternalLink size={13} />
+                {t('lead_panel.open_ghl')}
+              </a>
+            )}
+            <button
+              onClick={onClose}
+              className={`px-4 py-2.5 rounded-xl border border-line text-[13px] font-semibold text-ink2 cursor-pointer hover:bg-line-soft bg-transparent ${lead.ghl_contact_url ? '' : 'w-full'}`}
+            >
+              {t('lead_panel.close')}
+            </button>
+          </div>
         </div>
 
       </div>

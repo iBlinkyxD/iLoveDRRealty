@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify'
 import {
   Check, X, ArrowLeft, Home, MapPin, Tag, Link2, Calendar,
   CircleDollarSign, ArrowLeftRight, BedDouble, Bath, Ruler, Maximize2,
-  TrendingUp, Wallet, CheckCircle2, Video, Box, Building2, Users,
+  TrendingUp, Wallet, CheckCircle2, Video, Box, Building2, Users, Mail, Phone,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -426,14 +426,25 @@ function SnapshotColumn({ data, changedKeys, isProposed }: ColProps) {
                     </div>
                   </div>
                 )}
-                {str('co_listing_agent_contact') && (
-                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_agent_contact') ? 'bg-amber-50' : ''}`}>
-                    <Link2 size={14} style={{ color: ch('co_listing_agent_contact') ? AMBER : accent }} className="shrink-0" />
+                {str('co_listing_brokerage_email') && (
+                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_brokerage_email') ? 'bg-amber-50' : ''}`}>
+                    <Mail size={14} style={{ color: ch('co_listing_brokerage_email') ? AMBER : accent }} className="shrink-0" />
                     <div className="min-w-0">
-                      <div className="text-[10.5px] text-dim">{t('edit_review.co_contact')}</div>
-                      <div className="text-[13.5px] font-bold truncate" style={{ color: ch('co_listing_agent_contact') ? AMBER : 'var(--color-ink)' }}>
-                        {str('co_listing_agent_contact')}
-                      </div>
+                      <div className="text-[10.5px] text-dim">Brokerage Email</div>
+                      <a href={`mailto:${str('co_listing_brokerage_email')}`} className="text-[13.5px] font-bold truncate block hover:underline" style={{ color: ch('co_listing_brokerage_email') ? AMBER : 'var(--color-ink)' }}>
+                        {str('co_listing_brokerage_email')}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                {str('co_listing_brokerage_phone') && (
+                  <div className={`px-4 py-3 flex items-center gap-3 ${ch('co_listing_brokerage_phone') ? 'bg-amber-50' : ''}`}>
+                    <Phone size={14} style={{ color: ch('co_listing_brokerage_phone') ? AMBER : accent }} className="shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-[10.5px] text-dim">Brokerage Phone</div>
+                      <a href={`tel:${str('co_listing_brokerage_phone')}`} className="text-[13.5px] font-bold truncate block hover:underline" style={{ color: ch('co_listing_brokerage_phone') ? AMBER : 'var(--color-ink)' }}>
+                        {str('co_listing_brokerage_phone')}
+                      </a>
                     </div>
                   </div>
                 )}

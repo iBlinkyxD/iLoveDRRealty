@@ -88,11 +88,18 @@ export interface AdminListing {
   co_listing_agent_name: string | null
   co_listing_agent_contact: string | null
   co_listing_agent_email: string | null
+  co_listing_brokerage_email: string | null
+  co_listing_brokerage_phone: string | null
   co_listing_commission_split: number | null
   co_listing_notes: string | null
   co_listing_status: string | null
   currency: string
   source_ref: string | null
+  price_per_day: number | null
+  price_per_month: number | null
+  owner_paypal_email: string | null
+  co_listing_agreement_accepted: boolean
+  co_listing_agreement_url: string | null
 }
 
 export interface AdminListingsQuery {
@@ -211,6 +218,8 @@ export interface AdminUser {
   phone: string | null
   created_at: string
   avatar_url: string | null
+  assigned_realtor_id: string | null
+  assigned_realtor_name: string | null
 }
 
 export async function getAdminUsers(role?: string, status?: string): Promise<AdminUser[]> {
@@ -352,4 +361,8 @@ export async function getBulkImportJob(jobId: string): Promise<BulkImportJob> {
 export async function listBulkImportJobs(): Promise<BulkImportJob[]> {
   const res = await client.get<BulkImportJob[]>('/admin/listings/bulk-import')
   return res.data
+}
+
+export async function assignRealtorToOwner(userId: string, realtorId: string | null): Promise<void> {
+  await client.put(`/admin/users/${userId}/assign-realtor`, { realtor_id: realtorId })
 }

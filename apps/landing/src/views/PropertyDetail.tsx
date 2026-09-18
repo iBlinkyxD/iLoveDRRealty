@@ -32,8 +32,14 @@ import type { ApiListingDetail } from "../api/listings";
 import { submitInquiry } from "../api/inquiries";
 import { PhoneInput } from 'react-international-phone'
 import 'react-international-phone/style.css'
-import { createBooking } from "../api/bookings";
+import { createBooking, createPaymentAuth, getUnavailableDates, type BookedRange } from "../api/bookings";
 import { getMe } from "../api/auth";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { PAYPAL_ENABLED } from "../lib/features";
+
+// Empty while PAYPAL_ENABLED is off, which collapses every PayPal branch below
+// and falls the booking form back to a no-payment "Request to book".
+const PAYPAL_CLIENT_ID = PAYPAL_ENABLED ? (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '') : ''
 import { useTranslation } from 'react-i18next'
 
 function Slider({
@@ -284,10 +290,15 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
   const [inquirySent, setInquirySent] = useState(false);
 
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [bookingForm, setBookingForm] = useState({ checkIn: '', checkOut: '', guests: 1, notes: '' });
+  const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '', checkIn: '', checkOut: '', guests: 1, notes: '' });
   const [bookingSending, setBookingSending] = useState(false);
   const [bookingSent, setBookingSent] = useState(false);
   const [bookingError, setBookingError] = useState('');
+  const [bookingDateError, setBookingDateError] = useState('');
+  const [rentalType, setRentalType] = useState<'daily' | 'monthly'>('daily');
+  const [calYear, setCalYear] = useState<number>(() => new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState<number>(() => new Date().getMonth());
+  const [bookedRanges, setBookedRanges] = useState<BookedRange[]>([]);
   const [me, setMe] = useState<{ display_name: string; email: string; phone: string | null; avatar_url: string | null } | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -297,6 +308,12 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
   useEffect(() => {
     getMe().then(data => setMe(data)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (listing?.transaction === 'rent' && listing.id) {
+      getUnavailableDates(listing.id).then(setBookedRanges).catch(() => {})
+    }
+  }, [listing?.id, listing?.transaction])
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -333,6 +350,9 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
     const totalInterest = totalPaid - loan;
     return { loan, down, monthly, totalPaid, totalInterest };
   }, [aPrice, aDown, aRate, aTerm]);
+  const todayStr = new Date().toISOString().split('T')[0]
+  const isDateBooked = (ds: string) => bookedRanges.some(r => ds >= r.check_in && ds < r.check_out)
+
   const handleInquiry = async (e: FormEvent) => {
     e.preventDefault()
     setInquirySending(true)
@@ -348,10 +368,19 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
     setBookingSending(true)
     setBookingError('')
     try {
-      await createBooking({ listing_id: id, check_in: bookingForm.checkIn, check_out: bookingForm.checkOut, guests: bookingForm.guests, notes: bookingForm.notes || undefined })
+      await createBooking({
+        listing_id: id,
+        check_in: bookingForm.checkIn,
+        check_out: bookingForm.checkOut,
+        guests: bookingForm.guests,
+        notes: bookingForm.notes || undefined,
+        name: bookingForm.name,
+        email: bookingForm.email,
+        phone: bookingForm.phone || undefined,
+      })
       setBookingSent(true)
-    } catch (err: any) {
-      setBookingError(err?.response?.status === 401 ? t('booking.error_auth') : t('booking.error_generic'))
+    } catch {
+      setBookingError(t('booking.error_generic'))
     } finally { setBookingSending(false) }
   }
 
@@ -1106,6 +1135,18 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                   : `≈ RD$${Math.round(Number(listing.price) * dopRate).toLocaleString("en-US")} DOP ${t('unit.per_mo')}`}
               </div>
               {[
+                listing.price_per_day && [
+                  t('sidebar.daily_rate'),
+                  currency === 'DOP'
+                    ? `RD$${Math.round(Number(listing.price_per_day) * dopRate).toLocaleString('en-US')} ${t('unit.per_day')}`
+                    : `$${Number(listing.price_per_day).toLocaleString()} ${t('unit.per_day')}`,
+                ],
+                listing.price_per_month && [
+                  t('sidebar.monthly_rate'),
+                  currency === 'DOP'
+                    ? `RD$${Math.round(Number(listing.price_per_month) * dopRate).toLocaleString('en-US')} ${t('unit.per_mo')}`
+                    : `$${Number(listing.price_per_month).toLocaleString()} ${t('unit.per_mo')}`,
+                ],
                 listing.hoa_fee && [
                   t('sidebar.hoa_fee'),
                   currency === 'DOP'
@@ -1140,20 +1181,80 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
               ) : bookingOpen ? (
                 <form onSubmit={handleBooking} className="mt-4 flex flex-col gap-2">
                   {bookingError && <div className="text-[12px] text-coral font-semibold text-center">{bookingError}</div>}
-                  <div className="grid grid-cols-2 gap-2">
+                  {listing?.price_per_day && listing?.price_per_month && (
                     <div>
-                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_in')}</div>
-                      <input required type="date" value={bookingForm.checkIn}
-                        onChange={e => setBookingForm(f => ({ ...f, checkIn: e.target.value }))}
-                        className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.rental_type')}</div>
+                      <div className="flex gap-1.5">
+                        {(['daily', 'monthly'] as const).map(type => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setRentalType(type)}
+                            className={`flex-1 py-1.5 rounded-full text-[12px] font-semibold border cursor-pointer transition-colors font-sans ${
+                              rentalType === type
+                                ? 'bg-coral text-white border-coral'
+                                : 'bg-transparent text-ink2 border-line'
+                            }`}
+                          >
+                            {t(`booking.${type}`)}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+                  )}
+                  <input required placeholder={t('booking.name')} value={bookingForm.name}
+                    onChange={e => setBookingForm(f => ({ ...f, name: e.target.value }))}
+                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
+                  <input required type="email" placeholder={t('booking.email')} value={bookingForm.email}
+                    onChange={e => setBookingForm(f => ({ ...f, email: e.target.value }))}
+                    className="w-full text-[13px] border border-line rounded-lg px-3 py-2 font-sans outline-none" />
+                  <PhoneInput
+                    defaultCountry="us"
+                    placeholder={t('booking.phone')}
+                    value={bookingForm.phone}
+                    onChange={phone => setBookingForm(f => ({ ...f, phone }))}
+                    inputStyle={{ flex: 1, width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #e4ddcf', borderLeft: 'none', borderRadius: '0 0.5rem 0.5rem 0', backgroundColor: '#ffffff', fontFamily: 'inherit', fontSize: '0.8125rem', color: '#00102e', outline: 'none' }}
+                    countrySelectorStyleProps={{ buttonStyle: { border: '1px solid #e4ddcf', borderRight: 'none', borderRadius: '0.5rem 0 0 0.5rem', backgroundColor: '#f3f1ea', padding: '0 0.5rem', cursor: 'pointer', height: '100%' } }}
+                  />
+                  {rentalType === 'daily' && (
                     <div>
-                      <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_out')}</div>
-                      <input required type="date" value={bookingForm.checkOut}
-                        onChange={e => setBookingForm(f => ({ ...f, checkOut: e.target.value }))}
-                        className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_in')}</div>
+                          <input required type="date" value={bookingForm.checkIn}
+                            min={todayStr}
+                            onChange={e => {
+                              const val = e.target.value
+                              if (isDateBooked(val)) {
+                                setBookingDateError(t('booking.error_date_unavailable'))
+                                setBookingForm(f => ({ ...f, checkIn: '' }))
+                              } else {
+                                setBookingDateError('')
+                                setBookingForm(f => ({ ...f, checkIn: val, checkOut: f.checkOut && f.checkOut <= val ? '' : f.checkOut }))
+                              }
+                            }}
+                            className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                        </div>
+                        <div>
+                          <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.check_out')}</div>
+                          <input required type="date" value={bookingForm.checkOut}
+                            min={bookingForm.checkIn || todayStr}
+                            onChange={e => {
+                              const val = e.target.value
+                              if (isDateBooked(val)) {
+                                setBookingDateError(t('booking.error_date_unavailable'))
+                                setBookingForm(f => ({ ...f, checkOut: '' }))
+                              } else {
+                                setBookingDateError('')
+                                setBookingForm(f => ({ ...f, checkOut: val }))
+                              }
+                            }}
+                            className="w-full text-[12px] border border-line rounded-lg px-2 py-1.5 font-sans outline-none" />
+                        </div>
+                      </div>
+                      {bookingDateError && <div className="text-[11.5px] text-coral mt-1">{bookingDateError}</div>}
                     </div>
-                  </div>
+                  )}
                   <div>
                     <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-1">{t('booking.guests')}</div>
                     <input type="number" min={1} max={20} value={bookingForm.guests}
@@ -1168,18 +1269,121 @@ function PropertyDetailInner({ id: idProp }: { id?: string }) {
                       className="flex-1 py-2 rounded-full border border-line text-[13px] font-semibold text-ink2 cursor-pointer bg-transparent font-sans">
                       {t('sidebar.cancel')}
                     </button>
-                    <button type="submit" disabled={bookingSending}
-                      className="flex-1 py-2 rounded-full bg-coral text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
-                      {bookingSending ? t('sidebar.sending') : t('sidebar.request')}
-                    </button>
+                    {(!PAYPAL_CLIENT_ID || listing?.transaction !== 'rent' || !listing?.price_per_day || rentalType === 'monthly') && (
+                      <button type="submit" disabled={bookingSending}
+                        className="flex-1 py-2 rounded-full bg-coral text-white text-[13px] font-bold border-none cursor-pointer font-sans disabled:opacity-60">
+                        {bookingSending ? t('sidebar.sending') : t('sidebar.request')}
+                      </button>
+                    )}
                   </div>
+                  {PAYPAL_CLIENT_ID && listing?.transaction === 'rent' && listing?.price_per_day && rentalType === 'daily' && (
+                    <PayPalScriptProvider options={{ clientId: PAYPAL_CLIENT_ID, intent: 'authorize', currency: 'USD' }}>
+                      <div className="mt-1">
+                        <PayPalButtons
+                          style={{ layout: 'vertical', shape: 'pill', label: 'pay', height: 40 }}
+                          createOrder={async () => {
+                            if (!bookingForm.checkIn || !bookingForm.checkOut) {
+                              setBookingError(t('booking.error_dates'))
+                              throw new Error('dates required')
+                            }
+                            if (!me && (!bookingForm.name.trim() || !bookingForm.email.trim())) {
+                              setBookingError(t('booking.error_contact'))
+                              throw new Error('contact required')
+                            }
+                            setBookingError('')
+                            const result = await createPaymentAuth({ listing_id: id, check_in: bookingForm.checkIn, check_out: bookingForm.checkOut })
+                            return result.paypal_order_id
+                          }}
+                          onApprove={async (data) => {
+                            setBookingSending(true)
+                            try {
+                              await createBooking({
+                                listing_id: id,
+                                check_in: bookingForm.checkIn,
+                                check_out: bookingForm.checkOut,
+                                guests: bookingForm.guests,
+                                notes: bookingForm.notes || undefined,
+                                name: me ? undefined : bookingForm.name,
+                                email: me ? undefined : bookingForm.email,
+                                phone: me ? undefined : (bookingForm.phone || undefined),
+                                paypal_order_id: data.orderID,
+                              })
+                              setBookingSent(true)
+                            } catch {
+                              setBookingError(t('booking.error_generic'))
+                            } finally {
+                              setBookingSending(false)
+                            }
+                          }}
+                          onError={() => setBookingError(t('booking.error_generic'))}
+                        />
+                      </div>
+                    </PayPalScriptProvider>
+                  )}
+                  {/* Non-refundable payment terms — only meaningful when we actually collect payment */}
+                  {PAYPAL_ENABLED && (
+                    <p className="text-[11px] text-ink3 leading-relaxed mt-2">
+                      {t('booking.deposit_disclaimer')}
+                    </p>
+                  )}
                 </form>
               ) : (
-                <button onClick={() => setBookingOpen(true)}
+                <button onClick={() => {
+                  setBookingForm(f => ({
+                    ...f,
+                    name: me?.display_name || f.name,
+                    email: me?.email || f.email,
+                    phone: me?.phone || f.phone,
+                  }))
+                  setBookingOpen(true)
+                }}
                   className="w-full flex justify-center items-center py-3 mt-4 rounded-full border-none cursor-pointer text-white font-sans text-[13.5px] font-bold bg-coral">
                   {t('sidebar.request_book')}
                 </button>
               )}
+              {/* Availability Calendar */}
+              {!bookingSent && (() => {
+                const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
+                const firstDay = new Date(calYear, calMonth, 1).getDay()
+                const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
+                const todayMs = new Date(new Date().toDateString()).getTime()
+                const prevMo = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) } else setCalMonth(m => m - 1) }
+                const nextMo = () => { if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) } else setCalMonth(m => m + 1) }
+                const cells: React.ReactNode[] = []
+                for (let i = 0; i < firstDay; i++) cells.push(<div key={`b${i}`} />)
+                for (let d = 1; d <= daysInMonth; d++) {
+                  const dateMs = new Date(calYear, calMonth, d).getTime()
+                  const isPast = dateMs < todayMs
+                  const isToday = dateMs === todayMs
+                  const ds = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+                  const isBooked = bookedRanges.some(r => ds >= r.check_in && ds < r.check_out)
+                  const disabled = isPast || isBooked
+                  cells.push(
+                    <button key={d} type="button" disabled={disabled}
+                      onClick={() => { setBookingForm(f => ({ ...f, name: me?.display_name || f.name, email: me?.email || f.email, phone: me?.phone || f.phone, checkIn: ds })); setBookingOpen(true) }}
+                      className={`aspect-square w-full flex items-center justify-center rounded-full text-[11.5px] border-0 transition-colors font-sans ${isPast ? 'text-dim/40 bg-transparent cursor-default' : isBooked ? 'text-dim/40 bg-red-50 line-through cursor-default' : isToday ? 'bg-ink text-white font-bold cursor-pointer' : 'text-ink bg-transparent cursor-pointer hover:bg-blue-50 hover:text-blue-700 font-medium'}`}>
+                      {d}
+                    </button>
+                  )
+                }
+                return (
+                  <div className="mt-5 pt-4 border-t border-line-soft">
+                    <div className="text-[10.5px] font-bold text-ink2 uppercase tracking-wide mb-3">Availability</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <button type="button" onClick={prevMo} className="w-7 h-7 rounded-full border border-line bg-white text-ink2 flex items-center justify-center cursor-pointer hover:bg-paper2 transition-colors text-[14px]">‹</button>
+                      <span className="text-[12.5px] font-semibold text-ink">{MONTHS[calMonth]} {calYear}</span>
+                      <button type="button" onClick={nextMo} className="w-7 h-7 rounded-full border border-line bg-white text-ink2 flex items-center justify-center cursor-pointer hover:bg-paper2 transition-colors text-[14px]">›</button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-0.5 mb-1">
+                      {['S','M','T','W','T','F','S'].map((d, i) => (
+                        <div key={i} className="text-center text-[10px] font-bold text-dim">{d}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-0.5">{cells}</div>
+                    <p className="text-[11px] text-dim mt-2 text-center">Select a date to start booking</p>
+                  </div>
+                )
+              })()}
             </>
           )}
 

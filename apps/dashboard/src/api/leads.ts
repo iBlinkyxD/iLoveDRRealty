@@ -11,18 +11,21 @@ export interface Lead {
   property_title: string | null
   listing_realtor_id: string | null
   listing_realtor_name: string | null
+  listing_owner_id: string | null
+  listing_owner_name: string | null
   from_user_id: string | null
   from_user_code: string | null
   from_user_name: string | null
   from_user_avatar_url: string | null
   assigned_realtor_id: string | null
   assigned_realtor_name: string | null
-  status: 'new' | 'assigned' | 'contacted' | 'closed'
+  status: 'new' | 'assigned' | 'schedule' | 'contacted' | 'closed'
   created_at: string
   assigned_at: string | null
   contacted_at: string | null
   closed_at: string | null
   ghl_contact_url: string | null
+  booking_status: string | null
 }
 
 export interface LeadCreate {

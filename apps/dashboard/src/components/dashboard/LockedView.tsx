@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { Lock, Clock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Role } from '../../App'
+import type { UserInfo } from '../../lib/auth'
 import { OwnerHome } from './OwnerHome'
 import { RealtorHome } from './RealtorHome'
 import { getMyUpgradeRequests } from '../../api/upgradeRequests'
 import { getMyLeads } from '../../api/leads'
 import { OwnerLeadModal, RealtorModal } from '../../pages/buyer/Upgrade'
 
-export function LockedView({ tab, tone, go }: { tab: Role; tone: string; go: (v: string) => void }) {
+export function LockedView({ tab, tone, go, user }: { tab: Role; tone: string; go: (v: string) => void; user: UserInfo }) {
   const { t } = useTranslation('common')
 
   const label = tab === 'Owner' ? t('locked.label_owner') : t('locked.label_realtor')
@@ -48,8 +49,8 @@ export function LockedView({ tab, tone, go }: { tab: Role; tone: string; go: (v:
     )}
     <div className="relative overflow-hidden rounded-2xl">
       <div className="pointer-events-none select-none" style={{ opacity: 0.35 }}>
-        {tab === 'Owner'   && <OwnerHome   go={() => {}} tone={tone} />}
-        {tab === 'Realtor' && <RealtorHome go={() => {}} tone={tone} />}
+        {tab === 'Owner'   && <OwnerHome   go={() => {}} tone={tone} user={user} />}
+        {tab === 'Realtor' && <RealtorHome go={() => {}} tone={tone} user={user} />}
       </div>
 
       <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(248,249,252,0.72)' }}>
