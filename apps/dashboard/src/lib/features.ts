@@ -4,10 +4,7 @@
  * PAYPAL_ENABLED — master switch for every PayPal-related UI surface
  * (payout email capture, payout release/request actions, and the
  * PayPal-linked gates on listing submission).
- * Kept OFF until the business bank account is validated and production
- * PayPal API credentials are issued. The backend PayPal integration is
- * left untouched; this only hides the client-side entry points.
- *
- * To re-enable: flip this to `true`.
+ * Must be kept in step with the landing app's flag. Set it back to `false` to hide
+ * every PayPal entry point again; the backend PayPal integration is unaffected either way.
  */
-export const PAYPAL_ENABLED = false
+export const PAYPAL_ENABLED = true
