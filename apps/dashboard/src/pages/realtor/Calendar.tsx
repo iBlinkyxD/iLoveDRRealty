@@ -1,7 +1,9 @@
 import { Calendar, CalendarDays, ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card } from '../../components/dashboard/shared'
+import { SchedulingFrame } from '../../components/dashboard/SchedulingFrame'
 import type { UserInfo } from '../../lib/auth'
+import { SCHEDULING_COLOR, SCHEDULING_LABEL, schedulingProvider } from '../../lib/scheduling'
 
 export function RealtorCalendar({ user, go }: { user: UserInfo; go: (v: string) => void }) {
   const { t } = useTranslation('realtor')
@@ -29,27 +31,21 @@ export function RealtorCalendar({ user, go }: { user: UserInfo; go: (v: string) 
     )
   }
 
+  const provider = schedulingProvider(calendlyUrl)
+
   return (
     <Card
       title={
         <span className="flex items-center gap-2">
           <Calendar size={14} /> {t('calendar_page.title')}
-          <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" className="text-[#006BFF] inline-flex items-center gap-0.5 hover:underline ml-0.5">
+          <a href={calendlyUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 hover:underline ml-0.5" style={{ color: SCHEDULING_COLOR[provider] }}>
             <ExternalLink size={11} />
           </a>
         </span>
       }
-      sub={t('calendar_page.embed_sub')}
+      sub={t('calendar_page.embed_sub', { provider: SCHEDULING_LABEL[provider] })}
     >
-      <div className="rounded-xl overflow-hidden border border-line" style={{ height: '680px' }}>
-        <iframe
-          src={`${calendlyUrl}?hide_gdpr_banner=1&embed_type=inline`}
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          title="Calendly scheduling"
-        />
-      </div>
+      <SchedulingFrame url={calendlyUrl} />
     </Card>
   )
 }

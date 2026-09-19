@@ -117,11 +117,11 @@
   },
   "calendar_page": {
     "title":         "Calendar",
-    "sub":           "Your Calendly scheduling page",
-    "connect_title": "Connect Calendly",
-    "connect_desc":  "Link your Calendly URL in Settings so clients and your assigned realtor can schedule meetings with you.",
+    "sub":           "Your scheduling page",
+    "connect_title": "Connect your calendar",
+    "connect_desc":  "Link your Calendly or Google Calendar booking page in Settings so clients and your assigned realtor can schedule meetings with you.",
     "connect_btn":   "Go to Settings",
-    "embed_sub":     "Powered by Calendly"
+    "embed_sub":     "Powered by {{provider}}"
   },
   "listings_page": {
     "title":                "My Listings",

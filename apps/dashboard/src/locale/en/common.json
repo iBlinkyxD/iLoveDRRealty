@@ -106,10 +106,10 @@
   },
   "setup_banner": {
     "calendly": {
-      "title": "Connect your Calendly to start adding listings",
-      "desc": "Link your scheduling page in Settings so clients and leads can book meetings with you. You need it before you can add a listing.",
-      "btn": "Connect Calendly",
-      "tooltip": "Connect your Calendly in Settings to start adding listings"
+      "title": "Connect your calendar to start adding listings",
+      "desc": "Link your Calendly or Google Calendar booking page in Settings so clients and leads can book meetings with you. You need it before you can add a listing.",
+      "btn": "Connect calendar",
+      "tooltip": "Connect your Calendly or Google Calendar in Settings to start adding listings"
     },
     "paypal": {
       "title": "Connect your PayPal to start adding listings",
@@ -117,5 +117,10 @@
       "btn": "Connect PayPal",
       "tooltip": "Connect your PayPal in Settings to start adding listings"
     }
+  },
+  "scheduling": {
+    "link_title": "Your {{provider}} booking page",
+    "link_desc": "This page can't be shown inside the dashboard, but clients can book with you through it. Open it in a new tab to view or test it.",
+    "open_btn": "Open booking page"
   }
 }

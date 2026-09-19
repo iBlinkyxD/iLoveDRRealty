@@ -146,7 +146,7 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
           kind={role === 'Owner' ? 'owner' : 'realtor'}
           user={user}
           go={go}
-          hideCalendly={view === 'calendar'}   // the Calendar page already shows its own full-page Calendly prompt
+          hideCalendly={view === 'calendar'}   // the Calendar page already shows its own full-page calendar prompt
         />
       )}
       {renderView()}

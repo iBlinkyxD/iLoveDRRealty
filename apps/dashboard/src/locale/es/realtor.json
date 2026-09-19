@@ -168,12 +168,12 @@
   },
   "calendar_page": {
     "title":            "Calendario",
-    "sub":              "Tu página de programación de Calendly",
+    "sub":              "Tu página de programación",
     "schedule_showing": "+ Agendar visita",
-    "connect_title":    "Conectar Calendly",
-    "connect_desc":     "Vincula tu URL de Calendly en Ajustes para mostrar tu página de programación aquí y compartirla con tus leads asignados.",
+    "connect_title":    "Conecta tu calendario",
+    "connect_desc":     "Vincula tu página de reservas de Calendly o Google Calendar en Ajustes para mostrar tu página de programación aquí y compartirla con tus leads asignados.",
     "connect_btn":      "Ir a Ajustes",
-    "embed_sub":        "Powered by Calendly"
+    "embed_sub":        "Powered by {{provider}}"
   },
   "submit_listing_page": {
     "back_to_listings":    "Volver a propiedades",

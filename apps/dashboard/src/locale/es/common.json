@@ -106,10 +106,10 @@
   },
   "setup_banner": {
     "calendly": {
-      "title": "Conecta tu Calendly para empezar a agregar propiedades",
-      "desc": "Vincula tu página de programación en Ajustes para que clientes y leads puedan agendar reuniones contigo. La necesitas antes de poder agregar una propiedad.",
-      "btn": "Conectar Calendly",
-      "tooltip": "Conecta tu Calendly en Ajustes para empezar a agregar propiedades"
+      "title": "Conecta tu calendario para empezar a agregar propiedades",
+      "desc": "Vincula tu página de reservas de Calendly o Google Calendar en Ajustes para que clientes y leads puedan agendar reuniones contigo. La necesitas antes de poder agregar una propiedad.",
+      "btn": "Conectar calendario",
+      "tooltip": "Conecta tu Calendly o Google Calendar en Ajustes para empezar a agregar propiedades"
     },
     "paypal": {
       "title": "Conecta tu PayPal para empezar a agregar propiedades",
@@ -117,5 +117,10 @@
       "btn": "Conectar PayPal",
       "tooltip": "Conecta tu PayPal en Ajustes para empezar a agregar propiedades"
     }
+  },
+  "scheduling": {
+    "link_title": "Tu página de reservas de {{provider}}",
+    "link_desc": "Esta página no se puede mostrar dentro del panel, pero los clientes pueden reservar contigo a través de ella. Ábrela en una pestaña nueva para verla o probarla.",
+    "open_btn": "Abrir página de reservas"
   }
 }

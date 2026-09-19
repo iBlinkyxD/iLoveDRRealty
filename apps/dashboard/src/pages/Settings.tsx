@@ -11,6 +11,7 @@ import type { Role } from '../App'
 import { changePassword, deactivateAccount, linkGoogle, requestAccountDeletion, setPassword, unlinkGoogle, updateProfile, uploadAvatar } from '../api/auth'
 import { ConfirmModal } from '../components/shared/ConfirmModal'
 import { PAYPAL_ENABLED } from '../lib/features'
+import { SCHEDULING_COLOR, SCHEDULING_LABEL, SCHEDULING_PLACEHOLDER, SCHEDULING_PROVIDERS, schedulingProvider, validateSchedulingUrl, type SchedulingProvider } from '../lib/scheduling'
 
 const inp = 'w-full px-3 py-2.5 rounded-lg border border-line bg-white text-[13.5px] text-ink outline-none transition-colors focus:border-[#0d9488] disabled:bg-[#f4f5f7] disabled:text-dim'
 
@@ -86,14 +87,20 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
   const [calendlyUrl, setCalendlyUrl] = useState(user.calendly_url ?? '')
   const [calendlyInput, setCalendlyInput] = useState('')
   const [calendlySaving, setCalendlySaving] = useState(false)
+  const [pickedProvider, setPickedProvider] = useState<SchedulingProvider>('calendly')
+  // Once connected, the stored URL decides the provider; the picker only matters while connecting.
+  const connectedProvider = calendlyUrl ? schedulingProvider(calendlyUrl) : null
+  const providerLabel = SCHEDULING_LABEL[connectedProvider ?? pickedProvider]
   const [paypalEmail, setPaypalEmail] = useState(user.paypal_email ?? '')
   const [paypalEmailInput, setPaypalEmailInput] = useState('')
   const [paypalEmailSaving, setPaypalEmailSaving] = useState(false)
 
   async function handleCalendlyConnect() {
-    const url = calendlyInput.trim()
-    if (!url.startsWith('https://calendly.com/')) {
-      toast.error('Please enter a valid Calendly URL (https://calendly.com/...)')
+    const url = validateSchedulingUrl(calendlyInput, pickedProvider)
+    if (!url) {
+      toast.error(pickedProvider === 'google'
+        ? 'Please enter your Google Calendar appointment page link (https://calendar.google.com/calendar/appointments/... or https://calendar.app.google/...)'
+        : 'Please enter a valid Calendly URL (https://calendly.com/...)')
       return
     }
     setCalendlySaving(true)
@@ -102,7 +109,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
       setCalendlyUrl(url)
       setCalendlyInput('')
       onUserUpdate({ calendly_url: url })
-      toast.success('Calendly connected')
+      toast.success(`${SCHEDULING_LABEL[pickedProvider]} connected`)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
@@ -117,7 +124,7 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
       setCalendlyUrl('')
       setCalendlyInput('')
       onUserUpdate({ calendly_url: undefined })
-      toast.success('Calendly disconnected')
+      toast.success(`${providerLabel} disconnected`)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to disconnect')
     } finally {
@@ -739,12 +746,12 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
         <Section icon={Plug} title="Connections">
           <div className="rounded-xl border border-line overflow-hidden">
             <div className="px-4 py-3 bg-[#f8f9fc] border-b border-line flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#006BFF]/10 flex items-center justify-center shrink-0">
-                <CalendarDays size={15} className="text-[#006BFF]" />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${SCHEDULING_COLOR[connectedProvider ?? pickedProvider]}1a` }}>
+                <CalendarDays size={15} style={{ color: SCHEDULING_COLOR[connectedProvider ?? pickedProvider] }} />
               </div>
               <div>
-                <div className="text-[13px] font-bold text-ink">Calendly</div>
-                <div className="text-[11px] text-dim">Scheduling integration</div>
+                <div className="text-[13px] font-bold text-ink">{connectedProvider ? providerLabel : 'Scheduling calendar'}</div>
+                <div className="text-[11px] text-dim">{connectedProvider ? 'Scheduling integration' : 'Calendly or Google Calendar'}</div>
               </div>
               {calendlyUrl ? (
                 <span className="ml-auto flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ color: '#15803d', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
@@ -772,7 +779,28 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <div className="text-[12px] text-dim">{role === 'Owner' ? 'Add your Calendly URL so clients and your assigned realtor can schedule meetings with you.' : 'Add your Calendly URL to display your scheduling page on the Calendar tab and share it with your assigned leads.'}</div>
+                  <div className="text-[12px] text-dim">{role === 'Owner' ? `Add your ${providerLabel} booking link so clients and your assigned realtor can schedule meetings with you.` : `Add your ${providerLabel} booking link to display your scheduling page on the Calendar tab and share it with your assigned leads.`}</div>
+                  <div className="flex gap-1.5" role="group" aria-label="Scheduling provider">
+                    {SCHEDULING_PROVIDERS.map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        aria-pressed={pickedProvider === p}
+                        onClick={() => setPickedProvider(p)}
+                        className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold cursor-pointer border ${pickedProvider === p ? '' : 'border-line bg-white text-dim'}`}
+                        style={pickedProvider === p
+                          ? { color: SCHEDULING_COLOR[p], background: `${SCHEDULING_COLOR[p]}14`, borderColor: SCHEDULING_COLOR[p] }
+                          : undefined}
+                      >
+                        {SCHEDULING_LABEL[p]}
+                      </button>
+                    ))}
+                  </div>
+                  {pickedProvider === 'google' && (
+                    <div className="text-[11px] text-dim leading-[1.6]">
+                      In Google Calendar, create an <strong>appointment schedule</strong> (requires Google Workspace or Google One), then paste its booking page link. To show it inline on your Calendar tab, use the <em>Add to website</em> link (calendar.google.com/…); the short calendar.app.google link opens in a new tab instead.
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <input
                       className={`${inp} flex-1`}
@@ -780,14 +808,15 @@ export function UserSettings({ user, role, tone, onUserUpdate, initialTab }: { u
                       value={calendlyInput}
                       onChange={e => setCalendlyInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleCalendlyConnect()}
-                      placeholder="https://calendly.com/your-link"
+                      placeholder={SCHEDULING_PLACEHOLDER[pickedProvider]}
                       maxLength={500}
                     />
                     <button
                       type="button"
                       disabled={calendlySaving}
                       onClick={handleCalendlyConnect}
-                      className="shrink-0 px-4 py-2 rounded-lg text-[12.5px] font-bold text-white border-0 cursor-pointer bg-[#006BFF] disabled:opacity-50"
+                      className="shrink-0 px-4 py-2 rounded-lg text-[12.5px] font-bold text-white border-0 cursor-pointer disabled:opacity-50"
+                      style={{ background: SCHEDULING_COLOR[pickedProvider] }}
                     >
                       {calendlySaving ? 'Connecting…' : 'Connect'}
                     </button>

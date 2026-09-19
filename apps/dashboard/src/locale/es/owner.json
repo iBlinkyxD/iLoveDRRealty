@@ -117,11 +117,11 @@
   },
   "calendar_page": {
     "title":         "Calendario",
-    "sub":           "Tu página de programación de Calendly",
-    "connect_title": "Conectar Calendly",
-    "connect_desc":  "Vincula tu URL de Calendly en Ajustes para que clientes y tu agente puedan agendar reuniones contigo.",
+    "sub":           "Tu página de programación",
+    "connect_title": "Conecta tu calendario",
+    "connect_desc":  "Vincula tu página de reservas de Calendly o Google Calendar en Ajustes para que clientes y tu agente puedan agendar reuniones contigo.",
     "connect_btn":   "Ir a Ajustes",
-    "embed_sub":     "Powered by Calendly"
+    "embed_sub":     "Powered by {{provider}}"
   },
   "listings_page": {
     "title":                "Mis propiedades",
