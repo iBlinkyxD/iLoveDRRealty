@@ -103,5 +103,19 @@
     "cta_realtor": "Solicitar acceso →",
     "label_owner": "Propietario",
     "label_realtor": "Agente"
+  },
+  "setup_banner": {
+    "calendly": {
+      "title": "Conecta tu Calendly para empezar a agregar propiedades",
+      "desc": "Vincula tu página de programación en Ajustes para que clientes y leads puedan agendar reuniones contigo. La necesitas antes de poder agregar una propiedad.",
+      "btn": "Conectar Calendly",
+      "tooltip": "Conecta tu Calendly en Ajustes para empezar a agregar propiedades"
+    },
+    "paypal": {
+      "title": "Conecta tu PayPal para empezar a agregar propiedades",
+      "desc": "Agrega el correo de PayPal donde se enviarán los pagos de tus reservas. Lo necesitas antes de poder agregar una propiedad.",
+      "btn": "Conectar PayPal",
+      "tooltip": "Conecta tu PayPal en Ajustes para empezar a agregar propiedades"
+    }
   }
 }

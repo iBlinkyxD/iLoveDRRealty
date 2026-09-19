@@ -103,5 +103,19 @@
     "cta_realtor": "Request Upgrade →",
     "label_owner": "Property Owner",
     "label_realtor": "Realtor"
+  },
+  "setup_banner": {
+    "calendly": {
+      "title": "Connect your Calendly to start adding listings",
+      "desc": "Link your scheduling page in Settings so clients and leads can book meetings with you. You need it before you can add a listing.",
+      "btn": "Connect Calendly",
+      "tooltip": "Connect your Calendly in Settings to start adding listings"
+    },
+    "paypal": {
+      "title": "Connect your PayPal to start adding listings",
+      "desc": "Add the PayPal email where booking payouts should be sent. You need it before you can add a listing.",
+      "btn": "Connect PayPal",
+      "tooltip": "Connect your PayPal in Settings to start adding listings"
+    }
   }
 }

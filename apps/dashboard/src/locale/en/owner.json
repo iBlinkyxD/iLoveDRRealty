@@ -9,18 +9,6 @@
     "earnings":      "Earnings",
     "settings":      "Settings"
   },
-  "paypal_banner": {
-    "title":            "Link your PayPal account",
-    "desc":             "Connect your PayPal email in Settings to enable listings and receive booking payouts.",
-    "btn":              "Connect",
-    "disabled_tooltip": "Link your PayPal account in Settings to enable this"
-  },
-  "calendly_banner": {
-    "title":            "Link your Calendly",
-    "desc":             "Connect your scheduling page to add listings and let clients book meetings with you.",
-    "btn":              "Connect",
-    "disabled_tooltip": "Connect your Calendly in Settings to enable this"
-  },
   "kpis": {
     "active_listings":  "Active Listings",
     "upcoming_bookings":"Upcoming Bookings",

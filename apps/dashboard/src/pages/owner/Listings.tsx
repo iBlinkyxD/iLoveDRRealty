@@ -8,6 +8,8 @@ import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel
 import { OwnerSubmitListing } from './SubmitListing'
 import { submitLead } from '../../api/leads'
 import { getMe, getMyAgent } from '../../api/auth'
+import type { UserInfo } from '../../lib/auth'
+import { useListingSetup } from '../../components/dashboard/SetupBanners'
 import toast from 'react-hot-toast'
 
 function pageWindow(current: number, total: number): (number | '…')[] {
@@ -367,8 +369,10 @@ function filterToStatus(f: string): string | undefined {
   return f.toLowerCase()
 }
 
-export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => void }) {
+export function OwnerListings({ tone, go, user }: { tone: string; go: (v: string) => void; user: UserInfo }) {
   const { t } = useTranslation('owner')
+  // Same rule as the setup banners and every other "add listing" button.
+  const { canAddListings, blockedReason } = useListingSetup(user, 'owner')
   const [mainItems, setMainItems] = useState<Listing[]>([])
   const [mainTotal, setMainTotal] = useState(0)
   const [pendingReviews, setPendingReviews] = useState<Listing[]>([])
@@ -385,7 +389,6 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
   const [requestChangeListing, setRequestChangeListing] = useState<Listing | null>(null)
   const [editTarget, setEditTarget] = useState<Listing | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [calendlyLinked, setCalendlyLinked] = useState(false)
 
   const statusParam = filterToStatus(filter)
 
@@ -410,7 +413,7 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
     getMyAgent().then(d => {
       if (d.realtor_name) setAgent({ name: d.realtor_name, email: d.realtor_email ?? '', phone: d.realtor_phone ?? null, calendly_url: d.realtor_calendly_url ?? null })
     }).catch(() => {}).finally(() => setLoadingAgent(false))
-    getMe().then(me => { setCurrentUserId(me.id); setCalendlyLinked(!!me.calendly_url) }).catch(() => {})
+    getMe().then(me => setCurrentUserId(me.id)).catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const didMountTable = useRef(false)
@@ -516,9 +519,9 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
                 />
               </div>
               <button
-                onClick={() => calendlyLinked && go('submit-listing')}
-                disabled={!calendlyLinked}
-                title={!calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+                onClick={() => canAddListings && go('submit-listing')}
+                disabled={!canAddListings}
+                title={blockedReason}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 border-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: tone }}
               >
@@ -587,9 +590,9 @@ export function OwnerListings({ tone, go }: { tone: string; go: (v: string) => v
               </div>
             </div>
             <button
-              onClick={() => calendlyLinked && go('submit-listing')}
-              disabled={!calendlyLinked}
-              title={!calendlyLinked ? t('calendly_banner.disabled_tooltip') : undefined}
+              onClick={() => canAddListings && go('submit-listing')}
+              disabled={!canAddListings}
+              title={blockedReason}
               className="px-5 py-2 rounded-full text-[12.5px] font-bold text-white border-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               style={{ background: tone }}
             >

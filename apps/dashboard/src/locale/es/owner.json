@@ -9,18 +9,6 @@
     "earnings":      "Ganancias",
     "settings":      "Configuración"
   },
-  "paypal_banner": {
-    "title":            "Vincula tu cuenta de PayPal",
-    "desc":             "Conecta tu correo de PayPal en Ajustes para habilitar propiedades y recibir pagos de reservas.",
-    "btn":              "Conectar",
-    "disabled_tooltip": "Vincula tu cuenta de PayPal en Ajustes para habilitar esto"
-  },
-  "calendly_banner": {
-    "title":            "Vincula tu Calendly",
-    "desc":             "Conecta tu página de programación para agregar propiedades y que los clientes agenden reuniones contigo.",
-    "btn":              "Conectar",
-    "disabled_tooltip": "Conecta tu Calendly en Ajustes para habilitar esto"
-  },
   "kpis": {
     "active_listings":  "Propiedades activas",
     "upcoming_bookings":"Próximas reservas",

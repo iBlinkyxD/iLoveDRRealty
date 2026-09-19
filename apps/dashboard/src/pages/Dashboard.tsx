@@ -7,6 +7,7 @@ import { BuyerHome } from '../components/dashboard/BuyerHome'
 import { OwnerHome } from '../components/dashboard/OwnerHome'
 import { RealtorHome } from '../components/dashboard/RealtorHome'
 import { LockedView } from '../components/dashboard/LockedView'
+import { SetupBanners } from '../components/dashboard/SetupBanners'
 import { SavedHomes } from './buyer/SavedHomes'
 import { Inquiries } from './buyer/Inquiries'
 import { ROICalculator } from './buyer/ROICalculator'
@@ -38,6 +39,11 @@ const ROLE_ACCESS: Record<string, Role[]> = {
 const ROLE_TONE: Record<Role, string> = {
   Buyer: '#e10f1f', Owner: '#f0a800', Realtor: '#1f7a3d', Admin: '#0d9488',
 }
+// Owner/Realtor screens that show the "connect Calendly / PayPal to start adding listings" reminder.
+// (Home renders it itself; Settings is where the accounts get connected.)
+const SETUP_BANNER_VIEWS = new Set([
+  'listings', 'submit-listing', 'calendar', 'owner-bookings', 'realtor-bookings', 'leads', 'earnings', 'pipeline',
+])
 
 interface Props {
   go: (v: string) => void
@@ -110,7 +116,7 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
       // Realtor
       case 'pipeline':   return <Pipeline user={user} />
       // Shared by role
-      case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} go={go} /> : <RealtorListings tone={tone} go={go} user={user} />
+      case 'listings':        return role === 'Owner' ? <OwnerListings tone={tone} go={go} user={user} /> : <RealtorListings tone={tone} go={go} user={user} />
       case 'submit-listing':  return role === 'Owner' ? <OwnerSubmitListing go={go} tone={tone} /> : <SubmitListing go={go} tone={tone} />
       case 'calendar':   return role === 'Owner' ? <OwnerCalendar user={user} go={go} /> : <RealtorCalendar user={user} go={go} />
       case 'bookings':        return role === 'Admin' ? <AdminBookings /> : <BuyerBookings />
@@ -135,6 +141,14 @@ export default function Dashboard({ go, view = 'home', role, user, onUserUpdate 
           {getPageTitle(view)}
         </h1>
       </div>
+      {(role === 'Owner' || role === 'Realtor') && SETUP_BANNER_VIEWS.has(view) && (
+        <SetupBanners
+          kind={role === 'Owner' ? 'owner' : 'realtor'}
+          user={user}
+          go={go}
+          hideCalendly={view === 'calendar'}   // the Calendar page already shows its own full-page Calendly prompt
+        />
+      )}
       {renderView()}
     </div>
   )

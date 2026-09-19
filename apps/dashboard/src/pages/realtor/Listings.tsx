@@ -8,6 +8,7 @@ import { getMyListingsPage, type Listing } from '../../api/listings'
 import { EditListing } from './SubmitListing'
 import { ListingDetailPanel } from '../../components/listings/ListingDetailPanel'
 import type { UserInfo } from '../../lib/auth'
+import { useListingSetup } from '../../components/dashboard/SetupBanners'
 
 function pageWindow(current: number, total: number): (number | '…')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
@@ -290,7 +291,8 @@ const PAGE_SIZE = 50
 
 export function RealtorListings({ tone, go, user }: { tone: string; go: (v: string) => void; user?: UserInfo }) {
   const { t } = useTranslation('realtor')
-  const calendlyLinked = !!user?.calendly_url
+  // Same rule as the setup banner and every other "add listing" button.
+  const { canAddListings, blockedReason } = useListingSetup(user, 'realtor')
   const [mainItems, setMainItems] = useState<Listing[]>([])
   const [mainTotal, setMainTotal] = useState(0)
   const [pendingReviews, setPendingReviews] = useState<Listing[]>([])
@@ -382,9 +384,9 @@ export function RealtorListings({ tone, go, user }: { tone: string; go: (v: stri
                 />
               </div>
               <button
-                onClick={() => calendlyLinked && go('submit-listing')}
-                disabled={!calendlyLinked}
-                title={!calendlyLinked ? t('calendar_page.connect_desc') : undefined}
+                onClick={() => canAddListings && go('submit-listing')}
+                disabled={!canAddListings}
+                title={blockedReason}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12.5px] font-semibold text-white shrink-0 border-0 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: tone }}
               >
@@ -453,9 +455,9 @@ export function RealtorListings({ tone, go, user }: { tone: string; go: (v: stri
               </div>
             </div>
             <button
-              onClick={() => calendlyLinked && go('submit-listing')}
-              disabled={!calendlyLinked}
-              title={!calendlyLinked ? t('calendar_page.connect_desc') : undefined}
+              onClick={() => canAddListings && go('submit-listing')}
+              disabled={!canAddListings}
+              title={blockedReason}
               className="flex items-center gap-1.5 py-2 px-5 rounded-full text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               style={{ background: tone, color: '#fff' }}
             >
